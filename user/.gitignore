@@ -1,11 +1,27 @@
-__pycache__/
+# Django
 *.pyc
 *.pyo
 *.pyd
-.env
+__pycache__/
+*.sqlite3
+/migrations/*
+!/migrations/__init__.py
+/media/
+/static/
+/stockapp/settings.py
+/stockapp/local_settings.py
+/stockapp/__pycache__/
+
+# Virtual environment
 .venv/
 venv/
-*.sqlite3
-/static/
-/media/
-stockapp/settings.py
+env/
+ENV/
+
+# Environment variables
+.env
+
+# IDE files
+.idea/
+*.swp
+*.swo
