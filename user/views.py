@@ -6,24 +6,23 @@ from django.contrib.auth.forms import AuthenticationForm
 from .forms import UserRegisterForm
 from django.core.mail import EmailMultiAlternatives
 from django.template.loader import get_template
-from django.template import Context # For older Django/Python versions, might need this, but usually just pass dict directly
+from django.template import Context 
 
-#################### index page ####################################### 
-# This is the home page of your user app.
+
 def index(request):
     return render(request, 'user/index.html', {'title':'Home'})
  
-########### register view ##################################### 
+
 # Handles user registration.
 def register(request):
     if request.method == 'POST':
         form = UserRegisterForm(request.POST)
         if form.is_valid():
-            user = form.save() # Save the user (including custom fields like email, first/last name)
+            user = form.save()
             username = form.cleaned_data.get('username')
             email = form.cleaned_data.get('email')
             
-            # --- Email Confirmation System ---
+           
             # Renders the email template with user-specific data
             htmly = get_template('user/Email.html')
             d = { 'username': username }
@@ -32,7 +31,7 @@ def register(request):
             # Email details
             subject, from_email, to = 'Welcome to the Stock Reprice Calculator!', 'your_email@gmail.com', email # IMPORTANT: Update 'your_email@gmail.com' in settings.py too
             
-            # Create an EmailMultiAlternatives object for HTML email
+            
             msg = EmailMultiAlternatives(subject, html_content, from_email, [to])
             msg.attach_alternative(html_content, "text/html") # Attach HTML content
             msg.send() # Send the email
@@ -44,7 +43,7 @@ def register(request):
         form = UserRegisterForm() # If GET request, create an empty form
     return render(request, 'user/register.html', {'form': form, 'title':'Register'})
  
-################ login view ################################################### 
+
 # Handles user login.
 def Login(request): # Renamed from 'Login' to 'user_login' to avoid conflict with built-in login function
     if request.method == 'POST':
