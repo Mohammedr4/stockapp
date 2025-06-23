@@ -1,0 +1,22 @@
+# nixpacks.toml for Django deployment on Railway
+
+# Define the build phase
+[phases.build]
+# Install Python dependencies from requirements.txt
+commands = ["pip install -r requirements.txt", "python manage.py collectstatic --noinput"]
+
+# Define the start command for the web service
+[start]
+# This explicitly tells Nixpacks how to run your Gunicorn server
+cmd = "gunicorn project.wsgi --log-file -"
+
+# Define environment variables specific to the build environment (optional, but good for explicit paths)
+[variables]
+# Ensure Python can find Django and other modules correctly
+PYTHONPATH = "." # Add current directory to Python path
+# Explicitly tell Django where its settings file is during the build and run phases
+DJANGO_SETTINGS_MODULE = "project.settings"
+
+# Define the path to where the Django application is found
+# This helps Nixpacks and Gunicorn correctly locate your project.wsgi
+paths = ["."] # "." means the current directory (project root)
