@@ -1,0 +1,141 @@
+{% extends "user/index.html" %} {# Extend the base user/index.html for consistent header/footer/messages #}
+{% load static %} {# Load static files for CSS and JS specific to this app #}
+
+{% block start %} {# Start the content block defined in user/index.html #}
+
+<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}"> {# Link to calculator specific CSS #}
+<script src="{% static 'portfolio/js/script.js' %}"></script> {# Link to calculator specific JavaScript #}
+
+
+
+
+    <div class="container calculator-page"> {# Added 'calculator-page' class for specific styling #}
+        <div class="header">
+            <h1>Stock Reprice Calculator</h1>
+            <p>Analyse your stock holdings and re-pricing scenarios with precision</p>
+        </div>
+
+        <div class="calculator-grid">
+            <div class="card">
+                <h2>Current Holdings</h2>
+                
+                <div class="form-group">
+                    <label for="stock">Stock Symbol</label>
+                    <input type="text" id="stock" placeholder="e.g., INTL">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shares">Number of Shares</label>
+                        <input type="number" id="shares" placeholder="100" oninput="calculateAll()">
+                    </div>
+                    <div class="form-group">
+                        <label for="avgBuyPrice">Average Buy Price ($)</label>
+                        <input type="number" id="avgBuyPrice" placeholder="60.00" step="0.01" oninput="calculateAll()">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Total Cost Price ($)</label>
+                        <div class="display-value" id="costPrice">0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentPrice">Current Price ($)</label>
+                        <input type="number" id="currentPrice" placeholder="20.48" step="0.01" oninput="calculateAll()">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Current Portfolio Value ($)</label>
+                    <div class="display-value" id="currentValue">0.00</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Profit & Loss (P&L)</label>
+                    <div class="display-value" id="pl">0.00</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <h2>Reprice Calculator</h2>
+                
+                <div class="form-group">
+                    <label for="calculationMode">Calculation Mode</label>
+                    <select id="calculationMode" onchange="toggleCalculationMode()">
+                        <option value="shares">Calculate by Number of Shares</option>
+                        <option value="price">Calculate by Target Average Price</option>
+                    </select>
+                </div>
+                
+                <div id="sharesModeInputs">
+                    <div class="form-group">
+                        <label for="newShares">Additional Shares to Buy</label>
+                        <input type="number" id="newShares" placeholder="250" oninput="calculateFromShares()">
+                    </div>
+                </div>
+                
+                <div id="priceModeInputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="targetAvgPrice">Target Average Price ($)</label>
+                        <input type="number" id="targetAvgPrice" placeholder="30.00" step="0.01" oninput="calculateFromPrice()">
+                    </div>
+                    <div id="priceError" class="error-message" style="display: none;"></div>
+                </div>
+                
+                <button class="calculate-btn" onclick="calculateAll()">Calculate Reprice</button>
+                
+                <div class="results-section">
+                    <h3>Repriced Portfolio</h3>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>New Average Price ($)</label>
+                            <div class="display-value" id="newAvg">0.00</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Investment ($)</label>
+                            <div class="display-value" id="totalCost">0.00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Additional Shares Needed</label>
+                            <div class="display-value" id="calculatedShares">0</div>
+                        </div>
+                        <div class="form-group">
+                            <label>Total Shares After Purchase</label>
+                            <div class="display-value" id="totalShares">0</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost of New Shares ($)</label>
+                        <div class="display-value" id="newCost">0.00</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card highlight-card">
+            <h3>Portfolio Summary</h3>
+            <div class="metric-row">
+                <span class="metric-label">Stock:</span>
+                <span class="metric-value stock-symbol" id="summaryStock">-</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Current P&L:</span>
+                <span class="metric-value" id="summaryPL">$0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">New Average Price:</span>
+                <span class="metric-value" id="summaryNewAvg">$0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Break-even Price:</span>
+                <span class="metric-value" id="breakEvenPrice">$0.00</span>
+            </div>
+        </div>
+    </div>
+
+{% endblock start %} {# End the content block #}

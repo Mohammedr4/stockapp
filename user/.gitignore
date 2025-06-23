@@ -1,0 +1,36 @@
+# Django
+*.pyc
+*.pyo
+*.pyd
+__pycache__/
+*.sqlite3
+/migrations/*
+!/migrations/__init__.py
+/media/
+/static/
+
+# Core project settings file (sensitive data)
+/project/settings.py
+/project/local_settings.py # Often used for local overrides, also sensitive
+
+# Common IDE/OS files
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Virtual environment
+.venv/
+venv/
+env/
+ENV/
+
+# Environment variables (e.g., .env file for django-environ or similar)
+.env
+
+# Collectstatic directory
+/staticfiles/
+
+# Logs
+*.log
+*.ini

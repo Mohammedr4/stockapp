@@ -1,0 +1,110 @@
+{% load static %}
+{% load crispy_forms_tags %}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="title" content="Stock Reprice Calculator">
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta name="language" content="English">
+  <meta name="author" content="Your Name">
+
+  <title>{{title}} - Stock Reprice Calculator</title>
+
+  <!-- Bootstrap CSS from CDN -->
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+  
+  <!-- Font Awesome for icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+
+  <!-- Custom CSS for the user app (if any) -->
+  {# <link rel="stylesheet" type="text/css" href="{% static "index.css" %}" /> #} 
+  
+  <!-- jQuery (needed for Bootstrap JS) -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+  <!-- Bootstrap JS from CDN -->
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" xintegrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+  <!-- Message display logic (using Bootstrap alerts instead of raw alerts for better UX) -->
+  <style>
+    .alert-container {
+      position: fixed;
+      top: 60px; /* Adjust based on navbar height */
+      right: 20px;
+      z-index: 1050; /* Above most elements */
+      width: 300px;
+    }
+  </style>
+
+</head>
+
+<body class="container-fluid">
+
+  <!-- Navbar -->
+  <header class="row">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button class="navbar-toggle" data-toggle="collapse" data-target="#mainNavBar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="{% url "index" %}">Stock Calculator App</a>
+        </div>
+        <div class="collapse navbar-collapse" id="mainNavBar">
+          <ul class="nav navbar-nav navbar-right">
+            <li><a href="{% url "index" %}">Home</a></li>
+            {% if user.is_authenticated %}
+            <li><a href="{% url "portfolio_calculator" %}">Calculator</a></li> {# Link to the calculator app #}
+            <li>
+                {# THIS IS THE CRITICAL CHANGE: Use a form for POST request for logout #}
+                <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-link navbar-btn" style="color: #9d9d9d; text-decoration: none; padding: 15px 0px;"> {# Adjusted padding for better vertical alignment #}
+                        <span class="glyphicon glyphicon-log-out"></span> Logout ({{ user.username }})
+                    </button>
+                </form>
+            </li>
+            {% else %}
+            <li><a href="{% url "register" %}"><span class="glyphicon glyphicon-user"></span> Sign up</a></li>
+            <li><a href="{% url "login" %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></li>
+            {% endif %}
+          </ul>
+        </div>
+      </div>
+    </nav>
+  </header>
+  <br/><br/><br/> {# Add spacing for fixed navbar #}
+
+  <!-- Message display area -->
+  <div class="alert-container">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade in" role="alert">
+          <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+
+  <div class="row">
+    {% block start %}
+    {# Content from extending templates will go here #}
+    {% if user.is_authenticated %}
+    <center><h1>Welcome back {{user.username}}!</h1></center>
+    <center><p>Go to the <a href="{% url 'portfolio_calculator' %}">calculator</a> page.</p></center>
+    {% else %}
+    <center><h1>Please log in or sign up. . .</h1></center>
+    {% endif %}
+    {% endblock %}
+  </div>
+
+</body>
+</html>
