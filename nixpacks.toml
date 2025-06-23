@@ -7,12 +7,13 @@ commands = ["pip install -r requirements.txt", "python manage.py collectstatic -
 
 # Define the start command for the web service
 [start]
-# Execute the custom start script
-cmd = "bash ./start.sh"
+# This explicitly sets DJANGO_SETTINGS_MODULE and runs Gunicorn
+# This is the most direct way to ensure the setting is available.
+cmd = "DJANGO_SETTINGS_MODULE=project.settings gunicorn project.wsgi --log-file - --bind 0.0.0.0:$PORT"
 
-# Define environment variables specific to the build environment (optional, still useful for PYTHONPATH)
+# Define environment variables specific to the build environment (optional, but good for PYTHONPATH)
 [variables]
 # Ensure Python can find Django and other modules correctly
 # Setting current directory to Python path helps with module imports
 PYTHONPATH = "."
-# DJANGO_SETTINGS_MODULE will now be set in start.sh for robustness
+# DJANGO_SETTINGS_MODULE is now set directly in the 'cmd' above for maximum robustness
