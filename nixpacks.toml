@@ -7,13 +7,12 @@ commands = ["pip install -r requirements.txt", "python manage.py collectstatic -
 
 # Define the start command for the web service
 [start]
-# This explicitly tells Nixpacks how to run your Gunicorn server
-cmd = "gunicorn project.wsgi --log-file -"
+# Execute the custom start script
+cmd = "bash ./start.sh"
 
-# Define environment variables specific to the build environment
+# Define environment variables specific to the build environment (optional, still useful for PYTHONPATH)
 [variables]
 # Ensure Python can find Django and other modules correctly
 # Setting current directory to Python path helps with module imports
 PYTHONPATH = "."
-# Explicitly tell Django where its settings file is during the build and run phases
-DJANGO_SETTINGS_MODULE = "project.settings"
+# DJANGO_SETTINGS_MODULE will now be set in start.sh for robustness
