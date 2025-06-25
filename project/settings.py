@@ -77,7 +77,7 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'stockapp.wsgi.application'
+WSGI_APPLICATION = 'project.wsgi.application'
 
 
 
