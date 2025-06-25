@@ -1,36 +1,24 @@
-# Django
+# Python compiled files
 *.pyc
 *.pyo
 *.pyd
 __pycache__/
+
+# SQLite database file
 *.sqlite3
+
+# Django migrations except __init__.py
 /migrations/*
 !/migrations/__init__.py
-/media/
-/static/
 
-# Core project settings file (sensitive data)
-/project/settings.py
-/project/local_settings.py # Often used for local overrides, also sensitive
+# Media and static files (usually uploaded/generated files)
+media/
+static/
+staticfiles/
 
-# Common IDE/OS files
-.idea/
-*.swp
-*.swo
-.DS_Store
+# Local settings (sensitive info override)
+project/local_settings.py
 
-# Virtual environment
-.venv/
-venv/
-env/
-ENV/
-
-# Environment variables (e.g., .env file for django-environ or similar)
-.env
-
-# Collectstatic directory
-/staticfiles/
-
-# Logs
-*.log
-*.ini
+# Virtual environments
+/venv/
+/.ve
