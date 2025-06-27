@@ -12,31 +12,21 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
-import dj_database_url  # Ensure it's in your requirements.txt
+import dj_database_url
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# ==============================
-# SECURITY & ENVIRONMENT SETTINGS
-# ==============================
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-CHANGE-ME')
 
-# DEBUG mode should always be set via environment variable
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# Configure allowed hosts
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if DEBUG:
     ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
 
-
-
-# ==================
-# APPLICATION CONFIG
-# ==================
+# Add your deployed domain(s) here, if not using env variable
+if 'stockapp.up.railway.app' not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append('stockapp.up.railway.app')
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -46,11 +36,9 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
-    # Third-party
     'crispy_forms',
     'crispy_bootstrap4',
 
-    # Local apps
     'user',
     'portfolio',
 ]
@@ -87,20 +75,12 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-# ==========
-# DATABASES
-# ==========
-
 DATABASES = {
     'default': dj_database_url.config(
         default='sqlite:///' + str(BASE_DIR / 'db.sqlite3'),
         conn_max_age=600
     )
 }
-
-# ======================
-# PASSWORD VALIDATION
-# ======================
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -109,41 +89,22 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# =======================
-# INTERNATIONALIZATION
-# =======================
-
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# ============================
-# STATIC & MEDIA FILES
-# ============================
-
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'static')]
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# Optionally add media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# ===============
-# DEFAULT PRIMARY KEY
-# ===============
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ======================
-# AUTH REDIRECT URLS
-# ======================
 LOGIN_REDIRECT_URL = '/calculator/'
 LOGOUT_REDIRECT_URL = '/'
-
-# ======================
-# EMAIL CONFIGURATION
-# ======================
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = os.environ.get('EMAIL_HOST', 'smtp.gmail.com')
@@ -152,20 +113,14 @@ EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS', 'True') == 'True'
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', '')
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD', '')
 
-# Optional: Raise error if email settings are not defined in production
 if not DEBUG and (not EMAIL_HOST_USER or not EMAIL_HOST_PASSWORD):
     raise Exception("EMAIL credentials are not set for production.")
 
-# ======================
-# LOGGING (optional but good in production)
-# ======================
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
+        'console': {'class': 'logging.StreamHandler'},
     },
     'root': {
         'handlers': ['console'],
@@ -176,5 +131,4 @@ LOGGING = {
 CSRF_TRUSTED_ORIGINS = [
     'https://stockapp.up.railway.app',
 ]
-CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
-CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
+

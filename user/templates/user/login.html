@@ -2,25 +2,30 @@
 {% load crispy_forms_tags %}
 
 {% block start %}
- 
 <div class="content-section col-md-8 col-md-offset-2">
   <center>
-  <form method="POST" style="border: 1px solid #34495e; margin: 4%; padding:10%; border-radius:8px; background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
-    {% csrf_token %}
-    <fieldset class="form-group">
-      <legend class="border-bottom mb-4" style="font-size: 2.5rem; margin-bottom: 20px; color: #2c3e50;">Log In</legend>
-      {{ form|crispy }}
-    </fieldset>
-   <center>
-    <button style="background: #2c3e50; font-size: 1.5rem; padding: 10px 20px; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease;" class="btn btn-outline-info" type="submit">
-      <span class="glyphicon glyphicon-log-in"></span> Log In
-    </button>
+    <form method="POST" action="{% url 'login' %}" style="border: 1px solid #34495e; margin: 4%; padding:10%; border-radius:8px; background-color: #ffffff; box-shadow: 0 4px 8px rgba(0,0,0,0.1);">
+      {% csrf_token %}
+      <fieldset class="form-group">
+        <legend class="border-bottom mb-4" style="font-size: 2.5rem; margin-bottom: 20px; color: #2c3e50;">Log In</legend>
+        {{ form|crispy }}
+      </fieldset>
+      <center>
+        <button 
+          style="background: #2c3e50; font-size: 1.5rem; padding: 10px 20px; color: white; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s ease;" 
+          class="btn btn-outline-info" 
+          type="submit"
+        >
+          <span class="glyphicon glyphicon-log-in"></span> Log In
+        </button>
+      </center>
+      <br/>
+      <sub style="text-align: center; display: block; margin-top: 15px;">
+        <a href="{% url 'register' %}" style="text-decoration: none; color: #3498db; cursor:pointer;">
+          Don't have an account? Sign up here
+        </a>
+      </sub>
+    </form>
   </center>
-  <br/>
-  <sub style="text-align: center; display: block; margin-top: 15px;">
-    <a href="{% url 'register' %}" style="text-decoration: none; color: #3498db; cursor:pointer;">Don't have an account? Sign up here</a>
-  </sub>
-  </form>
-</center>
- </div>
+</div>
 {% endblock start %}
