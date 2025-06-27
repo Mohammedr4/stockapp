@@ -32,6 +32,8 @@ ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if DEBUG:
     ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
 
+
+
 # ==================
 # APPLICATION CONFIG
 # ==================
