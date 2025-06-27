@@ -173,3 +173,8 @@ LOGGING = {
     },
 }
 
+CSRF_TRUSTED_ORIGINS = [
+    'https://stockapp.up.railway.app',
+]
+CSRF_TRUSTED_ORIGINS = os.environ.get('CSRF_TRUSTED_ORIGINS', '').split(',')
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in CSRF_TRUSTED_ORIGINS if origin.strip()]
