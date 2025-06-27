@@ -22,3 +22,5 @@ project/local_settings.py
 # Virtual environments
 /venv/
 /.ve
+
+.env
