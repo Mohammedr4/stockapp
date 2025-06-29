@@ -16,24 +16,23 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views # Alias to avoid name collision with custom Login view
-from user import views as user_views # Alias for user app views
+from django.contrib.auth import views as auth_views
+from user import views as user_views
+from user.views import CustomLogoutView # IMPORTANT: Import your custom logout view
+from portfolio import views as portfolio_views # Import portfolio views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # User authentication paths (signup, login, logout, home)
-    path('', include('user.urls')), # Includes 'index', 'register', 'login' from user app
+    # Make the root URL ('/') the calculator page
+    path('', portfolio_views.calculator_view, name='home'), 
     
-    # Custom login/logout views provided by the user
-    # Note: user_views.Login is a custom view that handles login.
-    # auth_views.LogoutView is Django's built-in logout.
+    # User authentication paths (signup, login, logout)
     path('login/', user_views.Login, name ='login'),
-    # Use Django's built-in LogoutView, redirecting to the home page after logout
-    # Changed next_page='index' to next_page='/' for more robustness in redirect
-    path('logout/', auth_views.LogoutView.as_view(next_page = '/'), name ='logout'), 
+    # IMPORTANT CHANGE: Use your CustomLogoutView to clear session
+    path('logout/', CustomLogoutView.as_view(next_page = '/'), name ='logout'), 
     path('register/', user_views.register, name ='register'),
 
-    # Portfolio app URLs (for the calculator)
-    path('calculator/', include('portfolio.urls')), 
+    # Portfolio app URLs (keeping the /calculator/ path for direct access, though / is preferred now)
+    path('calculator/', portfolio_views.calculator_view, name='portfolio_calculator'), 
 ]
