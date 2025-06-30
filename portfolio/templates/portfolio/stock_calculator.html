@@ -154,8 +154,8 @@
                     <p>You can use the calculator once as a guest. Please log in or sign up to continue using it.</p>
                 </div>
                 <div class="modal-footer">
-                    <a href="{{ login_url }}" class="btn btn-primary">Login</a>
-                    <a href="{{ register_url }}" class="btn btn-success">Sign Up</a>
+                    <a href="{% url 'login' %}" class="btn btn-primary">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-success">Sign Up</a>
                 </div>
             </div>
         </div>
@@ -167,8 +167,8 @@
         var canUseCalculatorFreeInitial = {{ can_use_calculator_free|yesno:"true,false" }};
         var showLoginPopupInitial = {{ show_login_popup|yesno:"true,false" }};
         var userFeedbackMessage = "{{ user_feedback_message|escapejs }}";
-        var loginUrl = "{{ login_url }}";
-        var registerUrl = "{{ register_url }}";
+        var loginUrl = "{% url 'login' %}";
+        var registerUrl = "{% url 'register' %}";
     </script>
     {# Link to calculator specific JavaScript after context variables #}
     <script src="{% static 'portfolio/js/script.js' %}"></script> 

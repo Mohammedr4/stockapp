@@ -1,38 +1,35 @@
 """
 URL configuration for project project.
-
-The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/5.0/topics/http/urls/
-Examples:
-Function views
-    1. Add an import:  from my_app import views
-    2. Add a URL to urlpatterns:  path('', views.home, name='home')
-Class-based views
-    1. Add an import:  from other_app.views import Home
-    2. Add a URL to urlpatterns:  path('', Home.as_view(), name='home')
-Including another URLconf
-    1. Import the include() function: from django.urls import include, path
-    2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.contrib.auth import views as auth_views
+from django.conf import settings # Import settings
+from django.conf.urls.static import static # Import static file serving helper
+
+# Import your views
 from user import views as user_views
-from user.views import CustomLogoutView # IMPORTANT: Import your custom logout view
-from portfolio import views as portfolio_views # Import portfolio views
+from portfolio import views as portfolio_views
+from user.views import CustomLogoutView # Assuming you have this custom logout view
 
 urlpatterns = [
     path('admin/', admin.site.urls),
 
-    # Make the root URL ('/') the calculator page
+    # Make the root URL ('/') the calculator page for both authenticated and unauthenticated users
+    # The view itself will handle redirection for unauthenticated users if needed.
     path('', portfolio_views.calculator_view, name='home'), 
     
-    # User authentication paths (signup, login, logout)
+    # User authentication paths
     path('login/', user_views.Login, name ='login'),
-    # IMPORTANT CHANGE: Use your CustomLogoutView to clear session
+    # Use your CustomLogoutView if you have one, otherwise use Django's built-in LogoutView
     path('logout/', CustomLogoutView.as_view(next_page = '/'), name ='logout'), 
     path('register/', user_views.register, name ='register'),
 
-    # Portfolio app URLs (keeping the /calculator/ path for direct access, though / is preferred now)
+    # Portfolio app URLs (calculator is already at root, but keeping this for direct path if desired)
     path('calculator/', portfolio_views.calculator_view, name='portfolio_calculator'), 
 ]
+
+# IMPORTANT: Serve static files in production.
+# This is explicitly added because you are not using WhiteNoise.
+# This block should ONLY be active when DEBUG is False in production.
+if not settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

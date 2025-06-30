@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import os 
+import os # Make sure this line is at the very top
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,12 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
+# Use an environment variable for production SECRET_KEY. Provide a default for local dev.
 SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-@e^6b#s51d7@s9k^j_o7)b$1j8c+7d5&t!_x@m6-k9c!6y9z)a') 
 
 # SECURITY WARNING: don't run with debug turned on in production!
+# Use an environment variable for DEBUG. Default to True for local development.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# ALLOWED_HOSTS: Must list all domains your app will serve from in production
+# ALLOWED_HOSTS: Must list all domains your app will serve from in production.
+# Get from environment variable, split by comma. Add localhost for local dev if DEBUG is True.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if DEBUG:
     ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
@@ -41,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_bootstrap4', 
+    'crispy_bootstrap4', # IMPORTANT: crispy_bootstrap4 must be before crispy_forms
     'crispy_forms',      
     'user',              
     'portfolio',         
@@ -63,7 +66,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')], 
-        'APP_DIRS': True,
+        'APP_DIRS': True, # This tells Django to look for templates inside app directories (e.g., user/templates/user/)
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -124,7 +127,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-# REMOVED: STATICFILES_DIRS - Django will now automatically find static/ folders inside INSTALLED_APPS
+# REMOVED STATICFILES_DIRS: Django's collectstatic will now automatically look for 'static/'
+# folders inside each app listed in INSTALLED_APPS (e.g., portfolio/static/portfolio/).
+# This is the correct way for your current static file structure.
+
+# Directory where Django will collect all static files for production serving
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 
 # Default primary key field type
@@ -136,22 +144,22 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Authentication URLs
-LOGIN_REDIRECT_URL = '/calculator/' 
-LOGOUT_REDIRECT_URL = '/'          
-
-# Directory where Django will collect all static files for production serving
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
-
+LOGIN_REDIRECT_URL = '/calculator/' # Redirect to calculator page after successful login
+LOGOUT_REDIRECT_URL = '/'          # Redirect to home page after logout
 
 # Email settings for user confirmation - Using Environment Variables
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+# Get email user from environment variable, provide a dummy default for local dev if not set
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'your_email@gmail.com') 
+# Get email password from environment variable - THIS SHOULD NEVER HAVE A DEFAULT
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
 # IMPORTANT: CSRF Trusted Origins for deployment
+# Add your Railway app's domain here to prevent CSRF errors
 CSRF_TRUSTED_ORIGINS = [
     'https://stockapp.up.railway.app',
+    # Add other trusted origins if you have them, e.g., 'https://www.yourdomain.com'
 ]

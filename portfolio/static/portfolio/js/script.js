@@ -2,7 +2,6 @@
 
 // Declare global variables that will be populated by Django template context
 // These variables are injected into the <script> block in stock_calculator.html
-// before this script file is loaded.
 var isUserAuthenticated;
 var canUseCalculatorFreeInitial;
 var showLoginPopupInitial;
@@ -38,7 +37,7 @@ $(document).ready(function() {
         restrictCalculatorAccess();
     }
 
-    // --- Your Original Calculator JavaScript Functions ---
+    // --- Core Calculator JavaScript Functions (Preserved & Adapted) ---
 
     function formatNumber(num) {
         if (isNaN(num) || !isFinite(num)) return '0.00';
@@ -52,7 +51,7 @@ $(document).ready(function() {
     }
 
     function showError(message) {
-        const errorDiv = $('#priceError');
+        const errorDiv = $('#priceError'); 
         errorDiv.text(message);
         errorDiv.show();
     }
@@ -73,7 +72,7 @@ $(document).ready(function() {
             $('#priceModeInputs').show();
             calculateFromPrice();
         }
-        calculateAll(); // Recalculate summary after mode change
+        calculateAll(); 
     }
 
     function calculateFromShares() {
@@ -113,7 +112,7 @@ $(document).ready(function() {
         const costPrice = shares * avgBuyPrice;
         
         hideError();
-        
+
         if (shares <= 0 || currentPrice <= 0 || avgBuyPrice <= 0) {
             $('#calculatedShares').text('0');
             $('#newCost').text('0.00');
@@ -123,7 +122,7 @@ $(document).ready(function() {
             $('#summaryNewAvg').text(formatCurrency(avgBuyPrice));
             $('#breakEvenPrice').text(formatCurrency(avgBuyPrice));
             if (shares === 0 && currentPrice === 0 && avgBuyPrice === 0) {
-                 // Do nothing or show a specific message if no initial data
+                 // No initial data, no specific error for empty state
             } else {
                  showError('Please enter valid current holdings (shares, average buy price, current price).');
             }
@@ -190,7 +189,6 @@ $(document).ready(function() {
         $('#breakEvenPrice').text(formatCurrency(actualNewAvg));
     }
 
-    // Main calculation function, updates all display values based on current inputs
     function calculateAll() {
         const shares = parseFloat($('#shares').val()) || 0;
         const avgPrice = parseFloat($('#avgBuyPrice').val()) || 0;
@@ -224,16 +222,14 @@ $(document).ready(function() {
         }
     }
 
-    // Function to perform the actual calculation (calls calculateAll after validation)
-    // This function is what the 'Calculate Reprice' button will trigger.
-    function performCalculationAndRestrict() { // Renamed for clarity in this context
+    // Function to perform the actual calculation and enforce restriction (called by button)
+    function performCalculationAndRestrict() {
         const shares = parseFloat($('#shares').val());
         const avgBuyPrice = parseFloat($('#avgBuyPrice').val());
         const currentPrice = parseFloat($('#currentPrice').val());
         const calculationMode = $('#calculationMode').val();
 
         let isValid = true;
-        // Basic validation for initial holdings
         if (isNaN(shares) || shares < 0) isValid = false;
         if (isNaN(avgBuyPrice) || avgBuyPrice < 0) isValid = false;
         if (isNaN(currentPrice) || currentPrice < 0) isValid = false; 
@@ -241,22 +237,21 @@ $(document).ready(function() {
         if (calculationMode === 'shares') {
             const newShares = parseFloat($('#newShares').val());
             if (isNaN(newShares) || newShares < 0) isValid = false;
-        } else { // price mode
+        } else { 
             const targetAvgPrice = parseFloat($('#targetAvgPrice').val());
             if (isNaN(targetAvgPrice) || targetAvgPrice < 0) isValid = false;
         }
 
         if (!isValid) {
             alert("Please enter valid positive numbers for shares and prices. Current Price can be zero.");
-            return; // Stop if inputs are invalid
+            return; 
         }
         
-        calculateAll(); // Perform the calculation (updates all display values)
+        calculateAll(); 
 
-        // For anonymous users: apply restriction after the first valid calculation
         if (!isUserAuthenticated && canUseCalculatorFreeInitial && !hasCalculatedOnThisPage) {
-            hasCalculatedOnThisPage = true; // Mark as used on this page
-            restrictCalculatorAccess(); // Immediately disable inputs and show modal
+            hasCalculatedOnThisPage = true; 
+            restrictCalculatorAccess(); 
         }
     }
 
@@ -265,27 +260,24 @@ $(document).ready(function() {
     // Bind input events to all relevant calculator inputs for real-time updates
     $('.calculator-input').on('input', function() {
         if (!isUserAuthenticated && (!canUseCalculatorFreeInitial || hasCalculatedOnThisPage)) {
-            // If restricted, don't allow live input updates (keep them disabled)
-            if (!$('#loginSignupModal').hasClass('in')) { // Only show modal if not already open
+            if (!$('#loginSignupModal').hasClass('in')) { 
                  restrictCalculatorAccess(); 
             }
             return;
         }
-        calculateAll(); // For valid/authenticated users, update results live
+        calculateAll(); 
     });
 
     // Main Calculate Reprice button click handler
     $('#mainCalculateBtn').click(function() {
         if (isUserAuthenticated) {
-            performCalculationAndRestrict(); // Authenticated users have unlimited uses
+            performCalculationAndRestrict(); 
             return;
         }
 
-        // Anonymous users logic
         if (canUseCalculatorFreeInitial && !hasCalculatedOnThisPage) {
-            performCalculationAndRestrict(); // This will perform calculation AND set hasCalculatedOnThisPage = true, then restrict
+            performCalculationAndRestrict(); 
         } else {
-            // Already used once on this page, or restricted by server on load
             restrictCalculatorAccess(); 
         }
     });
@@ -293,7 +285,6 @@ $(document).ready(function() {
     // Main Clear All Inputs button click handler
     $('#mainClearBtn').click(function() {
         if (!isUserAuthenticated && (!canUseCalculatorFreeInitial || hasCalculatedOnThisPage)) {
-             // If restricted, don't allow clearing either, just show popup
             restrictCalculatorAccess(); 
             return;
         }
@@ -319,16 +310,13 @@ $(document).ready(function() {
         $('#summaryNewAvg').text('$0.00');
         $('#breakEvenPrice').text('$0.00');
 
-        hideError(); // Clear any error messages
-        // hasCalculatedOnThisPage is intentionally NOT reset here for anonymous users.
-        // The idea is that once they've used their one free calculation on this page load,
-        // any further action (even clear) should lead to restriction or require login.
+        hideError(); 
     });
 
     // Bind change event for calculation mode select
     $('#calculationMode').on('change', toggleCalculationMode);
 
-    // Initialize calculations and mode when page loads (after all elements are ready)
-    // This will run calculateAll which itself calls the specific mode calculation (shares/price)
+    // Initialize calculations and mode when page loads
     toggleCalculationMode(); 
+    calculateAll(); 
 });
