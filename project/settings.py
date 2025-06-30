@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import os # Make sure this line is at the very top
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -44,7 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_bootstrap4', # IMPORTANT: crispy_bootstrap4 must be before crispy_forms
+    'crispy_bootstrap4', 
     'crispy_forms',      
     'user',              
     'portfolio',         
@@ -66,7 +66,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')], 
-        'APP_DIRS': True, # This tells Django to look for templates inside app directories (e.g., user/templates/user/)
+        'APP_DIRS': True, 
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -144,22 +144,18 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
 # Authentication URLs
-LOGIN_REDIRECT_URL = '/calculator/' # Redirect to calculator page after successful login
-LOGOUT_REDIRECT_URL = '/'          # Redirect to home page after logout
+LOGIN_REDIRECT_URL = '/calculator/' 
+LOGOUT_REDIRECT_URL = '/'          
 
 # Email settings for user confirmation - Using Environment Variables
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# Get email user from environment variable, provide a dummy default for local dev if not set
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'your_email@gmail.com') 
-# Get email password from environment variable - THIS SHOULD NEVER HAVE A DEFAULT
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
 
 # IMPORTANT: CSRF Trusted Origins for deployment
-# Add your Railway app's domain here to prevent CSRF errors
 CSRF_TRUSTED_ORIGINS = [
     'https://stockapp.up.railway.app',
-    # Add other trusted origins if you have them, e.g., 'https://www.yourdomain.com'
 ]
