@@ -1,432 +1,193 @@
 /* portfolio/static/portfolio/css/style.css */
 
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700;800&display=swap');
-
-:root {
-    /* Lighter & Softer Cyberpunk Financial Theme */
-    --neon-cyan: #00e5e5; /* Slightly less intense */
-    --neon-purple: #a050e0; /* Softer purple */
-    --neon-green: #30e010; /* Slightly less intense green */
-    --electric-blue: #2080e0; /* Softer blue */
-    
-    --background-light: #f0f2f5; /* Very light grey/blue background */
-    --card-bg: rgba(255, 255, 255, 0.9); /* More opaque white for cards */
-    --text-dark: #333d4a; /* Darker text for readability on light bg */
-    --text-medium: #5a6a7c; /* Medium text for labels */
-    --border-light: #d0d5db; /* Light border */
-    
-    --shadow-subtle: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
-    --shadow-hover: 0 8px 25px rgba(0, 0, 0, 0.15); /* Slightly more pronounced on hover */
-
-    --danger-red: #e04040; /* Standard red */
-    --warning-orange: #e08020; /* Standard orange */
-    
-    /* Reduced Glass morphism variables for lighter feel */
-    --glass-bg: rgba(255, 255, 255, 0.7); /* More transparent for lighter look */
-    --glass-border: rgba(0, 0, 0, 0.1); /* Subtle border */
-    --glass-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Softer shadow */
-    
-    /* Animations - Dialed back for performance */
-    --glow-animation: glow-subtle 1.5s ease-in-out infinite alternate; /* Shorter, less intense glow */
-    --float-animation: float-subtle 4s ease-in-out infinite; /* Shorter, less intense float */
-}
-
-/* Lighter, cleaner background */
+/* General Body and Container Styling */
 body {
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--background-light);
-    color: var(--text-dark);
-    margin: 0;
-    padding-top: 40px; /* Reduced space for fixed navbar */
-    min-height: 100vh;
-    overflow-x: hidden;
-    position: relative;
+    font-family: Arial, sans-serif;
+    background-color: #e9ebee; /* Light grey background */
+    margin-top: 50px; /* Space for the fixed navbar */
+    padding-bottom: 20px;
 }
-
-/* Animated background particles - Simplified/Removed for performance */
-body::before {
-    content: '';
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Simplified background: subtle dots or lines, or just a solid color */
-    background-image: radial-gradient(circle, var(--electric-blue) 1px, transparent 1px),
-                      radial-gradient(circle, var(--neon-purple) 1px, transparent 1px);
-    background-size: 40px 40px;
-    background-position: 0 0, 20px 20px;
-    opacity: 0.03; /* Very subtle */
-    pointer-events: none;
-    z-index: -1;
-}
-
 
 .calculator-page {
-    max-width: 1400px;
-    margin: 0 auto;
-    padding: 2rem;
-    position: relative;
-    z-index: 1;
+    max-width: 1200px;
+    margin: 20px auto;
+    padding: 20px;
+    background-color: #f8f8f8;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-/* Header with retained title effect */
+/* Header Styling */
 .header {
     text-align: center;
-    margin-bottom: 1.5rem; /* Reduced margin bottom */
-    padding: 1rem 0; /* Reduced padding top/bottom */
-    position: relative;
+    margin-bottom: 30px;
+    color: #333;
 }
 
-/* REMOVED: .header::before rule to remove the strip above the title */
-
 .header h1 {
-    font-family: 'Inter', sans-serif; /* Use Inter for title */
-    font-size: clamp(3rem, 8vw, 5rem);
-    font-weight: 800;
-    background: linear-gradient(135deg, var(--neon-cyan) 0%, var(--electric-blue) 50%, var(--neon-purple) 100%);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
-    margin: 0; /* Adjusted margin to control space relative to .header padding */
-    letter-spacing: -0.02em;
-    text-shadow: 0 0 30px rgba(0, 255, 255, 0.5); /* Keep text shadow for title */
-    animation: pulse-title 3s ease-in-out infinite; /* Specific, retained pulse for title */
-    position: relative;
+    font-size: 2.5em;
+    color: #2c3e50; /* Dark blue */
+    margin-bottom: 10px;
 }
 
 .header p {
-    font-family: 'Inter', sans-serif; /* Use Inter for body text */
-    font-size: 1.3rem;
-    color: var(--text-medium);
-    max-width: 600px;
-    margin: 0 auto;
-    font-weight: 400; /* Slightly lighter weight */
-    opacity: 0.9;
-    line-height: 1.6;
+    font-size: 1.1em;
+    color: #666;
 }
 
-/* Calculator grid */
+/* Calculator Grid Layout */
 .calculator-grid {
     display: grid;
-    grid-template-columns: 1fr;
-    gap: 2rem;
-    margin-bottom: 3rem;
+    grid-template-columns: 1fr; /* Single column on small screens */
+    gap: 20px;
+    margin-bottom: 30px;
 }
 
-@media (min-width: 1024px) {
+@media (min-width: 768px) {
     .calculator-grid {
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: 1fr 1fr; /* Two columns on larger screens */
     }
 }
 
-/* Lighter glass morphism cards */
+/* Card Styling */
 .card {
-    background: var(--card-bg); /* More opaque */
-    backdrop-filter: blur(10px); /* Less blur */
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid var(--border-light); /* Lighter border */
-    border-radius: 15px; /* Slightly less rounded */
-    padding: 2.5rem;
-    box-shadow: var(--shadow-subtle);
-    position: relative;
-    overflow: hidden;
-    transition: all 0.2s ease-in-out; /* Slightly faster transition, less dramatic */
-}
-
-.card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 2px;
-    background: linear-gradient(90deg, var(--neon-cyan), var(--electric-blue), var(--neon-purple));
-    border-radius: 15px 15px 0 0;
-}
-
-.card:hover {
-    transform: translateY(-3px) scale(1.005); /* Less dramatic hover */
-    box-shadow: var(--shadow-hover);
-    border-color: var(--electric-blue); /* Subtle hover border color */
+    background-color: #ffffff;
+    border-radius: 10px;
+    padding: 25px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+    border: 1px solid #ddd;
 }
 
 .card h2 {
-    font-family: 'Inter', sans-serif; /* Use Inter for card titles */
-    font-size: 1.6rem;
-    font-weight: 700;
-    color: var(--electric-blue); /* Use electric blue for titles */
-    margin: 0 0 2rem 0;
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
+    font-size: 1.8em;
+    color: #2c3e50;
+    margin-top: 0;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #3498db; /* Blue underline */
+    padding-bottom: 10px;
 }
 
-.card h2::before {
-    /* REMOVED: content for emoji/icon */
-    /* REMOVED: font-size, color, animation for emoji/icon */
-}
-
-/* Form styling */
+/* Form Group Styling */
 .form-group {
-    margin-bottom: 1.5rem; /* Slightly less margin */
-    position: relative;
+    margin-bottom: 18px;
 }
 
 .form-group label {
-    font-family: 'Inter', sans-serif; /* Inter for labels */
     display: block;
-    margin-bottom: 0.5rem;
-    font-weight: 500;
-    color: var(--text-medium);
-    font-size: 0.9rem;
-    text-transform: uppercase;
-    letter-spacing: 0.05em; /* Slightly less letter spacing */
+    margin-bottom: 8px;
+    font-weight: bold;
+    color: #555;
 }
 
 .form-group input[type="text"],
 .form-group input[type="number"],
 .form-group select {
     width: 100%;
-    padding: 0.8rem 1.2rem; /* Slightly less padding */
-    background: var(--background-light); /* Lighter background for inputs */
-    border: 1px solid var(--border-light); /* Lighter border */
-    border-radius: 8px; /* Less rounded */
-    color: var(--text-dark);
-    font-size: 1rem;
-    font-family: 'JetBrains Mono', monospace; /* Keep robotic for inputs */
-    transition: all 0.2s ease;
-    box-sizing: border-box;
-    backdrop-filter: none; /* Removed blur for inputs */
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 1em;
+    box-sizing: border-box; /* Include padding in width */
 }
 
-/* Improved dropdown styling */
-.form-group select {
-    background: var(--background-light);
-    color: var(--text-dark);
-}
-
-.form-group select option {
-    background: var(--background-light);
-    color: var(--text-dark);
-    padding: 0.5rem;
-    border: none;
-}
-
-.form-group input:focus,
-.form-group select:focus {
-    outline: none;
-    border-color: var(--electric-blue);
-    box-shadow: 0 0 0 3px rgba(32, 128, 224, 0.15); /* Softer focus shadow */
-    background: white;
-}
-
-.form-group input::placeholder {
-    color: var(--text-medium);
-    font-style: normal; /* Removed italic */
-}
-
-/* Advanced form rows */
+/* Form Row for side-by-side inputs */
 .form-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 1rem; /* Less gap */
-    margin-bottom: 1.5rem;
-}
-
-@media (max-width: 640px) {
-    .form-row {
-        grid-template-columns: 1fr;
-        gap: 0;
-    }
+    display: flex;
+    gap: 20px;
+    margin-bottom: 18px;
+    flex-wrap: wrap; /* Allow wrapping on small screens */
 }
 
 .form-row .form-group {
-    margin-bottom: 0;
+    flex: 1; /* Distribute space evenly */
+    min-width: 150px; /* Minimum width before wrapping */
+    margin-bottom: 0; /* Reset margin for inner groups */
 }
 
-/* Improved readability for display values */
+/* Display Value Styling (for calculated outputs) */
 .display-value {
-    background: var(--background-light); /* Lighter background */
-    border: 1px solid var(--border-light); /* Lighter border */
-    border-radius: 8px; /* Less rounded */
-    padding: 0.8rem 1.2rem;
-    font-size: 1.1rem;
-    font-weight: 600;
-    font-family: 'JetBrains Mono', monospace; /* Keep robotic for display values */
-    color: var(--text-dark);
-    min-height: 24px;
+    background-color: #ecf0f1; /* Light grey background for display fields */
+    padding: 12px;
+    border-radius: 5px;
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #333;
+    text-align: left;
+    min-height: 44px; /* Ensure consistent height */
     display: flex;
     align-items: center;
-    position: relative;
-    overflow: hidden;
-    backdrop-filter: none; /* Removed blur */
 }
 
-.display-value::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 3px; /* Thinner accent line */
-    background: linear-gradient(180deg, var(--electric-blue), var(--neon-cyan));
-    border-radius: 8px 0 0 8px;
-}
-
-/* Profit/Loss with improved readability */
+/* Profit & Loss (P&L) specific styling */
 .profit-positive {
-    color: var(--neon-green) !important;
-    background: rgba(32, 224, 16, 0.1) !important; /* Lighter background */
-    border-color: rgba(32, 224, 16, 0.3) !important; /* Softer border */
-    /* Removed animation */
-}
-
-.profit-positive::before {
-    background: var(--neon-green) !important; /* Solid color for accent */
+    color: #27ae60; /* Green for positive P&L */
 }
 
 .profit-loss {
-    color: var(--danger-red) !important;
-    background: rgba(224, 64, 64, 0.1) !important; /* Lighter background */
-    border-color: rgba(224, 64, 64, 0.3) !important; /* Softer border */
-    /* Removed animation */
+    color: #e74c3c; /* Red for negative P&L */
 }
 
-.profit-loss::before {
-    background: var(--danger-red) !important; /* Solid color for accent */
+/* Error Message Styling */
+.error-message {
+    color: #e74c3c;
+    font-weight: bold;
+    margin-top: -10px;
+    margin-bottom: 10px;
+    font-size: 0.9em;
 }
 
-/* Button design - simplified but still distinct */
+/* Calculate Button */
 .calculate-btn {
-    width: 100%;
-    padding: 1rem 1.5rem; /* Less padding */
-    border: none;
-    border-radius: 8px; /* Less rounded */
-    font-size: 1rem;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif; /* Inter for buttons */
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    margin-bottom: 0.8rem; /* Less margin */
-    transition: all 0.2s ease;
-}
-
-.calculate-btn:first-of-type {
-    background: linear-gradient(135deg, var(--electric-blue) 0%, var(--neon-purple) 100%);
+    background-color: #3498db; /* Blue */
     color: white;
-    box-shadow: 0 4px 10px rgba(32, 128, 224, 0.3); /* Softer shadow */
-}
-
-.calculate-btn:first-of-type::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: -100%;
+    padding: 12px 25px;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent); /* Softer shimmer */
-    transition: left 0.4s; /* Faster shimmer */
+    margin-top: 10px;
+    margin-bottom: 20px; /* Adjusted margin */
 }
 
-.calculate-btn:first-of-type:hover {
-    transform: translateY(-2px); /* Less dramatic hover */
-    box-shadow: 0 6px 15px rgba(32, 128, 224, 0.5); /* Softer hover shadow */
+.calculate-btn:hover {
+    background-color: #2980b9; /* Darker blue on hover */
 }
 
-.calculate-btn:first-of-type:hover::before {
-    left: 100%;
-}
-
-.calculate-btn:last-of-type {
-    background: var(--background-light); /* Lighter background */
-    color: var(--text-dark);
-    border: 1px solid var(--border-light);
-    backdrop-filter: none; /* Removed blur */
-}
-
-.calculate-btn:last-of-type:hover {
-    background: var(--border-light);
-    border-color: var(--text-medium);
-    transform: translateY(-1px);
-}
-
-/* Results section */
+/* Results Section Styling */
 .results-section h3 {
-    font-family: 'Inter', sans-serif; /* Inter for results title */
-    font-size: 1.4rem;
-    font-weight: 600;
-    color: var(--electric-blue);
-    margin: 2rem 0 1rem 0;
-    padding: 0.8rem 0;
-    border-top: 1px solid var(--border-light); /* Lighter border */
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
+    font-size: 1.6em;
+    color: #2c3e50;
+    margin-top: 25px;
+    margin-bottom: 15px;
+    border-bottom: 1px dashed #ccc;
+    padding-bottom: 10px;
 }
 
-.results-section h3::before {
-    /* REMOVED: content for emoji/icon */
-    /* REMOVED: margin-right, color, animation for emoji/icon */
-}
-
-/* Portfolio summary */
+/* Highlight Card (Portfolio Summary) */
 .highlight-card {
-    background: var(--card-bg); /* Lighter background */
-    backdrop-filter: blur(10px); /* Less blur */
-    border: 1px solid var(--electric-blue); /* Changed from gold to electric-blue */
-    border-radius: 15px; /* Less rounded */
-    padding: 2.5rem;
-    margin-top: 2rem;
-    position: relative;
-    overflow: hidden;
-    box-shadow: var(--shadow-subtle);
-}
-
-.highlight-card::before {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    height: 3px; /* Thinner accent line */
-    background: linear-gradient(90deg, var(--electric-blue), var(--neon-cyan), var(--neon-purple), var(--electric-blue)); /* Changed gradient colors */
-    background-size: 200% 100%;
-    animation: shimmer-subtle 2s linear infinite; /* Shorter, less intense shimmer */
+    background-color: #e8f5e9; /* Light green background */
+    border: 1px solid #a8e6cf; /* Green border */
+    padding: 25px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
 }
 
 .highlight-card h3 {
-    font-family: 'Inter', sans-serif; /* Inter for summary title */
-    color: var(--electric-blue); /* Changed from gold to electric-blue */
-    font-size: 2rem;
-    font-weight: 800;
+    color: #27ae60; /* Darker green */
+    font-size: 2em;
     text-align: center;
-    margin-bottom: 1.5rem;
-    text-shadow: none; /* Removed text shadow */
-}
-
-.highlight-card h3::before {
-    /* REMOVED: content for emoji/icon */
-    /* REMOVED: margin-right, font-size for emoji/icon */
+    margin-bottom: 20px;
 }
 
 .metric-row {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    padding: 1rem 0; /* Less padding */
-    border-bottom: 1px solid var(--border-light); /* Lighter border */
-    transition: all 0.15s ease; /* Slightly faster, less dramatic */
-    border-radius: 5px;
-}
-
-.metric-row:hover {
-    background: rgba(0, 0, 0, 0.02); /* Even more subtle hover */
-    padding-left: 0.75rem; /* Less dramatic padding change */
-    padding-right: 0.75rem;
-    transform: translateX(3px); /* Less dramatic transform */
+    margin-bottom: 12px;
+    padding: 8px 0;
+    border-bottom: 1px dotted #c8e6c9; /* Dotted line for separation */
 }
 
 .metric-row:last-child {
@@ -434,152 +195,40 @@ body::before {
 }
 
 .metric-label {
-    font-family: 'Inter', sans-serif; /* Inter for labels */
-    font-weight: 500;
-    color: var(--text-medium);
-    font-size: 1em;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
+    font-weight: bold;
+    color: #333;
+    font-size: 1.1em;
 }
 
 .metric-value {
-    font-family: 'JetBrains Mono', monospace; /* Keep robotic for values */
-    font-weight: 700;
-    font-size: 1.1rem;
-    color: var(--electric-blue);
-    text-shadow: none; /* Removed text shadow */
+    font-size: 1.1em;
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 .stock-symbol {
-    font-family: 'JetBrains Mono', monospace; /* Keep robotic for symbol */
     text-transform: uppercase;
-    font-weight: 700;
-    color: var(--electric-blue); /* Changed from gold to electric-blue */
-    background: rgba(32, 128, 224, 0.1); /* Lighter background */
-    padding: 0.4rem 0.8rem;
-    border-radius: 5px;
-    border: 1px solid rgba(32, 128, 224, 0.3); /* Changed border color */
-    text-shadow: none; /* Removed text shadow */
+    font-weight: bold;
+    color: #3498db;
 }
 
-/* Error messages */
-.error-message {
-    color: var(--danger-red);
-    font-weight: 600;
-    margin-top: 0.5rem;
-    font-size: 0.9rem;
-    padding: 0.8rem;
-    background: rgba(224, 64, 64, 0.1);
-    border-radius: 8px;
-    border-left: 4px solid var(--danger-red);
-    font-family: 'Inter', sans-serif; /* Inter for error messages */
-}
-
-/* Alert styling */
-.alert {
-    padding: 1rem 1.5rem;
-    border-radius: 8px;
-    margin-bottom: 1.5rem;
-    background: rgba(32, 128, 224, 0.1); /* Lighter background */
-    color: var(--electric-blue);
-    border: 1px solid rgba(32, 128, 224, 0.3);
-    backdrop-filter: none; /* Removed blur */
-    font-family: 'Inter', sans-serif; /* Inter for alerts */
-}
-
-/* Modal styling */
-.modal-content {
-    background: var(--card-bg); /* Lighter background */
-    backdrop-filter: blur(10px); /* Less blur */
-    border: 1px solid var(--border-light);
-    border-radius: 15px;
-    box-shadow: var(--shadow-subtle);
-    color: var(--text-dark);
-}
-
-.modal-header,
-.modal-body,
-.modal-footer {
-    border-color: var(--border-light);
-    padding: 1.5rem;
-}
-
-.modal-header h3 {
-    color: var(--electric-blue);
-    font-family: 'Inter', sans-serif;
-    font-weight: 700;
-}
-
-.btn {
-    padding: 0.8rem 1.5rem;
-    border-radius: 8px;
-    font-weight: 600;
-    font-family: 'Inter', sans-serif;
-    text-transform: uppercase;
-    letter-spacing: 0.03em;
-    transition: all 0.2s ease;
-    border: none;
-}
-
-.btn-primary {
-    background: linear-gradient(135deg, var(--electric-blue), var(--neon-purple));
-    color: white;
-    box-shadow: 0 4px 10px rgba(32, 128, 224, 0.3);
-}
-
-.btn-success {
-    background: linear-gradient(135deg, var(--neon-green), #00cc00);
-    color: white;
-    box-shadow: 0 4px 10px rgba(32, 224, 16, 0.3);
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
+/* Responsive adjustments */
+@media (max-width: 600px) {
     .calculator-page {
-        padding: 1rem;
+        margin: 10px;
+        padding: 15px;
     }
-    
-    .card {
-        padding: 1.5rem;
-    }
-    
+
     .header h1 {
-        font-size: 2.2rem;
+        font-size: 2em;
     }
-    
-    .highlight-card {
-        padding: 1.5rem;
-    }
-    .metric-row {
+
+    .form-row {
         flex-direction: column;
-        align-items: flex-start;
-        gap: 5px;
+        gap: 0;
     }
-}
 
-/* Animations - Dialed back for performance */
-@keyframes glow-subtle {
-    from { box-shadow: 0 0 3px rgba(0, 229, 229, 0.2); }
-    to { box-shadow: 0 0 10px rgba(0, 229, 229, 0.6), 0 0 15px rgba(0, 229, 229, 0.3); }
-}
-
-@keyframes float-subtle {
-    0%, 100% { transform: translateY(0px); }
-    50% { transform: translateY(-5px); }
-}
-
-@keyframes pulse-title { /* Retained for title */
-    0%, 100% { opacity: 1; transform: scale(1); }
-    50% { opacity: 0.9; transform: scale(1.02); }
-}
-
-@keyframes shimmer-subtle { /* Retained for highlight-card border */
-    0% { background-position: -100% 0; }
-    100% { background-position: 100% 0; }
-}
-
-/* Selection styling */
-::selection {
-    background: rgba(0, 229, 229, 0.2);
-    color: var(--text-dark);
+    .form-row .form-group {
+        width: 100%;
+    }
 }
