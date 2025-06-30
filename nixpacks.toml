@@ -2,22 +2,23 @@
 
 # Define the build phase
 [phases.build]
-# Install Python dependencies from requirements.txt
-commands = ["pip install -r requirements.txt", "python manage.py collectstatic --noinput"]
+# Install Python dependencies and run collectstatic during the build
+commands = [
+    "pip install -r requirements.txt",
+    "python manage.py collectstatic --noinput"
+]
 
 # Define the start command for the web service
 [start]
 # This explicitly tells Nixpacks how to run your Gunicorn server
-cmd = "gunicorn project.wsgi:application --bind 0.0.0.0:$PORT" # Ensure ':application' is included for Gunicorn
+cmd = "gunicorn project.wsgi:application --bind 0.0.0.0:$PORT"
 
 # Define environment variables specific to the build environment
 [variables]
 # Ensure Python can find Django and other modules correctly
-# Setting current directory to Python path helps with module imports
-PYTHONPATH = "."
+PYTHONPATH = "." 
 # Explicitly tell Django where its settings file is during the build and run phases
 DJANGO_SETTINGS_MODULE = "project.settings"
 
-# Corrected: 'paths' expects a string, not an array
-# This tells Nixpacks where your main application code is located relative to the project root.
+# Define the path to where the Django application is found
 paths = "." 
