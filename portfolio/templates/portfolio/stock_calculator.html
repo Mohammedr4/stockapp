@@ -1,188 +1,176 @@
-{% extends "user/index.html" %} {# Extend your base template #}
-{% load static %} {# Load static files like your custom JS/CSS for calculator #}
+{% extends "user/index.html" %} {# Extend the base user/index.html for consistent header/footer/messages #}
+{% load static %} {# Load static files for CSS and JS specific to this app #}
 
-{% block start %} {# Content will replace the 'start' block in index.html #}
+{% block start %} {# Start the content block defined in user/index.html #}
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-md-offset-2"> {# Centering using Bootstrap 3 classes #}
-            <div class="panel panel-default">
-                <div class="panel-heading text-center">
-                    <h2 class="panel-title" style="font-size: 2em; color: #337ab7;">Stock Reprice Calculator</h2>
+{# Link to calculator specific CSS #}
+<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}"> 
+
+    <div class="container calculator-page"> {# Added 'calculator-page' class for specific styling #}
+        <div class="header">
+            <h1>Stock Reprice Calculator</h1>
+            <p>Analyse your stock holdings and re-pricing scenarios with precision</p>
+        </div>
+
+        {# User feedback message area #}
+        {# This alert will be shown/hidden by JavaScript based on Django context #}
+        <div class="alert alert-info text-center" id="user-feedback-alert" style="display:none;" role="alert"></div>
+
+        <div class="calculator-grid">
+            <div class="card">
+                <h2>Current Holdings</h2>
+                
+                <div class="form-group">
+                    <label for="stock">Stock Symbol</label>
+                    <input type="text" id="stock" placeholder="e.g., INTL" class="calculator-input"> {# Added class for JS #}
                 </div>
-                <div class="panel-body">
-                    {# Display user feedback message #}
-                    {% if user_feedback_message %}
-                        <div class="alert alert-info text-center" id="user-feedback-alert">
-                            {{ user_feedback_message }}
-                        </div>
-                    {% endif %}
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="shares">Number of Shares</label>
+                        <input type="number" id="shares" placeholder="100" class="calculator-input"> {# Added class for JS #}
+                    </div>
+                    <div class="form-group">
+                        <label for="avgBuyPrice">Average Buy Price ($)</label>
+                        <input type="number" id="avgBuyPrice" placeholder="60.00" step="0.01" class="calculator-input"> {# Added class for JS #}
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Total Cost Price ($)</label>
+                        <div class="display-value" id="costPrice">0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label for="currentPrice">Current Price ($)</label>
+                        <input type="number" id="currentPrice" placeholder="20.48" step="0.01" class="calculator-input"> {# Added class for JS #}
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Current Portfolio Value ($)</label>
+                    <div class="display-value" id="currentValue">0.00</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Profit & Loss (P&L)</label>
+                    <div class="display-value" id="pl">0.00</div>
+                </div>
+            </div>
 
-                    <form id="calculator-form" class="form-horizontal">
-                        {% csrf_token %}
+            <div class="card">
+                <h2>Reprice Calculator</h2>
+                
+                <div class="form-group">
+                    <label for="calculationMode">Calculation Mode</label>
+                    <select id="calculationMode" class="calculator-input"> {# Added class for JS #}
+                        <option value="shares">Calculate by Number of Shares</option>
+                        <option value="price">Calculate by Target Average Price</option>
+                    </select>
+                </div>
+                
+                <div id="sharesModeInputs">
+                    <div class="form-group">
+                        <label for="newShares">Additional Shares to Buy</label>
+                        <input type="number" id="newShares" placeholder="250" class="calculator-input"> {# Added class for JS #}
+                    </div>
+                </div>
+                
+                <div id="priceModeInputs" style="display: none;">
+                    <div class="form-group">
+                        <label for="targetAvgPrice">Target Average Price ($)</label>
+                        <input type="number" id="targetAvgPrice" placeholder="30.00" step="0.01" class="calculator-input"> {# Added class for JS #}
+                    </div>
+                    <div id="priceError" class="error-message" style="display: none;"></div>
+                </div>
+                
+                <button class="calculate-btn calculator-button" id="mainCalculateBtn">Calculate Reprice</button> {# Added ID and class for JS #}
+                <button class="calculate-btn calculator-button" id="mainClearBtn" style="background-color: #f0f0f0; color: #555; margin-top: 10px;">Clear All Inputs</button> {# Added Clear button and IDs #}
+                
+                <div class="results-section">
+                    <h3>Repriced Portfolio</h3>
+                    
+                    <div class="form-row">
                         <div class="form-group">
-                            <label for="initialPrice" class="col-sm-4 control-label">Initial Stock Price:</label>
-                            <div class="col-sm-8">
-                                <input type="number" step="0.01" class="form-control calculator-input" id="initialPrice" placeholder="e.g., 100.00">
-                            </div>
+                            <label>New Average Price ($)</label>
+                            <div class="display-value" id="newAvg">0.00</div>
                         </div>
                         <div class="form-group">
-                            <label for="currentPrice" class="col-sm-4 control-label">Current Stock Price:</label>
-                            <div class="col-sm-8">
-                                <input type="number" step="0.01" class="form-control calculator-input" id="currentPrice" placeholder="e.g., 110.50">
-                            </div>
+                            <label>Total Investment ($)</label>
+                            <div class="display-value" id="totalCost">0.00</div>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Additional Shares Needed</label>
+                            <div class="display-value" id="calculatedShares">0</div>
                         </div>
                         <div class="form-group">
-                            <label for="shares" class="col-sm-4 control-label">Number of Shares:</label>
-                            <div class="col-sm-8">
-                                <input type="number" step="1" class="form-control calculator-input" id="shares" placeholder="e.g., 10">
-                            </div>
+                            <label>Total Shares After Purchase</label>
+                            <div class="display-value" id="totalShares">0</div>
                         </div>
-                        <div class="form-group">
-                            <div class="col-sm-offset-4 col-sm-8">
-                                <button type="button" class="btn btn-primary calculator-button" id="calculateBtn">Calculate</button>
-                                <button type="button" class="btn btn-default calculator-button" id="clearBtn">Clear</button>
-                            </div>
-                        </div>
-                    </form>
-
-                    <div class="results mt-4">
-                        <h4 style="color: #5cb85c;">Results:</h4>
-                        <p><strong>Total Investment:</strong> <span id="totalInvestment">$0.00</span></p>
-                        <p><strong>Current Value:</strong> <span id="currentValue">$0.00</span></p>
-                        <p><strong>Profit/Loss:</strong> <span id="profitLoss">$0.00</span></p>
-                        <p><strong>Percentage Change:</strong> <span id="percentageChange">0.00%</span></p>
+                    </div>
+                    <div class="form-group">
+                        <label>Cost of New Shares ($)</label>
+                        <div class="display-value" id="newCost">0.00</div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
 
-<!-- Login/Signup Pop-up Modal -->
-<div class="modal fade" id="loginSignupModal" tabindex="-1" role="dialog" aria-labelledby="loginSignupModalLabel" aria-hidden="true">
-    <div class="modal-dialog" role="document">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 class="modal-title" id="loginSignupModalLabel">Access Restricted</h3>
-                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                    <span aria-hidden="true">&times;</span>
-                </button>
+        <div class="card highlight-card">
+            <h3>Portfolio Summary</h3>
+            <div class="metric-row">
+                <span class="metric-label">Stock:</span>
+                <span class="metric-value stock-symbol" id="summaryStock">-</span>
             </div>
-            <div class="modal-body">
-                <p>You can use the calculator once as a guest. Please log in or sign up to continue using it.</p>
+            <div class="metric-row">
+                <span class="metric-label">Current P&L:</span>
+                <span class="metric-value" id="summaryPL">$0.00</span>
             </div>
-            <div class="modal-footer">
-                <a href="{{ login_url }}" class="btn btn-primary">Login</a>
-                <a href="{{ register_url }}" class="btn btn-success">Sign Up</a>
+            <div class="metric-row">
+                <span class="metric-label">New Average Price:</span>
+                <span class="metric-value" id="summaryNewAvg">$0.00</span>
+            </div>
+            <div class="metric-row">
+                <span class="metric-label">Break-even Price:</span>
+                <span class="metric-value" id="breakEvenPrice">$0.00</span>
             </div>
         </div>
     </div>
-</div>
 
-<style>
-    /* Add some basic styling to make it look decent with Bootstrap 3 */
-    .panel-default {
-        border-color: #ddd;
-    }
-    .panel-heading {
-        background-color: #f5f5f5;
-        border-bottom: 1px solid #ddd;
-        padding: 10px 15px;
-        border-top-left-radius: 3px;
-        border-top-right-radius: 3px;
-    }
-    .panel-body {
-        padding: 15px;
-    }
-    .calculator-input {
-        /* Optional: add some custom styling */
-        border-radius: 5px;
-    }
-    .calculator-button {
-        border-radius: 5px;
-    }
-</style>
+    <!-- Login/Signup Pop-up Modal (This part remains as is, Bootstrap's default modal) -->
+    <div class="modal fade" id="loginSignupModal" tabindex="-1" role="dialog" aria-labelledby="loginSignupModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="loginSignupModalLabel">Access Restricted</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>You can use the calculator once as a guest. Please log in or sign up to continue using it.</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ login_url }}" class="btn btn-primary">Login</a>
+                    <a href="{{ register_url }}" class="btn btn-success">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script>
-    // This script should be placed at the end of the <body> or linked after jQuery/Bootstrap JS
-    $(document).ready(function() {
-        // Get data from Django context
-        var canUseCalculatorFree = {{ can_use_calculator_free|yesno:"true,false" }};
-        var showLoginPopup = {{ show_login_popup|yesno:"true,false" }};
+    {# Pass Django context variables to JavaScript #}
+    <script>
+        var isUserAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
+        var canUseCalculatorFreeInitial = {{ can_use_calculator_free|yesno:"true,false" }};
+        var showLoginPopupInitial = {{ show_login_popup|yesno:"true,false" }};
         var userFeedbackMessage = "{{ user_feedback_message|escapejs }}";
         var loginUrl = "{{ login_url }}";
         var registerUrl = "{{ register_url }}";
+    </script>
+    {# Link to calculator specific JavaScript after context variables #}
+    <script src="{% static 'portfolio/js/script.js' %}"></script> 
 
-        // Display user feedback message if present
-        if (userFeedbackMessage && !showLoginPopup) {
-            // Optional: You could make this a toast or a more prominent message
-            // For now, it's displayed in the alert-info div
-            $('#user-feedback-alert').text(userFeedbackMessage).show();
-        }
-
-        // Logic to disable calculator and show popup for restricted users
-        if (!canUseCalculatorFree) {
-            // Disable all input fields and buttons related to the calculator
-            $('.calculator-input').prop('disabled', true);
-            $('.calculator-button').prop('disabled', true);
-            
-            // Show the modal
-            $('#loginSignupModal').modal({
-                backdrop: 'static', // Prevent modal from closing when clicking outside
-                keyboard: false      // Prevent modal from closing with the escape key
-            });
-        }
-
-        // Calculator logic (from your previous implementation)
-        $('#calculateBtn').click(function() {
-            if (!canUseCalculatorFree) {
-                // If the button is clicked by a restricted user, show the modal again (should be disabled already)
-                $('#loginSignupModal').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                return; // Stop further execution
-            }
-
-            var initialPrice = parseFloat($('#initialPrice').val());
-            var currentPrice = parseFloat($('#currentPrice').val());
-            var shares = parseInt($('#shares').val());
-
-            if (isNaN(initialPrice) || isNaN(currentPrice) || isNaN(shares) || shares <= 0) {
-                // Use Bootstrap's alert system for user-friendly messages instead of browser alert()
-                alert("Please enter valid numbers for all fields and ensure shares is greater than 0.");
-                return;
-            }
-
-            var totalInvestment = initialPrice * shares;
-            var currentValue = currentPrice * shares;
-            var profitLoss = currentValue - totalInvestment;
-            var percentageChange = ((currentPrice - initialPrice) / initialPrice) * 100;
-
-            $('#totalInvestment').text('$' + totalInvestment.toFixed(2));
-            $('#currentValue').text('$' + currentValue.toFixed(2));
-            $('#profitLoss').text('$' + profitLoss.toFixed(2));
-            $('#percentageChange').text(percentageChange.toFixed(2) + '%');
-        });
-
-        $('#clearBtn').click(function() {
-            if (!canUseCalculatorFree) {
-                $('#loginSignupModal').modal({
-                    backdrop: 'static',
-                    keyboard: false
-                });
-                return;
-            }
-            $('#initialPrice').val('');
-            $('#currentPrice').val('');
-            $('#shares').val('');
-            $('#totalInvestment').text('$0.00');
-            $('#currentValue').text('$0.00');
-            $('#profitLoss').text('$0.00');
-            $('#percentageChange').text('0.00%');
-        });
-    });
-</script>
-
-{% endblock %}
-
+{% endblock start %} {# End the content block #}

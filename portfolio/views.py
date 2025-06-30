@@ -30,11 +30,11 @@ def calculator_view(request):
         # Get current count, default to 0 if not set
         used_count = request.session.get(session_key_name, 0)
 
-        # Check if the session exists and if it's the first visit, or subsequent
+        # IMPORTANT: Logic for one-time use vs. restriction
         if used_count == 0:
             # First time user in this session - allow use and mark it
             request.session[session_key_name] = 1 # Mark as used once
-            request.session.modified = True # IMPORTANT: Ensure session is marked as modified
+            request.session.modified = True # Ensure session is marked as modified
             can_use_calculator_free = True
             user_feedback_message = "Welcome! Use the calculator once for free."
         else:
@@ -42,8 +42,9 @@ def calculator_view(request):
             show_login_popup = True
             user_feedback_message = "Please login or sign up to continue using the calculator."
             # Increment count for tracking, though only 0 vs >0 matters for this logic
-            request.session[session_key_name] = used_count + 1
-            request.session.modified = True # IMPORTANT: Ensure session is marked as modified
+            # This line is primarily for debugging/logging, the 'if used_count == 0' handles restriction
+            request.session[session_key_name] = used_count + 1 
+            request.session.modified = True # Ensure session is marked as modified
 
     context = {
         'title': 'Stock Reprice Calculator',
