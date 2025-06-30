@@ -13,34 +13,37 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 from pathlib import Path
 import os 
 
+# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# --- SECURITY & DEPLOYMENT ---
-# Get SECRET_KEY from environment variable for production, provide a default for local dev.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'your-very-secret-key-for-local-dev-only') 
 
-# Get DEBUG from environment variable. Set to False in production.
+# Quick-start development settings - unsuitable for production
+# See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
+
+# SECURITY WARNING: keep the secret key used in production secret!
+# Use an environment variable for production SECRET_KEY. Provide a default for local dev.
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-@e^6b#s51d7@s9k^j_o7)b$1j8c+7d5&t!_x@m6-k9c!6y9z)a') 
+
+# SECURITY WARNING: don't run with debug turned on in production!
+# Use an environment variable for DEBUG. Default to True for local development.
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
 # ALLOWED_HOSTS: Must list all domains your app will serve from in production.
-# Get from environment variable, split by comma.
+# Get from environment variable, split by comma. Add localhost for local dev if DEBUG is True.
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if DEBUG:
     ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
 
-# CSRF_TRUSTED_ORIGINS: Crucial for login/forms on your deployed domain.
-CSRF_TRUSTED_ORIGINS = [
-    'https://stockapp.up.railway.app', # Replace with your actual Railway domain
-]
 
-# --- APPLICATION DEFINITION ---
+# Application definition
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', # Keep this for static file management
+    'django.contrib.staticfiles',
     'crispy_bootstrap4', 
     'crispy_forms',      
     'user',              
@@ -63,7 +66,7 @@ TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [os.path.join(BASE_DIR, 'templates')], 
-        'APP_DIRS': True, # This tells Django to look for templates inside app directories (e.g., portfolio/templates/portfolio/)
+        'APP_DIRS': True, 
         'OPTIONS': {
             'context_processors': [
                 'django.template.context_processors.debug',
@@ -77,7 +80,10 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'project.wsgi.application'
 
-# --- DATABASE ---
+
+# Database
+# https://docs.djangoproject.com/en/5.0/databases
+
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -85,39 +91,71 @@ DATABASES = {
     }
 }
 
-# --- PASSWORD VALIDATION ---
+
+# Password validation
+# https://docs.djangoproject.com/en/5.0/ref/settings/#auth-password-validators
+
 AUTH_PASSWORD_VALIDATORS = [
-    { 'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator', },
-    { 'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator', },
-    { 'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator', },
-    { 'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator', },
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
 ]
 
-# --- INTERNATIONALIZATION ---
+
+# Internationalization
+# https://docs.djangoproject.com/en/5.0/topics/i18n/
+
 LANGUAGE_CODE = 'en-us'
+
 TIME_ZONE = 'UTC'
+
 USE_I18N = True
+
 USE_TZ = True
 
-# --- STATIC FILES ---
-STATIC_URL = 'static/'
-# IMPORTANT: Do NOT define STATICFILES_DIRS if your static files are inside app's static/ folders.
-# Django's collectstatic will automatically find 'static/' folders inside each INSTALLED_APPS.
-# Your CSS is in portfolio/static/portfolio/, so this is the correct setup.
 
-# This is the directory where `python manage.py collectstatic` will gather all static files.
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/5.0/howto/static-files/
+
+STATIC_URL = 'static/'
+# REMOVED STATICFILES_DIRS: Django's collectstatic will now automatically look for 'static/'
+# folders inside each app listed in INSTALLED_APPS (e.g., portfolio/static/portfolio/).
+# This is the correct way for your current static file structure.
+
+# Directory where Django will collect all static files for production serving
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# --- OTHER SETTINGS ---
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+# Crispy Forms setting
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
+
+# Authentication URLs
 LOGIN_REDIRECT_URL = '/calculator/' 
 LOGOUT_REDIRECT_URL = '/'          
 
-# --- EMAIL SETTINGS (using environment variables) ---
+# Email settings for user confirmation - Using Environment Variables
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'your_email@gmail.com') 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+
+# IMPORTANT: CSRF Trusted Origins for deployment
+CSRF_TRUSTED_ORIGINS = [
+    'https://stockapp.up.railway.app',
+]
