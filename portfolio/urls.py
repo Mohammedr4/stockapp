@@ -14,23 +14,14 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import path, include
-from django.contrib.auth import views as auth_views
-from user import views as user_views
-from portfolio import views as portfolio_views # Import portfolio views
+# Import settings and static for serving static files in production (not recommended for scale)
+from django.conf import settings
+from django.conf.urls.static import static
 
-urlpatterns = [
-    path('admin/', admin.site.urls),
+# ... (your urlpatterns) ...
 
-    # IMPORTANT CHANGE: Make the root URL ('/') the calculator page
-    path('', portfolio_views.calculator_view, name='home'), 
-    
-    # User authentication paths (signup, login, logout)
-    path('login/', user_views.Login, name ='login'),
-    path('logout/', auth_views.LogoutView.as_view(next_page = '/'), name ='logout'), 
-    path('register/', user_views.register, name ='register'),
-
-    # Keep the /calculator/ path for direct access, but / is the main now
-    path('calculator/', portfolio_views.calculator_view, name='portfolio_calculator'), 
-]
+# IMPORTANT: Serve static files in development and production (NOT recommended for production scale)
+# This block is added to make static files visible when DEBUG is False,
+# as you've chosen not to use WhiteNoise or a dedicated static file server.
+if not settings.DEBUG:
+    urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

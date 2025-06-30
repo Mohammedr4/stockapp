@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 """
 
 from pathlib import Path
-import os
+import os 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -21,19 +21,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-# IMPORTANT: Generate a NEW, LONG, RANDOM key for production (e.g., in Railway environment variables)
-# Using os.environ.get() ensures it's not hardcoded in Git.
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-@e^6b#s51d7@s9k^j_o7)b$1j8c+7d5&t!_x@m6-k9c!6y9z)a')
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY', 'django-insecure-@e^6b#s51d7@s9k^j_o7)b$1j8c+7d5&t!_x@m6-k9c!6y9z)a') 
 
 # SECURITY WARNING: don't run with debug turned on in production!
-# Set to False in production via Railway environment variables
 DEBUG = os.environ.get('DJANGO_DEBUG', 'True') == 'True'
 
-# ALLOWED_HOSTS: List your domain(s) here in production
-# On Railway, you'll add the Railway app domain to ALLOWED_HOSTS env var
+# ALLOWED_HOSTS: Must list all domains your app will serve from in production
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 if DEBUG:
-    ALLOWED_HOSTS += ['127.0.0.1', 'localhost'] # For local development
+    ALLOWED_HOSTS += ['127.0.0.1', 'localhost']
 
 
 # Application definition
@@ -42,18 +38,18 @@ INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
-    'django.contrib.sessions', # <-- ENSURE THIS IS PRESENT
+    'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'crispy_bootstrap4', # MUST be before 'crispy_forms' for Bootstrap 4 templates
-    'crispy_forms',      # For better form rendering
-    'user',              # Your user authentication app
-    'portfolio',         # Your stock calculator app
+    'crispy_bootstrap4', 
+    'crispy_forms',      
+    'user',              
+    'portfolio',         
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware', # <-- ENSURE THIS IS PRESENT
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -66,7 +62,7 @@ ROOT_URLCONF = 'project.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -128,29 +124,34 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.0/howto/static-files/
 
 STATIC_URL = 'static/'
-# Define where Django should look for static files across all apps
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),
-]
-# Crucial for deployment: Django collects all static files into this directory
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# REMOVED: STATICFILES_DIRS - Django will now automatically find static/ folders inside INSTALLED_APPS
 
+
+# Default primary key field type
+# https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Crispy Forms setting
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
 
-# IMPORTANT CHANGE: Authentication URLs
-LOGIN_REDIRECT_URL = '/' # Redirect to the home page (now the calculator) after successful login
-LOGOUT_REDIRECT_URL = '/'          # Redirect to home page after logout
+# Authentication URLs
+LOGIN_REDIRECT_URL = '/calculator/' 
+LOGOUT_REDIRECT_URL = '/'          
+
+# Directory where Django will collect all static files for production serving
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+
 
 # Email settings for user confirmation - Using Environment Variables
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
-# Get email user from environment variable, provide a dummy default for local dev if not set
-EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'mraeesi97@gmail.com') # <<< Ensure this is your actual email for local testing
-# Get email password from environment variable - THIS SHOULD NEVER HAVE A DEFAULT
+EMAIL_HOST_USER = os.environ.get('EMAIL_USER', 'your_email@gmail.com') 
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_PASSWORD')
+
+# IMPORTANT: CSRF Trusted Origins for deployment
+CSRF_TRUSTED_ORIGINS = [
+    'https://stockapp.up.railway.app',
+]
