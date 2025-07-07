@@ -1,0 +1,97 @@
+{% extends "user/index.html" %} {# Extend the base user/index.html #}
+{% load static %} {# Load static files for CSS and JS #}
+
+{% block start %}
+
+{# Link to main application CSS #}
+<link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
+
+    <div class="container calculator-page"> {# Reusing calculator-page class for consistent styling #}
+        <div class="header">
+            <h1>Capital Gain/Loss Tax Estimator</h1>
+            <p>Estimate your tax liability on stock sales.</p>
+        </div>
+
+        <div class="calculator-grid"> {# Reusing calculator-grid for layout #}
+            <div class="card">
+                <h2>Transaction Details</h2>
+                
+                <div class="form-group">
+                    <label for="cgeStockSymbol">Stock Symbol</label>
+                    <input type="text" id="cgeStockSymbol" placeholder="e.g., AAPL" class="calculator-input">
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cgeBuyDate">Buy Date</label>
+                        <input type="date" id="cgeBuyDate" class="calculator-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="cgeBuyPrice">Buy Price ($)</label>
+                        <input type="number" id="cgeBuyPrice" placeholder="150.00" step="0.01" class="calculator-input">
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="cgeSellDate">Sell Date</label>
+                        <input type="date" id="cgeSellDate" class="calculator-input">
+                    </div>
+                    <div class="form-group">
+                        <label for="cgeSellPrice">Sell Price ($)</label>
+                        <input type="number" id="cgeSellPrice" placeholder="180.00" step="0.01" class="calculator-input">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="cgeShares">Number of Shares Sold</label>
+                    <input type="number" id="cgeShares" placeholder="100" class="calculator-input">
+                </div>
+
+                <div class="form-group">
+                    <label for="cgeCountry">Tax Country (For simplified rates)</label>
+                    <select id="cgeCountry" class="calculator-input">
+                        <option value="US">United States (Simplified)</option>
+                        <option value="UK">United Kingdom (Simplified)</option>
+                    </select>
+                </div>
+                
+                <button class="calculate-btn calculator-button" id="cgeCalculateBtn">Estimate Tax</button>
+                <button class="calculate-btn calculator-button" id="cgeClearBtn" style="background-color: #f0f0f0; color: #555; margin-top: 10px;">Clear Inputs</button>
+            </div>
+
+            <div class="card">
+                <h2>Estimated Results</h2>
+                
+                <div class="form-group">
+                    <label>Total Capital Gain/Loss ($)</label>
+                    <div class="display-value" id="cgeGainLoss">0.00</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Holding Period</label>
+                    <div class="display-value" id="cgeHoldingPeriod">-</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Estimated Tax Rate</label>
+                    <div class="display-value" id="cgeTaxRate">0%</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Estimated Tax Owed ($)</label>
+                    <div class="display-value" id="cgeTaxOwed">0.00</div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Net Profit After Tax ($)</label>
+                    <div class="display-value" id="cgeNetProfit">0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{# Link to capital gains specific JavaScript #}
+<script src="{% static 'portfolio/js/capital_gains.js' %}"></script>
+
+{% endblock start %}

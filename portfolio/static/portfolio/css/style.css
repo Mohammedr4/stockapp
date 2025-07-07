@@ -81,6 +81,7 @@ body {
 
 .form-group input[type="text"],
 .form-group input[type="number"],
+.form-group input[type="date"], /* ADDED: Style for date input */
 .form-group select {
     width: 100%;
     padding: 12px;
@@ -89,6 +90,13 @@ body {
     font-size: 1em;
     box-sizing: border-box; /* Include padding in width */
 }
+
+/* New: Input error highlighting for calculator inputs */
+.calculator-input.input-error {
+    border-color: #e74c3c !important; /* Red border */
+    box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3) !important; /* Red shadow */
+}
+
 
 /* Form Row for side-by-side inputs */
 .form-row {

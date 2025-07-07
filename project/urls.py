@@ -3,11 +3,11 @@ URL configuration for project project.
 """
 from django.contrib import admin
 from django.urls import path, include
-from django.conf import settings # Import settings
-from django.conf.urls.static import static # Import static file serving helper
+from django.conf import settings 
+from django.conf.urls.static import static 
 
 from user import views as user_views
-from portfolio import views as portfolio_views
+from portfolio import views as portfolio_views # Ensure portfolio views are imported
 from user.views import CustomLogoutView 
 
 urlpatterns = [
@@ -20,9 +20,11 @@ urlpatterns = [
     path('register/', user_views.register, name ='register'),
 
     path('calculator/', portfolio_views.calculator_view, name='portfolio_calculator'), 
+    
+    # NEW: Capital Gains Estimator Page
+    path('capital-gains/', portfolio_views.capital_gains_estimator_view, name='capital_gains_estimator'),
 ]
 
-# IMPORTANT: This block tells Django to serve static files when DEBUG is False.
-# This is a simple solution for small deployments. For large scale, use a CDN.
+# IMPORTANT: Serve static files in production.
 if not settings.DEBUG:
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
