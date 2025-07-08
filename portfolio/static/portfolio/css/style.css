@@ -4,9 +4,16 @@
 body {
     font-family: Arial, sans-serif;
     background-color: #e9ebee; /* Light grey background */
-    margin-top: 50px; /* Space for the fixed navbar */
+    /* REMOVED: margin-top: 50px; */
+    padding-top: 70px; /* ADDED: Space for the fixed navbar, standard Bootstrap approach. Adjust if your navbar height differs. */
     padding-bottom: 20px;
 }
+
+/* This is essential for fixed navbars when jumping to anchor links */
+html {
+    scroll-padding-top: 70px; /* ADDED: Should match body's padding-top for consistent scrolling */
+}
+
 
 .calculator-page {
     max-width: 1200px;
@@ -81,7 +88,7 @@ body {
 
 .form-group input[type="text"],
 .form-group input[type="number"],
-.form-group input[type="date"], /* ADDED: Style for date input */
+.form-group input[type="date"], /* Style for date input */
 .form-group select {
     width: 100%;
     padding: 12px;
@@ -218,6 +225,17 @@ body {
     text-transform: uppercase;
     font-weight: bold;
     color: #3498db;
+}
+
+/* --- Specific Calculator Section Spacing --- */
+/* Add space between different calculator modules */
+.calculator-section {
+    margin-bottom: 40px; 
+}
+
+/* Add a margin to the very first calculator section to separate it from the alert/top of page */
+#reprice-section {
+ * Adjust this value if you need more or less space after the initial alert */
 }
 
 /* Responsive adjustments */

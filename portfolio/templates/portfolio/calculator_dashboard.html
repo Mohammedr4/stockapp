@@ -1,0 +1,127 @@
+{% extends "user/index.html" %} {# Extend the base user/index.html #}
+{% load static %} {# Load static files for CSS and JS #}
+
+{% block title %}Stock Calculators - Dashboard{% endblock title %} {# Set a specific title for the dashboard #}
+
+{% block extra_head %}
+    {# Link to calculator specific CSS (now applied to the entire dashboard) #}
+    <link rel="stylesheet" href="{% static 'portfolio/css/style.css' %}">
+    {# The custom CSS for spacing and scroll-padding will go in style.css #}
+{% endblock extra_head %}
+
+{# Your existing navbar block (no changes needed here) #}
+{% block navbar %}
+<header class="row">
+    <nav class="navbar navbar-inverse navbar-fixed-top">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button class="navbar-toggle" data-toggle="collapse" data-target="#mainNavBar">
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="{% url "home" %}">Stock Calculator App</a>
+            </div>
+            <div class="collapse navbar-collapse" id="mainNavBar">
+                <ul class="nav navbar-nav"> {# Main navigation for calculator sections #}
+                    <li>
+                        <a href="#reprice-section">Stock Reprice</a>
+                    </li>
+                    <li>
+                        <a href="#capital-gains-section">Capital Gains Estimator</a>
+                    </li>
+                    {# Add more links here as you expand features #}
+                </ul>
+                <ul class="nav navbar-nav navbar-right"> {# User authentication links #}
+                    {% if user.is_authenticated %}
+                    <li>
+                        <form method="post" action="{% url 'logout' %}" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-link navbar-btn" style="color: #9d9d9d; text-decoration: none; padding: 15px 0px;">
+                                <span class="glyphicon glyphicon-log-out"></span> Logout ({{ user.username }})
+                            </button>
+                        </form>
+                    </li>
+                    {% else %}
+                    <li><a href="{% url "register" %}"><span class="glyphicon glyphicon-user"></span> Sign up</a></li>
+                    <li><a href="{% url "login" %}"><span class="glyphicon glyphicon-log-in"></span> Log in</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+{% endblock navbar %}
+
+{% block start %} {# Main content block for the dashboard #}
+
+{# REMOVED style="margin-top: 80px;" from here #}
+<div class="container-fluid"> 
+    {# User feedback message area #}
+    <div class="alert alert-info text-center" id="user-feedback-alert" style="display:none;" role="alert"></div>
+
+    {# Stock Reprice Calculator Section #}
+    <div id="reprice-section" class="calculator-section"> 
+        {% include 'portfolio/_stock_reprice_content.html' %} 
+    </div>
+
+    {# Capital Gains Estimator Section #}
+    <div id="capital-gains-section" class="calculator-section">
+        {% include 'portfolio/_capital_gains_content.html' %} 
+    </div>
+
+    {# Add more calculator sections here as you expand features #}
+
+</div>
+
+{% endblock start %}
+
+{% block extra_body_scripts %}
+    {# Your existing JS variables and script.js link #}
+    <script>
+        var isUserAuthenticated = {{ request.user.is_authenticated|yesno:"true,false" }};
+        var canUseCalculatorFreeInitial = {{ can_use_calculator_free|yesno:"true,false" }};
+        var showLoginPopupInitial = {{ show_login_popup|yesno:"true,false" }};
+        var userFeedbackMessage = "{{ user_feedback_message|escapejs }}";
+        var loginUrl = "{% url 'login' %}";
+        var registerUrl = "{% url 'register' %}";
+        var activeTab = "{{ active_tab|escapejs }}"; 
+    </script>
+    <script src="{% static 'portfolio/js/script.js' %}"></script>
+
+    {# Your instant jump JavaScript (no changes needed here from previous step) #}
+    <script>
+        $(document).ready(function() {
+            // Function to handle instant jump and header offset
+            function scrollToId(id) {
+                var targetElement = $(id);
+                if (targetElement.length) {
+                    var headerOffset = $('nav.navbar-fixed-top').outerHeight() || 0; 
+                    $('html, body').scrollTop(targetElement.offset().top - headerOffset - 2); 
+                }
+            }
+
+            // On page load, jump to the specific section if activeTab is set or hash in URL
+            if (activeTab === 'capital_gains') {
+                scrollToId('#capital-gains-section');
+            } else if (activeTab === 'reprice') {
+                scrollToId('#reprice-section');
+            } else if (window.location.hash) {
+                scrollToId(window.location.hash);
+            } 
+            // Removed the default scroll to #reprice-section if no activeTab or hash,
+            // as the body padding-top will handle initial positioning.
+            
+            // Handle navigation clicks for instant jump
+            $('a[href^="#"]').on('click', function(event) {
+                var targetId = this.hash; 
+                if (targetId) {
+                    event.preventDefault(); 
+                    window.location.hash = targetId; 
+                    scrollToId(targetId); 
+                }
+            });
+        });
+    </script>
+{% endblock extra_body_scripts %}

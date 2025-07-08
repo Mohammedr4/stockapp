@@ -11,7 +11,7 @@
   <meta name="language" content="English">
   <meta name="author" content="Your Name">
 
-  <title>{{title}} - Stock Reprice Calculator</title>
+  <title>{% block title %}Stock Calculator App{% endblock title %}</title> {# Now a block for dynamic titles #}
 
   <!-- Bootstrap CSS from CDN -->
   <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" xintegrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
@@ -19,9 +19,6 @@
   <!-- Font Awesome for icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
 
-  <!-- Custom CSS for the user app (if any) -->
-  {# <link rel="stylesheet" type="text/css" href="{% static "index.css" %}" /> #} 
-  
   <!-- jQuery (needed for Bootstrap JS) -->
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
   <!-- Bootstrap JS from CDN -->
@@ -38,11 +35,15 @@
     }
   </style>
 
+  {% block extra_head %}{% endblock extra_head %} {# New block for additional head content (e.g., page-specific CSS) #}
+
 </head>
 
 <body class="container-fluid">
 
-  <!-- Navbar -->
+  <!-- Navbar - Now a block that can be completely overridden by child templates -->
+  {% block navbar %}
+  {# Default navbar content. This will be replaced by calculator_dashboard.html #}
   <header class="row">
     <nav class="navbar navbar-inverse navbar-fixed-top">
       <div class="container-fluid">
@@ -53,15 +54,12 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
           </button>
-          <a class="navbar-brand" href="{% url "home" %}">Stock Calculator App</a>
+          <a class="navbar-brand" href="{% url "home" %}">Stock Calculator App (Default)</a>
         </div>
         <div class="collapse navbar-collapse" id="mainNavBar">
           <ul class="nav navbar-nav navbar-right">
-            <li><a href="{% url "home" %}">Home</a></li> {# Now links to the calculator #}
+            <li><a href="{% url "home" %}">Home (Default)</a></li>
             {% if user.is_authenticated %}
-            <li><a href="{% url "portfolio_calculator" %}">Calculator</a></li> {# Still useful for direct link, if needed #}
-            {# NEW LINK FOR CAPITAL GAINS ESTIMATOR #}
-            <li><a href="{% url "capital_gains_estimator" %}">Capital Gains</a></li>
             <li>
                 <form method="post" action="{% url 'logout' %}" style="display: inline;">
                     {% csrf_token %}
@@ -79,6 +77,7 @@
       </div>
     </nav>
   </header>
+  {% endblock navbar %}
   <br/><br/><br/> {# Add spacing for fixed navbar #}
 
   <!-- Message display area -->
@@ -95,22 +94,14 @@
     {% endif %}
   </div>
 
+  <!-- Main content block - This is where page-specific content will go -->
   <div class="row">
     {% block start %}
-    {# This block will now likely show simpler content, or could be empty if calculator is the main view #}
-    <center>
-        <h1>Welcome to the Stock Calculator App!</h1>
-        <p>This is your home page.</p>
-        {% if not user.is_authenticated %}
-            <p>Ready to start calculating? The calculator is on this page!</p>
-            <p>Already have an account? <a href="{% url 'login' %}">Log In</a></p>
-            <p>New here? <a href="{% url 'register' %}">Sign Up</a></p>
-        {% else %}
-            <p>You are logged in as {{ user.username }}. Enjoy unlimited calculations!</p>
-        {% endif %}
-    </center>
-    {% endblock %}
+    {# This block is intentionally left empty. Content will be provided by extending templates. #}
+    {% endblock start %}
   </div>
+
+  {% block extra_body_scripts %}{% endblock extra_body_scripts %} {# New block for scripts at end of body #}
 
 </body>
 </html>

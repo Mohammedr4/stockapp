@@ -1,0 +1,136 @@
+{# This file contains only the content for the Stock Reprice Calculator tab #}
+{# It does NOT extend any base template and does NOT load static files directly #}
+
+<div class="container calculator-page">
+    <div class="header">
+        <h1>Stock Reprice Calculator</h1>
+        <p>Analyse your stock holdings and re-pricing scenarios with precision</p>
+    </div>
+
+    {# User feedback message area #}
+    {# This alert will be shown/hidden by JavaScript based on Django context #}
+    <div class="alert alert-info text-center" id="user-feedback-alert" style="display:none;" role="alert"></div>
+
+    <div class="calculator-grid">
+        <div class="card">
+            <h2>Current Holdings</h2>
+            
+            <div class="form-group">
+                <label for="stock">Stock Symbol</label>
+                <input type="text" id="stock" placeholder="e.g., INTL" class="calculator-input">
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="shares">Number of Shares</label>
+                    <input type="number" id="shares" placeholder="100" class="calculator-input">
+                </div>
+                <div class="form-group">
+                    <label for="avgBuyPrice">Average Buy Price ($)</label>
+                    <input type="number" id="avgBuyPrice" placeholder="60.00" step="0.01" class="calculator-input">
+                </div>
+            </div>
+            
+            <div class="form-row">
+                <div class="form-group">
+                    <label>Total Cost Price ($)</label>
+                    <div class="display-value" id="costPrice">0.00</div>
+                </div>
+                <div class="form-group">
+                    <label for="currentPrice">Current Price ($)</label>
+                    <input type="number" id="currentPrice" placeholder="20.48" step="0.01" class="calculator-input">
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label>Current Portfolio Value ($)</label>
+                <div class="display-value" id="currentValue">0.00</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Profit & Loss (P&L)</label>
+                <div class="display-value" id="pl">0.00</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Reprice Calculator</h2>
+            
+            <div class="form-group">
+                <label for="calculationMode">Calculation Mode</label>
+                <select id="calculationMode" class="calculator-input">
+                    <option value="shares">Calculate by Number of Shares</option>
+                    <option value="price">Calculate by Target Average Price</option>
+                </select>
+            </div>
+            
+            <div id="sharesModeInputs">
+                <div class="form-group">
+                    <label for="newShares">Additional Shares to Buy</label>
+                    <input type="number" id="newShares" placeholder="250" class="calculator-input">
+                </div>
+            </div>
+            
+            <div id="priceModeInputs" style="display: none;">
+                <div class="form-group">
+                    <label for="targetAvgPrice">Target Average Price ($)</label>
+                    <input type="number" id="targetAvgPrice" placeholder="30.00" step="0.01" class="calculator-input">
+                </div>
+                <div id="priceError" class="error-message" style="display: none;"></div>
+            </div>
+            
+            <button class="calculate-btn calculator-button" id="mainCalculateBtn">Calculate Reprice</button>
+            <button class="calculate-btn calculator-button" id="mainClearBtn" style="background-color: #f0f0f0; color: #555; margin-top: 10px;">Clear All Inputs</button>
+            
+            <div class="results-section">
+                <h3>Repriced Portfolio</h3>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>New Average Price ($)</label>
+                        <div class="display-value" id="newAvg">0.00</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Investment ($)</label>
+                        <div class="display-value" id="totalCost">0.00</div>
+                    </div>
+                </div>
+                
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Additional Shares Needed</label>
+                        <div class="display-value" id="calculatedShares">0</div>
+                    </div>
+                    <div class="form-group">
+                        <label>Total Shares After Purchase</label>
+                        <div class="display-value" id="totalShares">0</div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Cost of New Shares ($)</label>
+                    <div class="display-value" id="newCost">0.00</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Login/Signup Pop-up Modal (This part remains as is, Bootstrap's default modal) -->
+    <div class="modal fade" id="loginSignupModal" tabindex="-1" role="dialog" aria-labelledby="loginSignupModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3 class="modal-title" id="loginSignupModalLabel">Access Restricted</h3>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p>You can use the calculator once as a guest. Please log in or sign up to continue using it.</p>
+                </div>
+                <div class="modal-footer">
+                    <a href="{{ login_url }}" class="btn btn-primary">Login</a>
+                    <a href="{{ register_url }}" class="btn btn-success">Sign Up</a>
+                </div>
+            </div>
+        </div>
+    </div>
