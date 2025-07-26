@@ -1,0 +1,486 @@
+{# calculators/templates/calculators/capital_gains_estimator.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capital Gains Estimator{% endblock %}
+
+{% block content %}
+    <div class="container calculator-page">
+        <div class="header">
+            <h1>Capital Gains Estimator</h1>
+            <p>Calculate your potential capital gains or losses and estimate your tax liability for stocks based on UK or US rules.</p>
+        </div>
+
+        <form method="post" class="calculator-form">
+            {% csrf_token %} {# Django security tag: MANDATORY for all forms #}
+
+            {% if form.non_field_errors %}
+                <div class="alert alert-danger">
+                    {% for error in form.non_field_errors %}
+                        <p>{{ error }}</p>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            {% if messages %}
+                <div class="messages">
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+
+            <div class="calculator-grid">
+                {# Card 1: Transaction Details #}
+                <div class="card">
+                    <h2>Transaction Details</h2>
+
+                    <div class="form-group">
+                        <label for="{{ form.asset_name.id_for_label }}">{{ form.asset_name.label }}</label>
+                        {{ form.asset_name }}
+                        {% if form.asset_name.help_text %}<span class="help-text">{{ form.asset_name.help_text }}</span>{% endif %}
+                        {% if form.asset_name.errors %}<ul class="error-list">{% for error in form.asset_name.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.tax_rule_country.id_for_label }}">{{ form.tax_rule_country.label }}</label>
+                        {{ form.tax_rule_country }}
+                        {% if form.tax_rule_country.help_text %}<span class="help-text">{{ form.tax_rule_country.help_text }}</span>{% endif %}
+                        {% if form.tax_rule_country.errors %}<ul class="error-list">{% for error in form.tax_rule_country.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.purchase_date.id_for_label }}">{{ form.purchase_date.label }}</label>
+                            {{ form.purchase_date }}
+                            {% if form.purchase_date.help_text %}<span class="help-text">{{ form.purchase_date.help_text }}</span>{% endif %}
+                            {% if form.purchase_date.errors %}<ul class="error-list">{% for error in form.purchase_date.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.sale_date.id_for_label }}">{{ form.sale_date.label }}</label>
+                            {{ form.sale_date }}
+                            {% if form.sale_date.help_text %}<span class="help-text">{{ form.sale_date.help_text }}</span>{% endif %}
+                            {% if form.sale_date.errors %}<ul class="error-list">{% for error in form.sale_date.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.shares_purchased.id_for_label }}">{{ form.shares_purchased.label }}</label>
+                            {{ form.shares_purchased }}
+                            {% if form.shares_purchased.help_text %}<span class="help-text">{{ form.shares_purchased.help_text }}</span>{% endif %}
+                            {% if form.shares_purchased.errors %}<ul class="error-list">{% for error in form.shares_purchased.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                        {#  >>> ADDED shares_sold FIELD HERE <<<  #}
+                        <div class="form-group">
+                            <label for="{{ form.shares_sold.id_for_label }}">{{ form.shares_sold.label }}</label>
+                            {{ form.shares_sold }}
+                            {% if form.shares_sold.help_text %}<span class="help-text">{{ form.shares_sold.help_text }}</span>{% endif %}
+                            {% if form.shares_sold.errors %}<ul class="error-list">{% for error in form.shares_sold.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="{{ form.purchase_price_per_share.id_for_label }}">{{ form.purchase_price_per_share.label }}</label>
+                            {{ form.purchase_price_per_share }}
+                            {% if form.purchase_price_per_share.help_text %}<span class="help-text">{{ form.purchase_price_per_share.help_text }}</span>{% endif %}
+                            {% if form.purchase_price_per_share.errors %}<ul class="error-list">{% for error in form.purchase_price_per_share.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.sale_price_per_share.id_for_label }}">{{ form.sale_price_per_share.label }}</label>
+                            {{ form.sale_price_per_share }}
+                            {% if form.sale_price_per_share.help_text %}<span class="help-text">{{ form.sale_price_per_share.help_text }}</span>{% endif %}
+                            {% if form.sale_price_per_share.errors %}<ul class="error-list">{% for error in form.sale_price_per_share.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="{{ form.commission_purchase.id_for_label }}">{{ form.commission_purchase.label }}</label>
+                        {{ form.commission_purchase }}
+                        {% if form.commission_purchase.help_text %}<span class="help-text">{{ form.commission_purchase.help_text }}</span>{% endif %}
+                        {% if form.commission_purchase.errors %}<ul class="error-list">{% for error in form.commission_purchase.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+                    <div class="form-group">
+                        <label for="{{ form.commission_sale.id_for_label }}">{{ form.commission_sale.label }}</label>
+                        {{ form.commission_sale }}
+                        {% if form.commission_sale.help_text %}<span class="help-text">{{ form.commission_sale.help_text }}</span>{% endif %}
+                        {% if form.commission_sale.errors %}<ul class="error-list">{% for error in form.commission_sale.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                    </div>
+
+                    <button type="submit" class="calculate-btn calculator-button" id="calculateCapitalGainsBtn">Calculate Capital Gains</button>
+                    <button type="reset" class="calculate-btn calculator-button" id="clearCapitalGainsBtn" style="background-color: #f0f0f0; color: #555; margin-top: 10px;">Clear All</button>
+                </div>
+
+                {# Card 2: Tax Estimation and Capital Gains Summary #}
+                <div class="card" id="taxEstimationSummaryCard">
+                    <h2>Your Tax Situation</h2>
+                    <p>Please provide your estimated annual taxable income to help calculate the tax.</p>
+
+                    {# UK Specific Inputs - initially shown if UK, or hidden/shown by JS later #}
+                    <div id="ukTaxInputs" {% if form.tax_rule_country.value != 'UK' %}style="display: none;"{% endif %}>
+                        <div class="form-group">
+                            <label for="{{ form.annual_taxable_income.id_for_label }}">Your Annual Taxable Income (£)</label>
+                            {{ form.annual_taxable_income }}
+                            {% if form.annual_taxable_income.help_text %}<span class="help-text">{{ form.annual_taxable_income.help_text }}</span>{% endif %}
+                            {% if form.annual_taxable_income.errors %}<ul class="error-list">{% for error in form.annual_taxable_income.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+
+                    {# US Specific Inputs - initially shown if US, or hidden/shown by JS later #}
+                    <div id="usTaxInputs" {% if form.tax_rule_country.value != 'US' %}style="display: none;"{% endif %}>
+                        <div class="form-group">
+                            <label for="{{ form.us_filing_status.id_for_label }}">Filing Status</label>
+                            {{ form.us_filing_status }}
+                            {% if form.us_filing_status.help_text %}<span class="help-text">{{ form.us_filing_status.help_text }}</span>{% endif %}
+                            {% if form.us_filing_status.errors %}<ul class="error-list">{% for error in form.us_filing_status.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                        <div class="form-group">
+                            <label for="{{ form.annual_taxable_income.id_for_label }}">Your Annual Taxable Income ($)</label>
+                            {# Re-using annual_taxable_income field, just relabeling for US context #}
+                            {{ form.annual_taxable_income }}
+                            {% if form.annual_taxable_income.help_text %}<span class="help-text">{{ form.annual_taxable_income.help_text }}</span>{% endif %}
+                            {% if form.annual_taxable_income.errors %}<ul class="error-list">{% for error in form.annual_taxable_income.errors %}<li>{{ error }}</li>{% endfor %}</ul>{% endif %}
+                        </div>
+                    </div>
+                    
+                    <hr> {# Separator for clarity #}
+
+                    <h2>Capital Gains Summary</h2>
+
+                    {# The results below will only show if 'results.calculation_successful' is true #}
+                    {% if results.calculation_successful %}
+                        <div class="form-group">
+                            <label>Total Cost Basis ({{ results.tax_currency }})</label>
+                            <div class="display-value" id="totalCostBasis">{{ results.total_purchase_cost|floatformat:2 }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Total Proceeds ({{ results.tax_currency }})</label>
+                            <div class="display-value" id="totalProceeds">{{ results.total_sale_proceeds|floatformat:2 }}</div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Gross Gain / Loss ({{ results.tax_currency }})</label>
+                            <div class="display-value" id="grossGainLoss" style="color: {% if results.gross_gain_loss >= 0 %}green{% else %}red{% endif %};">
+                                {{ results.gross_gain_loss|floatformat:2 }}
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label>Holding Period</label>
+                            <div class="display-value" id="holdingPeriod">{{ results.holding_period }}</div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label>Gain / Loss Type</label>
+                            <div class="display-value" id="gainLossType">{{ results.gain_loss_type }}</div>
+                        </div>
+
+                        {# Only show tax specific results if tax calculation was successful #}
+                        {% if results.tax_calculation_successful %}
+                            <div class="form-group">
+                                <label>Estimated Capital Gains Tax ({{ results.tax_currency }})</label>
+                                <div class="display-value" id="estimatedTaxPayable">{{ results.estimated_tax|floatformat:2 }}</div>
+                            </div>
+                            <div class="form-group">
+                                <label>Net Gain / Loss (After Tax) ({{ results.tax_currency }})</label>
+                                <div class="display-value" id="netGainLoss" style="color: {% if results.net_gain_loss >= 0 %}green{% else %}red{% endif %};">
+                                    {{ results.net_gain_loss|floatformat:2 }}
+                                </div>
+                            </div>
+                        {% else %}
+                             <div class="form-group">
+                                <p class="initial-message">Fill in your tax situation to see estimated tax.</p>
+                            </div>
+                        {% endif %}
+
+                    {% else %}
+                        <div class="form-group">
+                            <p class="initial-message">Enter your transaction details and click "Calculate" to see the summary here.</p>
+                        </div>
+                    {% endif %}
+
+                    <div class="disclaimer">
+                        <p><em>Disclaimer: This is an estimation for general guidance only, based on simplified tax rules. It is not financial or tax advice. Consult a qualified tax professional for personalized guidance.</em></p>
+                    </div>
+
+                </div> {# End Card 2 #}
+            </div> {# End Calculator Grid #}
+        </form>
+    </div>
+
+    {# Inject specific CSS for this calculator. You can move this to a static CSS file if you prefer. #}
+    <style>
+        .calculator-page {
+            max-width: 1200px; /* Wider container for side-by-side */
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #f8f8f8; /* Lighter background for the page content */
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); /* Lighter shadow */
+            text-align: center;
+        }
+
+        .calculator-page .header h1 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+
+        .calculator-page .header p {
+            color: #555;
+            margin-bottom: 30px;
+        }
+
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr; /* Two columns, equal width */
+            gap: 30px; /* Space between columns */
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) { /* Adjust for smaller screens */
+            .calculator-grid {
+                grid-template-columns: 1fr; /* Stack columns on smaller screens */
+            }
+        }
+
+        .card {
+            background-color: #fff;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08); /* Card specific shadow */
+            text-align: left;
+            display: flex; /* Use flexbox for vertical layout within card */
+            flex-direction: column;
+        }
+
+        .card h2 {
+            color: #27ae60;
+            font-size: 1.6em;
+            margin-top: 0;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #333;
+            font-size: 0.95em;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group input[type="date"],
+        .form-group select {
+            width: 100%; /* Make inputs fill their container */
+            padding: 10px 12px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            font-size: 1em;
+            box-sizing: border-box; /* Include padding and border in the element's total width and height */
+            background-color: #fcfcfc;
+        }
+
+        .form-group input[type="date"] {
+            /* Some browsers may need specific height for date inputs */
+            min-height: 40px; 
+        }
+
+        .form-group select {
+            appearance: none; /* Remove default select arrow */
+            background-image: url('data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23000%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-13.9%202.3-13%205.4zM287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-6.5%200-13.9%202.3-13%205.4z%22%2F%3E%3C%2Fsvg%3E'); /* Custom arrow */
+            background-repeat: no-repeat;
+            background-position: right 10px center;
+            background-size: 12px;
+            padding-right: 30px; /* Space for the arrow */
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 20px; /* Space between items in a row */
+            margin-bottom: 18px;
+        }
+        .form-row .form-group {
+            flex: 1; /* Each group takes equal space in the row */
+            margin-bottom: 0; /* Override default margin */
+        }
+
+        .help-text {
+            font-size: 0.8em;
+            color: #777;
+            margin-top: 5px;
+            display: block;
+        }
+
+        .error-list {
+            color: #e74c3c;
+            font-size: 0.85em;
+            margin-top: 5px;
+            padding-left: 0;
+            list-style: none;
+        }
+
+        .calculator-button {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            margin-top: 15px; /* Spacing between buttons */
+        }
+
+        .calculate-btn {
+            background-color: #27ae60;
+            color: white;
+        }
+        .calculate-btn:hover {
+            background-color: #2ecc71;
+            transform: translateY(-2px);
+        }
+
+        #clearCapitalGainsBtn {
+            background-color: #ddd;
+            color: #555;
+        }
+        #clearCapitalGainsBtn:hover {
+            background-color: #ccc;
+            transform: translateY(-2px);
+        }
+
+        .disclaimer {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 30px;
+            padding-top: 15px;
+            border-top: 1px solid #eee;
+            text-align: center;
+        }
+
+        hr {
+            border: 0;
+            border-top: 1px solid #eee;
+            margin: 25px 0;
+        }
+
+        .display-value {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #2c3e50;
+            background-color: #f0f0f0;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            margin-top: 5px;
+        }
+        .display-value.positive { color: #27ae60; }
+        .display-value.negative { color: #e74c3c; }
+
+        .initial-message {
+            text-align: center;
+            font-style: italic;
+            color: #888;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+
+        /* Styling for Django messages */
+        .messages {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 20px;
+        }
+
+        .messages .alert {
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            font-size: 0.9em;
+        }
+
+        .messages .alert-info {
+            background-color: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+
+        .messages .alert-warning {
+            background-color: #fff3cd;
+            color: #856404;
+            border: 1px solid #ffeeba;
+        }
+
+        .messages .alert-error { /* Django's 'error' tag maps to danger visually */
+            background-color: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+    </style>
+
+    <script>
+        // Basic JavaScript to show/hide tax inputs based on selection
+        document.addEventListener('DOMContentLoaded', function() {
+            const taxCountrySelect = document.getElementById('id_tax_rule_country'); // Django ID
+            const ukInputs = document.getElementById('ukTaxInputs');
+            const usInputs = document.getElementById('usTaxInputs');
+            const annualTaxableIncomeField = document.getElementById('id_annual_taxable_income');
+
+            function toggleTaxInputs() {
+                if (taxCountrySelect.value === 'UK') {
+                    ukInputs.style.display = 'block';
+                    usInputs.style.display = 'none';
+                    // Clear US specific fields if switching from US to UK
+                    document.getElementById('id_us_filing_status').value = ''; 
+                } else if (taxCountrySelect.value === 'US') {
+                    ukInputs.style.display = 'none';
+                    usInputs.style.display = 'block';
+                    // The annual_taxable_income field is reused, no need to clear.
+                } else {
+                    // If no country or default is selected, hide both
+                    ukInputs.style.display = 'none';
+                    usInputs.style.display = 'none';
+                    document.getElementById('id_us_filing_status').value = ''; 
+                    annualTaxableIncomeField.value = ''; // Clear income if no country selected
+                }
+            }
+
+            // Initial call on page load
+            toggleTaxInputs();
+
+            // Listen for changes on the country select
+            taxCountrySelect.addEventListener('change', toggleTaxInputs);
+
+            // "Clear All" button functionality
+            const clearButton = document.getElementById('clearCapitalGainsBtn');
+            clearButton.addEventListener('click', function() {
+                // Reset the form
+                document.querySelector('.calculator-form').reset();
+                // Manually trigger the select change to reset visibility
+                toggleTaxInputs(); 
+                // Clear previous results displayed and reset colors
+                document.getElementById('totalCostBasis').innerText = '0.00';
+                document.getElementById('totalProceeds').innerText = '0.00';
+                document.getElementById('grossGainLoss').innerText = '0.00';
+                document.getElementById('netGainLoss').innerText = '0.00';
+                document.getElementById('holdingPeriod').innerText = 'N/A';
+                document.getElementById('gainLossType').innerText = 'N/A';
+                document.getElementById('estimatedTaxPayable').innerText = '0.00';
+                document.getElementById('grossGainLoss').style.color = ''; // Reset color
+                document.getElementById('netGainLoss').style.color = ''; // Reset color
+            });
+        });
+    </script>
+{% endblock %}

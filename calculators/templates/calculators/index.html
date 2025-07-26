@@ -1,0 +1,33 @@
+{# calculators/templates/calculators/index.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calculators - StockSavvy{% endblock %}
+
+{% block content %}
+<div class="container calculator-page">
+    <div class="header">
+        <h1>Our Calculators</h1>
+        <p>Explore our range of financial calculators to assist your investment decisions.</p>
+    </div>
+
+    <div class="calculator-list-grid">
+        {% for calculator in calculators %}
+        <div class="calculator-card">
+            <div class="icon">
+                <i class="{{ calculator.icon }}"></i>
+            </div>
+            <h3>{{ calculator.name }}</h3>
+            <p>{{ calculator.description }}</p>
+            <a href="{% url calculator.url_name %}" class="btn btn-primary">Go to Calculator</a>
+        </div>
+        {% empty %}
+        <p>No calculators available yet.</p>
+        {% endfor %}
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_body %}
+    {# You might not need specific JS here, or it can be very simple for the index page #}
+{% endblock extra_body %}

@@ -1,0 +1,172 @@
+{# core/templates/core/landing_page.html #}
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}StockSavvy: Your Smart Investment Navigator{% endblock %}
+
+{% block content %}
+    {% if user.is_authenticated %}
+        <header class="hero-section" style="padding-bottom: 60px;"> {# Slight padding adjust for logged-in state #}
+            <h1>Welcome back, {{ user.username }}!</h1>
+            <p>Ready to manage your investments or start a new calculation?</p>
+            <div style="margin-top: 40px;"> {# Container for buttons with some top margin #}
+                <a href="{% url 'calculators:calculators_index' %}" class="cta-button">Go to Calculators</a>
+                {# Assuming 'portfolio:portfolio_list' is your portfolio URL name #}
+                <a href="{% url 'portfolio:portfolio_list' %}" class="cta-button" style="background-color: #3498db; margin-left: 15px;">View My Portfolio</a>
+            </div>
+        </header>
+    {% else %}
+        {# Original hero-section content for guests - DO NOT CHANGE THIS #}
+        <header class="hero-section">
+            <h1>Unlock Smarter Investment Decisions.</h1>
+            <p>Calculate stock gains, manage your portfolio, and project future wealth with intuitive, powerful tools. <strong>Your first step is instantly free.</strong></p>
+            <a href="{% url 'calculators:stock_reprice_calculator' %}" class="cta-button">Calculate My Stock Average Now (No Account Needed!)</a>
+            <p style="font-size: 0.9em; margin-top: 15px;">See how it works instantly. No credit card, no commitment, just clarity.</p>
+        </header>
+    {% endif %}
+
+    {# This section is relevant for both authenticated and unauthenticated users, so it's outside the if/else #}
+    <section class="features-section">
+        <h2>Tools Designed for Your Financial Growth.</h2>
+        <div class="feature-cards">
+            <div class="card">
+                <h3>Stock Reprice Calculator</h3>
+                <p>See how buying more shares impacts your average cost, total investment, and profit potential. Plan your next move with precision.</p>
+            </div>
+            <div class="card">
+                <h3>Capital Gains Estimator</h3>
+                <p>Navigate Taxes with Confidence.</p>
+                <p>Estimate potential capital gains or losses and understand your tax implications for UK and US rules before you sell.</p>
+            </div>
+            <div class="card">
+                <h3>Compound Calculator</h3>
+                <p>Project Your Future Wealth.</p>
+                <p>Visualize the power of compounding. Calculate the future value of your investments with regular contributions and varying interest.</p>
+            </div>
+            <div class="card">
+                <h3>Portfolio Management Tools</h3>
+                <p>Track & Master Your Holdings.</p>
+                <p>Keep a personal record of your stock investments, see real-time P&L, and gain insights into your overall portfolio health.</p>
+            </p>
+            </div>
+        </div>
+    </section>
+
+    {% if not user.is_authenticated %} {# This section is ONLY for guests - DO NOT CHANGE THIS #}
+        <section class="signup-section">
+            <h2>Unlock Your Full Investment Potential – It's Free.</h2>
+            <ul>
+                <li>✔ Save Your Progress: Keep a historical record of all your calculations and insights.</li>
+                <li>✔ Personalized Portfolio: Track your actual stock holdings, their performance, and overall portfolio value.</li>
+                <li>✔ Unlimited Access: Enjoy every calculator and feature without restriction, anytime you need them.</li>
+                <li>✔ Access Anywhere: Your data is securely stored and available across all your devices.</li>
+                <li>✔ Ready for More: Position yourself for future enhancements and advanced tracking features.</li>
+            </ul>
+            <a href="{% url 'accounts:register' %}" class="cta-button">Create Your Free StockSavvy Account Now!</a>
+        </section>
+    {% endif %}
+
+    <footer class="footer">
+        <p>&copy; 2025 StockSavvy. All rights reserved.</p>
+        {# Add more footer links here later #}
+    </footer>
+{% endblock content %}
+
+{% block extra_head %}
+    {# Any page-specific CSS for landing_page.html goes here #}
+    <style>
+        .hero-section {
+            background-color: #2c3e50; /* Dark blue/grey */
+            color: white;
+            padding: 100px 20px;
+            text-align: center;
+        }
+        .hero-section h1 {
+            font-size: 3em;
+            margin-bottom: 20px;
+        }
+        .hero-section p {
+            font-size: 1.2em;
+            margin-bottom: 40px;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #27ae60; /* Green */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.2em;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover {
+            background-color: #2ecc71; /* Lighter green */
+        }
+        .features-section {
+            padding: 60px 20px;
+            background-color: #ffffff;
+            text-align: center;
+        }
+        .features-section h2 {
+            font-size: 2.5em;
+            margin-bottom: 40px;
+            color: #2c3e50;
+        }
+        .feature-cards {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+        }
+        .card {
+            background-color: #f9f9f9;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 30px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            text-align: left;
+        }
+        .card h3 {
+            color: #27ae60;
+            margin-bottom: 10px;
+        }
+        .signup-section {
+            background-color: #ecf0f1; /* Light grey */
+            padding: 80px 20px;
+            text-align: center;
+        }
+        .signup-section h2 {
+            font-size: 2.5em;
+            color: #2c3e50;
+            margin-bottom: 30px;
+        }
+        .signup-section ul {
+            list-style: none;
+            padding: 0;
+            margin-bottom: 40px;
+            display: inline-block; /* For centering the list items */
+            text-align: left;
+        }
+        .signup-section li {
+            font-size: 1.1em;
+            margin-bottom: 15px;
+        }
+        .signup-section li::before {
+            content: ""; /* Checkmark is now handled by bullet point */
+            color: #27ae60;
+            margin-right: 10px;
+        }
+        .footer {
+            background-color: #34495e; /* Darker blue/grey */
+            color: white;
+            padding: 30px 20px;
+            font-size: 0.9em;
+            text-align: center;
+        }
+    </style>
+{% endblock extra_head %}

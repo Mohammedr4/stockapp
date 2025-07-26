@@ -1,0 +1,42 @@
+{# core/templates/core/signup_prompt.html #}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign Up / Log In - StockSavvy</title>
+    <style>
+        body { font-family: Arial, sans-serif; text-align: center; padding: 50px; background-color: #f4f7f6; }
+        .message-box { background-color: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 40px; max-width: 500px; margin: 0 auto; }
+        h1 { color: #2c3e50; }
+        p { margin-bottom: 30px; line-height: 1.5; }
+        .cta-button {
+            display: inline-block;
+            background-color: #27ae60;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-size: 1.1em;
+            font-weight: bold;
+            margin: 0 10px;
+            transition: background-color 0.3s ease;
+        }
+        .cta-button:hover { background-color: #2ecc71; }
+        .login-link { color: #3498db; text-decoration: none; font-weight: bold; }
+        .login-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="message-box">
+        <h1>Unlock Your Full StockSavvy Experience!</h1>
+        <p>You've just completed your free calculation – we hope it was helpful! To continue using all our powerful calculators, save your unique investment insights, and build your personalized portfolio, please create a free account or log in.</p>
+        <div>
+            {# These links will point to your actual sign-up/login pages later #}
+            <a href="#" class="cta-button">Create My Free Account</a>
+            <a href="#" class="login-link">I Already Have an Account - Log In</a>
+        </div>
+        <p style="margin-top: 20px;"><a href="{% url 'home' %}">Back to Home</a></p>
+    </div>
+</body>
+</html>
