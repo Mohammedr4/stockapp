@@ -28,7 +28,7 @@ SECRET_KEY = 'django-insecure-xm1n+om7-u8hxy-klofqpnmn4haoc(!fco_s!s+@%fwmhw+j(g
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1']
 
 
 # Application definition
@@ -145,3 +145,6 @@ CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
+
+STATIC_URL = 'static/'
+STATIC_ROOT = BASE_DIR / 'staticfiles' 
