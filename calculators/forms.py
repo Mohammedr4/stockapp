@@ -1,78 +1,103 @@
 # calculators/forms.py
 
 from django import forms
-from crispy_forms.helper import FormHelper
-from crispy_forms.layout import Layout, Submit, Field, HTML, Row, Column
-from decimal import Decimal # Make sure Decimal is imported for forms
-import datetime # For date field default/initial values
+from crispy_forms.helper import FormHelper # Keep if you use crispy forms for other forms or layouts
+from crispy_forms.layout import Layout, Submit, Field, HTML, Row, Column # Keep if you use crispy forms for other forms or layouts
+from decimal import Decimal # Essential for precise financial calculations
+import datetime # For date field default/initial values (if used elsewhere)
 
 class StockRepriceForm(forms.Form):
-    # Core Inputs for Current Holdings (from your HTML's "Current Holdings" card)
+    # Field for existing holdings
     stock_symbol = forms.CharField(
-        max_length=10,
-        label="Stock Symbol (e.g., TSLA)",
-        help_text="The ticker symbol of the stock.",
-        required=True
+        max_length=10, 
+        required=True, 
+        label="Stock Symbol (e.g., AAPL)",
+        widget=forms.TextInput(attrs={'placeholder': 'e.g., AAPL'})
     )
-    current_shares = forms.DecimalField( # Using DecimalField for precision and consistency
-        min_value=Decimal('0'), # Allow 0 shares for new potential positions
-        max_digits=15,
-        decimal_places=4,
+    current_shares = forms.DecimalField(
+        max_digits=15, 
+        decimal_places=4, 
+        min_value=Decimal('0'), 
+        required=True, 
         label="Current Shares Held",
-        help_text="The number of shares you currently own.",
-        required=True
+        widget=forms.NumberInput(attrs={'step': '0.0001', 'placeholder': 'e.g., 100.00'})
     )
     average_buy_price = forms.DecimalField(
-        min_value=Decimal('0.00'), # Allow 0 for initial buy where avg price is current price
-        max_digits=15,
-        decimal_places=4,
+        max_digits=15, 
+        decimal_places=4, 
+        min_value=Decimal('0'), 
+        required=True, 
         label="Average Buy Price ($)",
-        help_text="Your current average purchase price per share.",
-        required=True
+        widget=forms.NumberInput(attrs={'step': '0.0001', 'placeholder': 'e.g., 150.75'})
     )
     current_market_price = forms.DecimalField(
-        min_value=Decimal('0.01'), # Current price should generally be positive for this calc
-        max_digits=15,
-        decimal_places=4,
+        max_digits=15, 
+        decimal_places=4, 
+        min_value=Decimal('0.01'), # Market price should be positive
+        required=True, 
         label="Current Market Price ($)",
-        help_text="The current market price per share of the stock.",
-        required=True
+        widget=forms.NumberInput(attrs={'step': '0.0001', 'placeholder': 'e.g., 140.20'})
     )
 
-    # Calculation Mode Selector (from your HTML's "Reprice Calculator" card, <select id="calculationMode">)
-    CALCULATION_MODES = [
-        ('shares', 'Calculate by Number of Shares'),
-        ('price', 'Calculate by Target Average Price'),
+    # Calculation mode (radio buttons)
+    CALCULATION_MODE_CHOICES = [
+        ('shares', 'By Additional Shares'),
+        ('price', 'By Target Average Price'),
     ]
     calculation_mode = forms.ChoiceField(
-        choices=CALCULATION_MODES,
-        label="Calculation Mode",
-        initial='shares', # Matches the default option in your HTML
-        required=True
+        choices=CALCULATION_MODE_CHOICES, 
+        widget=forms.RadioSelect, 
+        initial='shares', # Default to 'By Additional Shares'
+        label="Choose Calculation Mode"
     )
 
-    # Inputs specific to each mode (from your HTML, these are conditionally displayed in JS)
-    # We make them not required at the form level, and handle conditional validation in the view
-    additional_shares_to_buy = forms.DecimalField( # Matches <input type="number" id="newShares">
-        min_value=Decimal('0'),
-        max_digits=15,
-        decimal_places=4,
+    # Fields specific to 'shares' mode (not required initially)
+    additional_shares_to_buy = forms.DecimalField(
+        max_digits=15, 
+        decimal_places=4, 
+        min_value=Decimal('0'), 
+        required=False, # Set required via JavaScript based on mode
         label="Additional Shares to Buy",
-        help_text="Number of new shares you plan to buy.",
-        required=False # Only required if 'shares' mode is selected
+        widget=forms.NumberInput(attrs={'step': '0.0001', 'placeholder': 'e.g., 50.00'})
     )
-    target_average_price = forms.DecimalField( # Matches <input type="number" id="targetAvgPrice">
-        min_value=Decimal('0.01'), # Target price should be positive
-        max_digits=15,
-        decimal_places=4,
+
+    # Fields specific to 'price' mode (not required initially)
+    target_average_price = forms.DecimalField(
+        max_digits=15, 
+        decimal_places=4, 
+        min_value=Decimal('0.01'), 
+        required=False, # Set required via JavaScript based on mode
         label="Target Average Price ($)",
-        help_text="Your desired new average price per share.",
-        required=False # Only required if 'price' mode is selected
+        widget=forms.NumberInput(attrs={'step': '0.0001', 'placeholder': 'e.g., 145.00'})
     )
 
-    # Hidden field for onboarding logic (as per our "try before you commit" discussion)
-    user_authenticated = forms.BooleanField(required=False, widget=forms.HiddenInput())
+    def clean(self):
+        cleaned_data = super().clean()
+        calculation_mode = cleaned_data.get('calculation_mode')
+        current_shares = cleaned_data.get('current_shares')
+        average_buy_price = cleaned_data.get('average_buy_price')
+        current_market_price = cleaned_data.get('current_market_price')
+        additional_shares_to_buy = cleaned_data.get('additional_shares_to_buy')
+        target_average_price = cleaned_data.get('target_average_price')
 
+        # Custom validation for 'shares' mode
+        if calculation_mode == 'shares':
+            if additional_shares_to_buy is None or additional_shares_to_buy < 0:
+                self.add_error('additional_shares_to_buy', "This field is required and must be zero or a positive number for 'By Additional Shares' mode.")
+        elif calculation_mode == 'price':
+            if target_average_price is None or target_average_price <= 0:
+                self.add_error('target_average_price', "This field is required and must be a positive number for 'By Target Average Price' mode.")
+            
+            # Specific validation for target average price
+            if current_shares is not None and average_buy_price is not None and current_market_price is not None and target_average_price is not None:
+                if target_average_price >= average_buy_price:
+                    self.add_error('target_average_price', "Target average price must be lower than your current average buy price to reprice down.")
+                if target_average_price <= current_market_price:
+                    self.add_error('target_average_price', "Target average price must be higher than the current market price to be achievable by buying more.")
+        
+        return cleaned_data
+    
+# --- CapitalGainsForm (Existing form, ensure it's correctly indented and placed) ---
 class CapitalGainsForm(forms.Form):
     asset_name = forms.CharField(
         label="Stock Symbol / Asset Name",
@@ -101,7 +126,7 @@ class CapitalGainsForm(forms.Form):
         min_value=1,
         help_text="Total number of shares/units bought."
     )
-    shares_sold = forms.IntegerField( # <<< ADDED THIS FIELD >>>
+    shares_sold = forms.IntegerField( 
         label="Number of Shares Sold",
         min_value=1,
         help_text="The number of shares/units being sold in this transaction."
@@ -136,8 +161,6 @@ class CapitalGainsForm(forms.Form):
         initial=Decimal('0.00'),
         help_text="Any fees paid when selling (optional)."
     )
-
-    # NEW FIELDS FOR TAX ESTIMATION
     annual_taxable_income = forms.DecimalField(
         label="Your Annual Taxable Income (£ or $)",
         max_digits=12,
@@ -175,19 +198,11 @@ class CapitalGainsForm(forms.Form):
 
         if shares_purchased is not None and shares_sold is not None:
             if shares_sold > shares_purchased:
-                # This depends on your business logic. If you want to allow partial sales
-                # of a larger block bought earlier, this check needs to be more complex
-                # and involve a proper "cost basis accounting" method (FIFO, LIFO, etc.).
-                # For a simple single transaction, this is a reasonable check.
                 self.add_error('shares_sold', "Shares sold cannot exceed shares purchased for this specific transaction. For partial sales, please adjust shares purchased to match shares sold.")
             if shares_sold <= 0:
                 self.add_error('shares_sold', "Number of shares sold must be a positive number.")
 
-
         # Conditional validation for tax inputs
-        # Only require these if the user has explicitly selected a country
-        # and there's a gross gain to potentially tax.
-        # The view handles the 'info' message if no tax country is selected.
         if tax_rule_country: # If a country is selected, then validate annual_taxable_income
             if annual_taxable_income is None: 
                 self.add_error('annual_taxable_income', "Please provide your annual taxable income for tax estimation.")

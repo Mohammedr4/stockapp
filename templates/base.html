@@ -7,211 +7,20 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StockSavvy{% endblock %}</title>
 
-    {# NO BOOTSTRAP CSS LINK HERE - we'll add minimal modal CSS below #}
+    {# Bootstrap 4 CSS (REQUIRED for Bootstrap classes like modal, btn etc.) #}
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" xintegrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9yj0N" crossorigin="anonymous">
 
-    <style>
-        /* Basic Global Styles (YOUR ORIGINAL STYLES) */
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            background-color: #f4f7f6;
-            color: #333;
-        }
-        .navbar {
-            background-color: #2c3e50; /* Dark blue/grey */
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .navbar .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-        .navbar .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 25px;
-            font-size: 1.1em;
-            transition: color 0.3s ease;
-        }
-        .navbar .nav-links a:hover {
-            color: #27ae60; /* Green highlight on hover */
-        }
-        .navbar .nav-links .cta-btn {
-            background-color: #27ae60;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .navbar .nav-links .cta-btn:hover {
-            background-color: #2ecc71;
-            color: white;
-        }
-        .navbar .user-menu {
-            position: relative;
-            cursor: pointer;
-        }
-        .navbar .user-menu span {
-            margin-right: 10px;
-        }
-        .navbar .user-menu .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #34495e;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            right: 0;
-            top: 100%; /* Position below the user name */
-            border-radius: 5px;
-            overflow: hidden; /* For rounded corners */
-        }
-        .navbar .user-menu:hover .dropdown-content {
-            display: block;
-        }
-        .navbar .user-menu .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            text-align: left;
-            margin: 0; /* Override default nav-links margin */
-        }
-        .navbar .user-menu .dropdown-content a:hover {
-            background-color: #2c3e50;
-            color: #27ae60;
-        }
-        /* Basic container for content */
-        .content {
-            padding: 20px;
-        }
+    {# Google Fonts - Inter (used in styles.css) #}
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-        /* --- Minimal CSS for Bootstrap Modal Functionality (New Additions) --- */
-        /* These styles are crucial for the modal to be hidden by default and appear correctly */
-        .modal {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1050;
-            display: none; /* Important: hidden by default */
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            outline: 0;
-        }
+    {# Font Awesome for icons #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" xintegrity="sha512-1ycn6IcaQQ40NZMfz7SSLwWSKzQc2q/9yFJ5Lg1t22JjQ423y1xJ7f5+6yI+f4d2TzK9oU5m4K+r2u/a6gBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-        /* The modal backdrop (dark overlay) */
-        .modal-backdrop {
-            position: fixed;
-            top: 0;
-            left: 0;
-            z-index: 1040;
-            width: 100vw;
-            height: 100vh;
-            background-color: #000; /* Black */
-            opacity: 0.5; /* Semi-transparent */
-        }
+    {# Your Custom Global Stylesheet (loads after Bootstrap to allow overrides) #}
+    <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
-        /* When the modal is actively shown by Bootstrap JS */
-        .modal.show {
-            display: block;
-            overflow-x: hidden;
-            overflow-y: auto;
-        }
-        .modal.fade {
-            transition: opacity 0.15s linear; /* Basic fade animation */
-        }
-        .modal.fade:not(.show) {
-            opacity: 0;
-        }
-
-        /* The dialog box itself (centers content) */
-        .modal-dialog {
-            position: relative;
-            width: auto;
-            margin: 1.75rem auto; /* Vertical centering roughly */
-            pointer-events: none; /* Allows clicks to pass through to modal content */
-            max-width: 500px; /* Adjust as needed */
-            transition: transform 0.3s ease-out; /* Slide-in animation */
-        }
-        .modal.fade .modal-dialog {
-            transform: translate(0, -50px);
-        }
-        .modal.show .modal-dialog {
-            transform: none;
-        }
-
-        /* The actual content box of the modal */
-        .modal-content {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            width: 100%;
-            pointer-events: auto;
-            background-color: #fff;
-            background-clip: padding-box;
-            border: 1px solid rgba(0, 0, 0, 0.2);
-            border-radius: 0.3rem; /* Small rounded corners */
-            outline: 0;
-        }
-
-        /* Standard modal sections */
-        .modal-header {
-            display: flex;
-            align-items: flex-start;
-            justify-content: space-between;
-            padding: 1rem;
-            border-bottom: 1px solid #dee2e6; /* Light grey separator */
-            border-top-left-radius: 0.3rem;
-            border-top-right-radius: 0.3rem;
-        }
-        .modal-title {
-            margin-bottom: 0;
-            line-height: 1.5;
-            font-size: 1.25rem; /* Standard title size */
-        }
-        .modal-body {
-            position: relative;
-            flex: 1 1 auto;
-            padding: 1rem;
-        }
-        .modal-footer {
-            display: flex;
-            align-items: center;
-            justify-content: flex-end;
-            padding: 1rem;
-            border-top: 1px solid #dee2e6; /* Light grey separator */
-            border-bottom-right-radius: 0.3rem;
-            border-bottom-left-radius: 0.3rem;
-        }
-
-        /* Close button (if you use <button type="button" class="close" ...>&times;</button>) */
-        .close {
-            padding: 1rem;
-            margin: -1rem -1rem -1rem auto;
-            background-color: transparent;
-            border: 0;
-            font-size: 1.5rem; /* Large 'x' */
-            font-weight: 700;
-            line-height: 1;
-            color: #000;
-            text-shadow: 0 1px 0 #fff;
-            opacity: .5;
-        }
-        .close:hover {
-            color: #000;
-            text-decoration: none;
-            opacity: .75;
-        }
-        /* --- END Minimal CSS for Bootstrap Modal Functionality --- */
-
-    </style>
     {% block extra_head %}{% endblock %} {# For page-specific CSS/JS #}
 </head>
 <body>
@@ -219,10 +28,7 @@
         <a href="{% url 'home' %}" class="logo">StockSavvy</a>
         <div class="nav-links">
             {% if user.is_authenticated %}
-                {# NEW: Link to the Calculators Index Page #}
-                <a href="{% url 'calculators:calculators_index' %}">Calculators</a> {# <-- THIS IS THE CORRECTED LINE #}
-
-                {# Update this link to point to your actual portfolio list URL #}
+                <a href="{% url 'calculators:calculators_index' %}">Calculators</a>
                 <a href="{% url 'portfolio:portfolio_list' %}">My Portfolio</a>
 
                 <div class="user-menu">
@@ -234,26 +40,17 @@
                     </div>
                 </div>
             {% else %}
-                {# The main CTA is on the landing page itself #}
                 <a href="{% url 'accounts:login' %}">Login</a>
                 <a href="{% url 'accounts:register' %}" class="cta-btn">Sign Up Free</a>
             {% endif %}
         </div>
     </nav>
 {# --- ORIGINAL DJANGO MESSAGES SECTION --- #}
-    <div class="messages-container" style="padding: 10px 20px; text-align: center;">
+    <div class="messages-container">
         {% if messages %}
-            <ul style="list-style: none; padding: 0; margin: 0;">
+            <ul>
                 {% for message in messages %}
-                    <li style="
-                        padding: 10px;
-                        margin-bottom: 10px;
-                        border-radius: 5px;
-                        {% if message.tags == 'success' %}background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb;{% endif %}
-                        {% if message.tags == 'error' %}background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb;{% endif %}
-                        {% if message.tags == 'warning' %}background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba;{% endif %}
-                        {% if message.tags == 'info' %}background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb;{% endif %}
-                    ">
+                    <li class="{{ message.tags }}"> {# Use message.tags for class #}
                         {{ message }}
                     </li>
                 {% endfor %}
@@ -267,18 +64,14 @@
         {% endblock %}
     </div>
 
-    {# --- IMPORTANT: INCLUDE FONT AWESOME FOR ICONS --- #}
-    {# Add this line in your <head> section, or right before your closing </body> tag #}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40NZMfz7SSLwWSKzQc2q/9yFJ5Lg1t22JjQ423y1xJ7f5+6yI+f4d2TzK9oU5m4K+r2u/a6gBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
-
-    {# --- IMPORTANT: KEEP JQUERY, POPPER.JS, AND BOOTSTRAP JS HERE --- #}
     {# jQuery (must be loaded first, as Bootstrap depends on it) #}
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" xintegrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
     {# Popper.js (needed for Bootstrap 4 tooltips, popovers, and for some modal positioning) #}
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" xintegrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
     {# Bootstrap JS (must be loaded after jQuery and Popper) #}
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtobF9LwZ8y7NlXl8tGq5t2C1j7M2B9lX9t5y8D1M1T9M" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" xintegrity="sha384-B4gt1jrGC7Jh4AgTPSdUtobF9LwZ8y7NlXl8tGq5t2C1j7M2B9lX9t5y8D1M1T9M" crossorigin="anonymous"></script>
 
-    {% block extra_js %}{% endblock %} {# For page-specific JS, now matches stock_chart.html #}
+    {% block extra_js %}{% endblock %} {# For page-specific JS #}
+    {% block extra_body %}{% endblock extra_body %} {# Added for consistency with my previous calculator template #}
 </body>
 </html>

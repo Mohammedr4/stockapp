@@ -1,4 +1,5 @@
 # calculators/views.py
+
 import json
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import render, redirect
@@ -7,10 +8,12 @@ from decimal import Decimal, InvalidOperation
 from datetime import date
 from dateutil.relativedelta import relativedelta # Make sure you have 'pip install python-dateutil'
 
-from .forms import StockRepriceForm
-from .forms import CapitalGainsForm
+from django.http import JsonResponse # Essential for AJAX responses
 
-FREE_USE_LIMIT = 1
+from .forms import StockRepriceForm, CapitalGainsForm # Ensure both forms are imported
+
+# Define constants (adjust as needed, or move to settings.py if preferred)
+FREE_STOCK_REPRICE_USE_LIMIT = 1 # Renamed for clarity, used by stock reprice calculator
 FREE_CGT_USE_LIMIT = 1 # Your defined limit for Capital Gains Estimator
 
 # --- Helper Functions for Capital Gains Calculations ---
@@ -179,166 +182,231 @@ def calculate_us_cgt(gross_gain, annual_income, filing_status, holding_period_ty
     return cgt_payable.quantize(Decimal('0.01'))
 
 
-# --- Existing stock_reprice_calculator view (no changes needed here) ---
+# --- Stock Reprice Calculator View ---
 def stock_reprice_calculator(request):
-    print(f"DEBUG: User authenticated = {request.user.is_authenticated}")
-    print(f"DEBUG: User object = {request.user}")
-
     form = StockRepriceForm()
+    
+    # Initialize results dictionary with default values
     results = {
-        'total_cost_price': Decimal('0.00'),
+        'calculation_successful': False,
+        'stock_symbol': '',
+        'current_shares': Decimal('0.00'),
+        'average_buy_price': Decimal('0.00'),
+        'current_market_price': Decimal('0.00'),
+        'total_cost_price_initial': Decimal('0.00'),
         'current_portfolio_value': Decimal('0.00'),
         'p_l_initial': Decimal('0.00'),
+        'calculation_mode': 'shares', # Default to 'shares' for display purposes
+        'additional_shares_entered': Decimal('0.00'), # For shares mode
+        'target_average_price_entered': Decimal('0.00'), # For price mode
         'new_average_price': Decimal('0.00'),
         'total_investment': Decimal('0.00'),
-        'additional_shares_needed': Decimal('0.00'),
+        'calculated_shares_needed': Decimal('0.00'), # Shares to buy in price mode
+        'cost_of_new_shares': Decimal('0.00'), # Cost in shares mode or price mode
         'total_shares_after_purchase': Decimal('0.00'),
-        'cost_of_new_shares': Decimal('0.00'),
         'portfolio_value_after_purchase': Decimal('0.00'),
         'p_l_after_purchase': Decimal('0.00'),
-        'mode': '',
-        'calculation_successful': False,
+        'status_message': 'Enter your stock details above to see the reprice summary here.'
     }
+
+    # Determine if the request is AJAX
+    is_ajax = request.headers.get('x-requested-with') == 'XMLHttpRequest'
+    
     calculation_allowed = True
     show_modal_for_signup = False
 
+    # --- Handle GET requests (initial page load or after non-AJAX redirect) ---
     if request.method == 'GET':
         if not request.user.is_authenticated:
-            free_uses = request.session.get('free_uses_count', 0)
-            if free_uses >= FREE_USE_LIMIT:
+            free_reprice_uses = request.session.get('free_reprice_uses_count', 0)
+            if free_reprice_uses >= FREE_STOCK_REPRICE_USE_LIMIT:
                 calculation_allowed = False
                 show_modal_for_signup = True
-                messages.info(request, "You've used your free calculation. Please log in or sign up for unlimited access!")
-                context = {
-                    'form': form,
-                    'results': results,
-                    'calculation_allowed': calculation_allowed,
-                    'show_modal_for_signup': show_modal_for_signup,
-                }
-                return render(request, 'calculators/stock_reprice_calculator.html', context)
+                messages.info(request, "You've used your free Stock Reprice calculation. Please log in or sign up for unlimited access!")
+        
+        # If there's results/form data in session from a non-AJAX POST, retrieve it
+        if 'reprice_results' in request.session:
+            retrieved_results = json.loads(request.session.pop('reprice_results'))
+            for key, value in retrieved_results.items():
+                if isinstance(value, str):
+                    try: # Convert Decimal strings back to Decimal objects
+                        results[key] = Decimal(value) if any(k_part in key for k_part in ['price', 'shares', 'cost', 'investment', 'p_l']) else value
+                    except InvalidOperation:
+                        results[key] = value # Keep as string if conversion fails
+                else:
+                    results[key] = value
 
+            if 'reprice_form_data' in request.session:
+                initial_data = json.loads(request.session.pop('reprice_form_data'))
+                for key, value in initial_data.items():
+                     if isinstance(value, str):
+                        try: # Convert form data Decimal strings back
+                            initial_data[key] = Decimal(value) if any(k_part in key for k_part in ['price', 'shares']) else value
+                        except InvalidOperation:
+                            pass # Keep as string
+                form = StockRepriceForm(initial=initial_data)
+
+    # --- Handle POST requests (AJAX or regular form submission) ---
     elif request.method == 'POST':
         form = StockRepriceForm(request.POST)
-        if form.is_valid():
-            if not request.user.is_authenticated:
-                free_uses = request.session.get('free_uses_count', 0)
-                if free_uses < FREE_USE_LIMIT:
-                    request.session['free_uses_count'] = free_uses + 1
-                else:
-                    calculation_allowed = False
-                    show_modal_for_signup = True
-                    messages.info(request, "You've used your free calculation. Please log in or sign up for unlimited access!")
-                    context = {
-                        'form': form,
-                        'results': results,
-                        'calculation_allowed': calculation_allowed,
-                        'show_modal_for_signup': show_modal_for_signup,
-                    }
-                    return render(request, 'calculators/stock_reprice_calculator.html', context)
-            
-            if calculation_allowed:
-                stock_symbol = form.cleaned_data['stock_symbol']
-                current_shares = form.cleaned_data['current_shares']
-                average_buy_price = form.cleaned_data['average_buy_price']
-                current_market_price = form.cleaned_data['current_market_price']
-                calculation_mode = form.cleaned_data['calculation_mode']
 
-                initial_total_cost_price = current_shares * average_buy_price
-                current_portfolio_value = current_shares * current_market_price
-                current_profit_loss = current_portfolio_value - initial_total_cost_price
+        # Apply free use limit check BEFORE form validation if possible (or within validation if logic is complex)
+        if not request.user.is_authenticated:
+            free_reprice_uses = request.session.get('free_reprice_uses_count', 0)
+            if free_reprice_uses >= FREE_STOCK_REPRICE_USE_LIMIT:
+                calculation_allowed = False
+                show_modal_for_signup = True
+                message = "You've used your free Stock Reprice calculation. Please log in or sign up for unlimited access!"
+                if is_ajax:
+                    return JsonResponse({'status': 'error', 'message': message, 'show_modal_for_signup': True}, status=403)
+                else:
+                    messages.info(request, message)
+                    # For non-AJAX, render with message and no calculation
+                    return render(request, 'calculators/stock_reprice_calculator.html', {'form': form, 'results': results, 'calculation_allowed': calculation_allowed, 'show_modal_for_signup': show_modal_for_signup})
+            else:
+                # Increment free uses count
+                request.session['free_reprice_uses_count'] = free_reprice_uses + 1
+        
+        # If calculation is allowed (either logged in or within free limit)
+        if calculation_allowed and form.is_valid():
+            stock_symbol = form.cleaned_data['stock_symbol']
+            current_shares = form.cleaned_data['current_shares']
+            average_buy_price = form.cleaned_data['average_buy_price']
+            current_market_price = form.cleaned_data['current_market_price']
+            calculation_mode = form.cleaned_data['calculation_mode']
+
+            # Initial portfolio calculations
+            initial_total_cost_price = current_shares * average_buy_price
+            current_portfolio_value = current_shares * current_market_price
+            current_profit_loss = current_portfolio_value - initial_total_cost_price
+
+            results.update({
+                'calculation_successful': True,
+                'stock_symbol': stock_symbol,
+                'current_shares': current_shares,
+                'average_buy_price': average_buy_price,
+                'current_market_price': current_market_price,
+                'total_cost_price_initial': initial_total_cost_price,
+                'current_portfolio_value': current_portfolio_value,
+                'p_l_initial': current_profit_loss,
+                'calculation_mode': calculation_mode,
+                'status_message': 'Calculation successful.'
+            })
+
+            if calculation_mode == 'shares':
+                additional_shares_to_buy = form.cleaned_data['additional_shares_to_buy']
+                
+                results['additional_shares_entered'] = additional_shares_to_buy # Store for display
+
+                cost_of_new_shares = additional_shares_to_buy * current_market_price
+                new_total_shares = current_shares + additional_shares_to_buy
+                new_total_investment = initial_total_cost_price + cost_of_new_shares
+                
+                new_average_price = Decimal('0.00')
+                if new_total_shares > 0:
+                    new_average_price = new_total_investment / new_total_shares
+                
+                portfolio_value_after_purchase = new_total_shares * current_market_price
+                p_l_after_purchase = portfolio_value_after_purchase - new_total_investment
 
                 results.update({
-                    'total_cost_price': initial_total_cost_price,
-                    'current_portfolio_value': current_portfolio_value,
-                    'p_l_initial': current_profit_loss,
-                    'calculation_successful': True,
+                    'new_average_price': new_average_price,
+                    'total_investment': new_total_investment,
+                    'calculated_shares_needed': additional_shares_to_buy, # In 'shares' mode, this is the input
+                    'cost_of_new_shares': cost_of_new_shares,
+                    'total_shares_after_purchase': new_total_shares,
+                    'portfolio_value_after_purchase': portfolio_value_after_purchase,
+                    'p_l_after_purchase': p_l_after_purchase,
                 })
 
-                if calculation_mode == 'shares':
-                    additional_shares_to_buy = form.cleaned_data['additional_shares_to_buy']
-                    results['mode'] = 'by_shares'
+            elif calculation_mode == 'price':
+                target_average_price = form.cleaned_data['target_average_price']
+                
+                results['target_average_price_entered'] = target_average_price # Store for display
 
-                    if additional_shares_to_buy < 0:
-                        messages.error(request, "Additional shares must be zero or a positive number.")
-                        results['calculation_successful'] = False
-                    else:
-                        cost_of_new_shares = additional_shares_to_buy * current_market_price
-                        new_total_shares = current_shares + additional_shares_to_buy
-                        new_total_investment = initial_total_cost_price + cost_of_new_shares
-                        
-                        new_average_price = Decimal('0.00')
-                        if new_total_shares > 0:
-                            new_average_price = new_total_investment / new_total_shares
-                        
-                        portfolio_value_after_purchase = new_total_shares * current_market_price
-                        p_l_after_purchase = portfolio_value_after_purchase - new_total_investment
+                try:
+                    # Formula: additional_shares = (current_shares * (avg_buy_price - target_avg_price)) / (target_avg_price - current_market_price)
+                    numerator = current_shares * (average_buy_price - target_average_price)
+                    denominator = target_average_price - current_market_price
 
-                        results.update({
-                            'new_average_price': new_average_price,
-                            'total_investment': new_total_investment,
-                            'additional_shares_needed': additional_shares_to_buy,
-                            'total_shares_after_purchase': new_total_shares,
-                            'cost_of_new_shares': cost_of_new_shares,
-                            'portfolio_value_after_purchase': portfolio_value_after_purchase,
-                            'p_l_after_purchase': p_l_after_purchase,
-                        })
+                    if denominator == Decimal('0'):
+                        raise ZeroDivisionError("Target price is equal to current market price, cannot calculate.")
+                    
+                    calculated_shares_needed = numerator / denominator
+                    
+                    if calculated_shares_needed < 0:
+                         # This implies target average price is higher than current average, or calculation error
+                        raise ValueError("Target average price cannot be reached by buying more shares; it might require selling.")
+                    
+                    calculated_shares_needed = calculated_shares_needed.quantize(Decimal('0.0001')) # Quantize for precision
 
-                elif calculation_mode == 'price':
-                    target_average_price = form.cleaned_data['target_average_price']
-                    results['mode'] = 'by_target_avg_price'
+                    cost_of_new_shares = calculated_shares_needed * current_market_price
+                    new_total_shares = current_shares + calculated_shares_needed
+                    new_total_investment = initial_total_cost_price + cost_of_new_shares
+                    
+                    portfolio_value_after_purchase = new_total_shares * current_market_price
+                    p_l_after_purchase = portfolio_value_after_purchase - new_total_investment
 
-                    if target_average_price <= 0:
-                        messages.error(request, "Target average price must be a positive value.")
-                        results['calculation_successful'] = False
-                    elif target_average_price >= average_buy_price:
-                        messages.error(request, "Target average price must be lower than your current average buy price to reprice down.")
-                        results['calculation_successful'] = False
-                    elif target_average_price <= current_market_price:
-                        messages.error(request, "Target average price must be higher than the current market price to be achievable by buying more.")
-                        results['calculation_successful'] = False
-                    else:
-                        denominator = current_market_price - target_average_price
-                        if denominator == Decimal('0'):
-                            messages.error(request, "Cannot calculate: Target price is equal to current market price.")
-                            results['calculation_successful'] = False
-                        else:
-                            numerator = current_shares * (target_average_price - average_buy_price)
-                            additional_shares_needed = numerator / denominator
-                            
-                            if additional_shares_needed < 0:
-                                messages.error(request, "Cannot calculate: The target average price requires selling shares, not buying more.")
-                                results['calculation_successful'] = False
-                            else:
-                                additional_shares_needed = additional_shares_needed.quantize(Decimal('0.0001'))
-                                
-                                cost_of_new_shares = additional_shares_needed * current_market_price
-                                new_total_shares = current_shares + additional_shares_needed
-                                new_total_investment = initial_total_cost_price + cost_of_new_shares
-                                
-                                portfolio_value_after_purchase = new_total_shares * current_market_price
-                                p_l_after_purchase = portfolio_value_after_purchase - new_total_investment
+                    results.update({
+                        'new_average_price': target_average_price, # The target is the new average
+                        'total_investment': new_total_investment,
+                        'calculated_shares_needed': calculated_shares_needed,
+                        'cost_of_new_shares': cost_of_new_shares,
+                        'total_shares_after_purchase': new_total_shares,
+                        'portfolio_value_after_purchase': portfolio_value_after_purchase,
+                        'p_l_after_purchase': p_l_after_purchase,
+                    })
 
-                                results.update({
-                                    'new_average_price': target_average_price,
-                                    'total_investment': new_total_investment,
-                                    'additional_shares_needed': additional_shares_needed,
-                                    'total_shares_after_purchase': new_total_shares,
-                                    'cost_of_new_shares': cost_of_new_shares,
-                                    'portfolio_value_after_purchase': portfolio_value_after_purchase,
-                                    'p_l_after_purchase': p_l_after_purchase,
-                                })
-        else: # Form is NOT valid on POST
-            messages.error(request, "Please correct the errors below.")
+                except (InvalidOperation, ZeroDivisionError, ValueError) as e:
+                    results['calculation_successful'] = False
+                    results['status_message'] = f"Calculation error for target price: {e}"
+                    # Clear specific results if calculation failed
+                    results['new_average_price'] = results['total_investment'] = results['calculated_shares_needed'] = \
+                    results['cost_of_new_shares'] = results['total_shares_after_purchase'] = \
+                    results['portfolio_value_after_purchase'] = results['p_l_after_purchase'] = Decimal('0.00')
+
+        else: # Form is NOT valid on POST or calculation not allowed due to free use limit
             results['calculation_successful'] = False
+            # Get errors from form if it's invalid
+            if form.errors:
+                error_messages = []
+                for field, errors in form.errors.items():
+                    # For non-field errors, just add them directly
+                    if field == '__all__': 
+                        error_messages.extend([str(e) for e in errors])
+                    else: # For field-specific errors
+                        error_messages.extend([f"{form[field].label}: {e}" for e in errors])
+                results['status_message'] = "Please correct the errors below:<br>" + "<br>".join(error_messages)
+            else:
+                results['status_message'] = "Calculation could not be performed due to an unknown error."
+    
+    # --- Response Handling (AJAX vs. Full Page) ---
+    if is_ajax:
+        # Helper to convert Decimal and other non-JSON serializable types to string
+        def convert_to_str(obj):
+            if isinstance(obj, Decimal):
+                return str(obj)
+            return obj # For other types, return as is (if already JSON serializable)
 
-    context = {
-        'form': form,
-        'results': results,
-        'calculation_allowed': calculation_allowed,
-        'show_modal_for_signup': show_modal_for_signup,
-    }
-    return render(request, 'calculators/stock_reprice_calculator.html', context)
-
+        # Convert results to JSON-serializable format
+        json_results = json.loads(json.dumps(results, default=convert_to_str))
+        
+        return JsonResponse({'status': 'success', 'results': json_results})
+    else:
+        # For non-AJAX requests (initial GET or POST with errors/redirect)
+        # Store results and form data in session for Post-Redirect-Get pattern if successful POST
+        if request.method == 'POST' and results['calculation_successful']:
+            request.session['reprice_results'] = json.dumps(results, default=str)
+            request.session['reprice_form_data'] = json.dumps(form.cleaned_data, default=str)
+            return redirect('calculators:stock_reprice_calculator') # Redirect to clear POST data
+        
+        context = {
+            'form': form,
+            'results': results,
+            'calculation_allowed': calculation_allowed,
+            'show_modal_for_signup': show_modal_for_signup,
+        }
+        return render(request, 'calculators/stock_reprice_calculator.html', context)
 
 @login_required
 def calculators_index(request):
@@ -351,7 +419,7 @@ def calculators_index(request):
         },
         {
             'name': 'Stock Reprice Calculator',
-            'description': 'Adjust historical stock prices for splits, dividends, or re-evaluate performance over time.',
+            'description': 'Analyze your stock holdings and re-pricing scenarios with precision.',
             'url_name': 'calculators:stock_reprice_calculator',
             'icon': 'fas fa-sync-alt'
         },
