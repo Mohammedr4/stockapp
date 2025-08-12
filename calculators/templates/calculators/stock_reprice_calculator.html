@@ -1,377 +1,455 @@
-{# calculators/templates/calculators/stock_reprice_calculator.html #}
 {% extends 'base.html' %}
 {% load static %}
-{% load calculator_filters %} {# Assuming you have this custom filter like 'add_class' #}
 
-{% block title %}Stock Reprice Calculator - StockSavvy{% endblock %}
+{% block title %}Stock Reprice Calculator - StockSavvy{% endblock title %}
 
 {% block content %}
-<div class="container calculator-page">
-    <div class="header">
-        <h1>Stock Reprice Calculator</h1>
-        <p>Analyze your stock holdings and re-pricing scenarios with precision</p>
-    </div>
+<style>
+        body { 
+            background-color: #f8f9fa; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .calculator-container { 
+            max-width: 1140px; 
+            margin: auto; 
+        }
+        .calculator-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            align-items: stretch;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            border-radius: 0.75rem;
+            padding: 30px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: white;
+        }
+        .card-title { 
+            font-weight: 600; 
+            color: #2c3e50; 
+            margin-bottom: 25px; 
+            font-size: 1.25rem;
+        }
+        .form-control { 
+            border-radius: 0.5rem; 
+            border: 1px solid #ced4da;
+            padding: 0.375rem 0.75rem;
+            font-size: 1rem;
+            line-height: 1.5;
+            color: #495057;
+            background-color: #fff;
+            background-clip: padding-box;
+        }
+        .form-control:focus {
+            color: #495057;
+            background-color: #fff;
+            border-color: #80bdff;
+            outline: 0;
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+        }
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        .form-group label {
+            margin-bottom: 0.5rem;
+            font-weight: normal;
+            color: #495057;
+            font-size: 0.875rem;
+        }
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -5px;
+            margin-left: -5px;
+        }
+        .form-row > .form-group,
+        .form-row > .col,
+        .form-row > [class*="col-"] {
+            padding-right: 5px;
+            padding-left: 5px;
+        }
+        .col-md-6 {
+            flex: 0 0 50%;
+            max-width: 50%;
+        }
+        .calculated-field {
+            background-color: #f0f2f5;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.5rem;
+            border: 1px solid #dee2e6;
+            min-height: calc(1.5em + 0.75rem + 2px);
+            display: flex;
+            align-items: center;
+            font-weight: 500;
+            color: #343a40;
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .pnl-value.text-success { 
+            color: #28a745 !important; 
+            font-weight: 600; 
+        }
+        .pnl-value.text-danger { 
+            color: #dc3545 !important; 
+            font-weight: 600; 
+        }
 
-    {# Django Messages (for non-AJAX messages or initial page load) #}
-    {% if messages %}
-        <ul class="messages list-unstyled mb-4">
-            {% for message in messages %}
-                <li class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %}" role="alert">
-                    {{ message }}
-                </li>
-            {% endfor %}
-        </ul>
-    {% endif %}
+        .calc-btn {
+            width: 100%; 
+            padding: 12px; 
+            font-size: 1rem; 
+            font-weight: 600;
+            border-radius: 8px; 
+            border: none; 
+            cursor: pointer; 
+            transition: all 0.2s ease-in-out;
+            text-align: center;
+            vertical-align: middle;
+            user-select: none;
+            line-height: 1.5;
+            margin-bottom: 0.5rem;
+        }
+        .btn-primary.calc-btn { 
+            background-color: #007bff; 
+            color: white; 
+            border: 1px solid #007bff;
+        }
+        .btn-primary.calc-btn:hover { 
+            background-color: #0069d9; 
+            border-color: #0062cc;
+        }
+        .btn-primary.calc-btn:disabled { 
+            background-color: #007bff; 
+            opacity: 0.65;
+            cursor: not-allowed; 
+        }
+        .btn-light.calc-btn { 
+            background-color: #f8f9fa; 
+            color: #212529; 
+            border: 1px solid #f8f9fa; 
+        }
+        .btn-light.calc-btn:hover { 
+            background-color: #e2e6ea; 
+            border-color: #dae0e5;
+        }
 
-    <form method="post" id="repriceCalculatorForm" action="{% url 'calculators:stock_reprice_calculator' %}">
-        {% csrf_token %}
+        .repriced-portfolio-grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr; 
+            gap: 1rem; 
+        }
+        
+        .dashed-divider {
+            border: 0;
+            border-top: 2px dashed #e9ecef;
+            margin: 1.75rem 0;
+        }
+        
+        @media (max-width: 991.98px) { 
+            .calculator-grid { 
+                grid-template-columns: 1fr; 
+            }
+            .col-md-6 {
+                flex: 0 0 100%;
+                max-width: 100%;
+            }
+        }
 
-        <div class="calculator-grid">
-            <div class="card">
-                <h2>Current Holdings</h2>
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        .header h1 {
+            color: #212529;
+            font-weight: normal;
+            margin-bottom: 0.5rem;
+            font-size: 2.5rem;
+            line-height: 1.2;
+        }
+        .header .lead {
+            color: #6c757d;
+            font-size: 1.25rem;
+            font-weight: 300;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
 
-                <div class="form-group">
-                    {{ form.stock_symbol.label_tag }}
-                    {{ form.stock_symbol|add_class:"calculator-input" }}
-                    {# Error messages for specific fields will be handled by JS for AJAX, but keep for non-AJAX #}
-                    {% if form.stock_symbol.errors %}<div class="text-danger error-message">{{ form.stock_symbol.errors }}</div>{% endif %}
-                </div>
+        .container {
+            width: 100%;
+            padding-right: 15px;
+            padding-left: 15px;
+            margin-right: auto;
+            margin-left: auto;
+        }
 
-                <div class="form-row">
+        .py-5 {
+            padding-top: 3rem !important;
+            padding-bottom: 3rem !important;
+        }
+
+        .mb-5 {
+            margin-bottom: 3rem !important;
+        }
+
+        .my-4 {
+            margin-top: 1.5rem !important;
+            margin-bottom: 1.5rem !important;
+        }
+
+        .mt-auto {
+            margin-top: auto !important;
+        }
+
+        .pt-3 {
+            padding-top: 1rem !important;
+        }
+
+        .spinner-border {
+            display: inline-block;
+            width: 1rem;
+            height: 1rem;
+            vertical-align: text-bottom;
+            border: 0.125em solid currentColor;
+            border-right-color: transparent;
+            border-radius: 50%;
+            animation: spinner-border 0.75s linear infinite;
+        }
+
+        .spinner-border-sm {
+            width: 0.875rem;
+            height: 0.875rem;
+            border-width: 0.125em;
+        }
+
+        @keyframes spinner-border {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container calculator-container py-5">
+        <div class="header text-center mb-5">
+            <h1>Stock Reprice Calculator</h1>
+            <p class="lead text-muted">Analyse your stock holdings and re-pricing scenarios with precision</p>
+        </div>
+
+        <form id="repriceCalculatorForm" method="post" novalidate>
+            {% csrf_token %}
+            <div class="calculator-grid">
+                
+                <div class="card">
+                    <h3 class="card-title">Current Holdings</h3>
+                    
                     <div class="form-group">
-                        {{ form.current_shares.label_tag }}
-                        {{ form.current_shares|add_class:"calculator-input" }}
-                        {% if form.current_shares.errors %}<div class="text-danger error-message">{{ form.current_shares.errors }}</div>{% endif %}
+                        <label for="id_stock_symbol">Stock Symbol (e.g., AAPL)</label>
+                        <input type="text" name="stock_symbol" id="id_stock_symbol" class="form-control" placeholder="e.g., AAPL">
                     </div>
-                    <div class="form-group">
-                        {{ form.average_buy_price.label_tag }}
-                        {{ form.average_buy_price|add_class:"calculator-input" }}
-                        {% if form.average_buy_price.errors %}<div class="text-danger error-message">{{ form.average_buy_price.errors }}</div>{% endif %}
-                    </div>
-                </div>
-
-                <div class="form-row">
-                    <div class="form-group">
-                        <label>Initial Total Cost Price ($)</label>
-                        <div class="display-value" id="totalCostPriceInitial">{{ results.total_cost_price_initial|floatformat:2|default:"0.00" }}</div>
-                    </div>
-                    <div class="form-group">
-                        {{ form.current_market_price.label_tag }}
-                        {{ form.current_market_price|add_class:"calculator-input" }}
-                        {% if form.current_market_price.errors %}<div class="text-danger error-message">{{ form.current_market_price.errors }}</div>{% endif %}
-                    </div>
-                </div>
-
-                <div class="form-group">
-                    <label>Current Portfolio Value ($)</label>
-                    <div class="display-value" id="currentPortfolioValue">{{ results.current_portfolio_value|floatformat:2|default:"0.00" }}</div>
-                </div>
-
-                <div class="form-group">
-                    <label>Profit & Loss (P&L)</label>
-                    <div class="display-value" id="pLInitial">{{ results.p_l_initial|floatformat:2|default:"0.00" }}</div>
-                </div>
-            </div>
-
-            <div class="card">
-                <h2>Reprice Calculator</h2>
-
-                <div class="form-group">
-                    <label>Choose Calculation Mode:</label>
-                    <div class="d-flex justify-content-around mb-3" id="calculationModeRadios">
-                        {# Django's RadioSelect renders individual radio inputs. Iterate over them. #}
-                        {% for radio in form.calculation_mode %}
-                            <div class="form-check form-check-inline">
-                                <input type="radio" name="{{ radio.data.name }}" id="{{ radio.id_for_label }}" value="{{ radio.data.value }}" {% if radio.data.selected %}checked{% endif %} class="form-check-input">
-                                <label class="form-check-label" for="{{ radio.id_for_label }}">{{ radio.choice_label }}</label>
-                            </div>
-                        {% endfor %}
-                    </div>
-                    {% if form.calculation_mode.errors %}<div class="text-danger error-message">{{ form.calculation_mode.errors }}</div>{% endif %}
-                </div>
-
-                <div id="sharesModeInputs">
-                    <div class="form-group">
-                        {{ form.additional_shares_to_buy.label_tag }}
-                        {{ form.additional_shares_to_buy|add_class:"calculator-input" }}
-                        <div class="text-danger error-message" id="error_additional_shares_to_buy"></div> {# For JS errors #}
-                    </div>
-                </div>
-
-                <div id="priceModeInputs" style="display: none;">
-                    <div class="form-group">
-                        {{ form.target_average_price.label_tag }}
-                        {{ form.target_average_price|add_class:"calculator-input" }}
-                        <div class="text-danger error-message" id="error_target_average_price"></div> {# For JS errors #}
-                        <div id="targetPriceHint" class="form-text text-muted">
-                            Target average price must be above current market price and below your current average buy price (for dollar-cost averaging down).
+                    <div class="form-row">
+                        <div class="form-group col-md-6">
+                            <label for="id_current_shares">Current Shares Held</label>
+                            <input type="number" name="current_shares" id="id_current_shares" class="form-control" placeholder="e.g., 100.00" step="0.0001">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label for="id_average_buy_price">Average Buy Price ($)</label>
+                            <input type="number" name="average_buy_price" id="id_average_buy_price" class="form-control" placeholder="e.g., 150.75" step="0.0001">
                         </div>
                     </div>
+                     <div class="form-group">
+                        <label for="id_current_market_price">Current Market Price ($)</label>
+                        <input type="number" name="current_market_price" id="id_current_market_price" class="form-control" placeholder="e.g., 140.20" step="0.0001">
+                    </div>
+                    
+                    <hr class="my-4">
+                    
+                    <div class="form-row">
+                         <div class="form-group col-md-6">
+                            <label>Total Cost Price ($)</label>
+                            <div class="calculated-field" id="totalCostPrice">0.00</div>
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Portfolio Value ($)</label>
+                            <div class="calculated-field" id="currentPortfolioValue">0.00</div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Profit & Loss (P&L)</label>
+                        <div class="calculated-field" id="pLInitial"><span class="pnl-value">0.00</span></div>
+                    </div>
                 </div>
 
-                {# The calculate button is now type="button" and its submission is handled by JS #}
-                <button type="button" class="calculate-btn calculator-button" id="mainClearBtn" style="background-color: #f0f0f0; color: #555; margin-top: 10px;">Clear All Inputs</button>
+                <div class="card">
+                    <h3 class="card-title">Reprice Calculator</h3>
+                    <div class="form-group">
+                        <label for="id_calculation_mode">Calculation Mode</label>
+                        <select name="calculation_mode" id="id_calculation_mode" class="form-control">
+                            <option value="shares">Calculate by Number of Shares</option>
+                            <option value="price">Calculate by Target Price</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="sharesModeInputs">
+                        <label for="id_additional_shares_to_buy">Additional Shares to Buy</label>
+                        <input type="number" name="additional_shares_to_buy" id="id_additional_shares_to_buy" class="form-control" placeholder="e.g., 50.00" step="0.0001">
+                    </div>
+                    <div class="form-group" id="priceModeInputs" style="display: none;">
+                        <label for="id_target_average_price">Target Average Price ($)</label>
+                        <input type="number" name="target_average_price" id="id_target_average_price" class="form-control" placeholder="e.g., 145.00" step="0.0001">
+                    </div>
+                    
+                    <div class="mt-auto pt-3">
+                        <button type="button" class="btn btn-primary calc-btn" id="analyzeBtn">
+                            Calculate Reprice
+                        </button>
+                        <button type="button" class="btn btn-light calc-btn" id="clearBtn">
+                            Clear All Inputs
+                        </button>
+                    </div>
 
-                <div class="results-section" id="resultsSection">
-                    <h3>Repriced Portfolio Summary</h3>
+                    <hr class="dashed-divider">
+
+                    <h3 class="card-title">Repriced Portfolio</h3>
                     <div id="dynamicResultsContent">
-                        {# This initial message will be replaced by JS upon calculation #}
-                        <p class="initial-message text-center">{{ results.status_message }}</p>
+                        <!-- JS will populate this grid -->
                     </div>
                 </div>
             </div>
-        </div>
-    </form>
-
-    {# This modal will be triggered by JavaScript if show_modal_for_signup is True #}
-    <div class="modal fade" id="loginSignupModal" tabindex="-1" role="dialog" aria-labelledby="loginSignupModalLabel" aria-hidden="true">
-        <div class="modal-dialog" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h3 class="modal-title" id="loginSignupModalLabel">Access Restricted</h3>
-                </div>  
-                <div class="modal-body">
-                    <p>You can use the calculator once as a guest. Please log in or sign up to continue using it.</p>
-                </div>
-                <div class="modal-footer">
-                    <a href="{% url 'accounts:login' %}" class="btn btn-primary">Login</a>
-                    <a href="{% url 'accounts:register' %}" class="btn btn-success">Sign Up</a>
-                </div>
-            </div>
-        </div>
+        </form>
     </div>
 
-</div>
-{% endblock content %}
-
-{% block extra_body %}
-<script>
+    <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const repriceForm = document.getElementById('repriceCalculatorForm');
-        const commonInputFields = [
-            document.getElementById('id_stock_symbol'),
-            document.getElementById('id_current_shares'),
-            document.getElementById('id_average_buy_price'),
-            document.getElementById('id_current_market_price')
-        ];
-        const sharesModeInput = document.getElementById('id_additional_shares_to_buy');
-        const priceModeInput = document.getElementById('id_target_average_price');
-        
-        const calculationModeRadios = repriceForm.querySelectorAll('input[name="calculation_mode"]'); 
-        const sharesModeInputsDiv = document.getElementById('sharesModeInputs');
-        const priceModeInputsDiv = document.getElementById('priceModeInputs');
-        const clearInputsButton = document.getElementById('mainClearBtn');
+        const form = document.getElementById('repriceCalculatorForm');
+        const analyzeBtn = document.getElementById('analyzeBtn');
+        const clearBtn = document.getElementById('clearBtn');
         const dynamicResultsContent = document.getElementById('dynamicResultsContent');
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        const modeSelect = document.getElementById('id_calculation_mode');
+        const sharesInputDiv = document.getElementById('sharesModeInputs');
+        const priceInputDiv = document.getElementById('priceModeInputs');
 
-        // Function to format numbers to 2 decimal places (currency) and add commas
-        function formatCurrency(value) {
-            // Ensure value is a number before formatting
-            const num = parseFloat(value);
-            return isNaN(num) ? '0.00' : num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-        }
+        const placeholderResultsHtml = `
+            <div class="repriced-portfolio-grid">
+                <div class="form-group mb-0"><label>New Average Price ($)</label><div class="calculated-field">---</div></div>
+                <div class="form-group mb-0"><label>Total Investment ($)</label><div class="calculated-field">---</div></div>
+                <div class="form-group mb-0"><label>Additional Shares Needed</label><div class="calculated-field">---</div></div>
+                <div class="form-group mb-0"><label>Total Shares After Purchase</label><div class="calculated-field">---</div></div>
+            </div>
+            <div class="form-group mt-3 mb-0"><label>Cost of New Shares ($)</label><div class="calculated-field">---</div></div>
+        `;
 
-        // Function to format shares to 4 decimal places and add commas
-        function formatShares(value) {
-            // Ensure value is a number before formatting
-            const num = parseFloat(value);
-            return isNaN(num) ? '0' : num.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 4 });
-        }
+        const formatCurrency = (value) => parseFloat(value).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-        // --- Initial Calculations Preview (Client-side) ---
-        // This runs immediately for the 'Current Holdings' card
         function updateInitialCalculations() {
-            const currentShares = parseFloat(commonInputFields[1].value) || 0;
-            const avgBuyPrice = parseFloat(commonInputFields[2].value) || 0;
-            const currentPrice = parseFloat(commonInputFields[3].value) || 0;
-
-            const totalCostPriceInitial = currentShares * avgBuyPrice;
-            const currentPortfolioValue = currentShares * currentPrice;
-            const pLInitial = currentPortfolioValue - totalCostPriceInitial;
-
-            document.getElementById('totalCostPriceInitial').textContent = formatCurrency(totalCostPriceInitial);
-            document.getElementById('currentPortfolioValue').textContent = formatCurrency(currentPortfolioValue);
-            document.getElementById('pLInitial').textContent = formatCurrency(pLInitial);
-        }
-
-        // --- Toggle Calculation Mode Inputs ---
-        function toggleModeFields() {
-            const selectedMode = repriceForm.querySelector('input[name="calculation_mode"]:checked').value;
-
-            // Clear previous errors
-            document.getElementById('error_additional_shares_to_buy').textContent = '';
-            document.getElementById('error_target_average_price').textContent = '';
-
-            if (selectedMode === 'shares') {
-                sharesModeInputsDiv.style.display = 'block';
-                priceModeInputsDiv.style.display = 'none';
-                
-                sharesModeInput.setAttribute('required', 'required');
-                priceModeInput.removeAttribute('required');
-                priceModeInput.value = ''; // Clear target price when switching mode
-            } else if (selectedMode === 'price') {
-                sharesModeInputsDiv.style.display = 'none';
-                priceModeInputsDiv.style.display = 'block';
-                
-                priceModeInput.setAttribute('required', 'required');
-                sharesModeInput.removeAttribute('required');
-                sharesModeInput.value = ''; // Clear additional shares when switching mode
+            const shares = parseFloat(document.getElementById('id_current_shares').value) || 0;
+            const avgPrice = parseFloat(document.getElementById('id_average_buy_price').value) || 0;
+            const marketPrice = parseFloat(document.getElementById('id_current_market_price').value) || 0;
+            const portfolioValue = shares * marketPrice;
+            const totalCost = shares * avgPrice;
+            const pnl = portfolioValue - totalCost;
+            
+            document.getElementById('totalCostPrice').textContent = formatCurrency(totalCost);
+            document.getElementById('currentPortfolioValue').textContent = formatCurrency(portfolioValue);
+            const pnlSpan = document.getElementById('pLInitial').querySelector('span');
+            pnlSpan.textContent = formatCurrency(Math.abs(pnl));
+            pnlSpan.className = 'pnl-value';
+            if (pnl > 0) { 
+                pnlSpan.classList.add('text-success'); 
+                pnlSpan.textContent = '+' + pnlSpan.textContent; 
+            } else if (pnl < 0) { 
+                pnlSpan.classList.add('text-danger'); 
+                pnlSpan.textContent = '-' + pnlSpan.textContent;
             }
-            updateCalculation(); // Trigger full calculation after mode change
         }
 
-        // --- AJAX Calculation Function with Debounce ---
-        let debounceTimeout = null;
-        function updateCalculation() {
-            clearTimeout(debounceTimeout); // Clear any previous debounce timeout
-
-            debounceTimeout = setTimeout(() => { // Set a new timeout
-                const formData = new FormData(repriceForm);
-                
-                fetch(repriceForm.action, {
-                    method: 'POST',
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest', // Identifies as AJAX
-                        'X-CSRFToken': csrfToken,
-                    },
-                    body: formData,
-                })
-                .then(response => {
-                    // Check for network errors or non-JSON responses first
-                    if (!response.ok) {
-                        return response.text().then(text => { throw new Error(`Server responded with ${response.status}: ${text}`); });
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    // Clear all field-specific error messages first
-                    document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-
-                    if (data.status === 'success') {
-                        const results = data.results; // Access the results object
-                        let resultsHtml = `
-                            <p class="text-center lead"><strong>Reprice Summary for ${results.stock_symbol}</strong></p>
-                            <div class="table-responsive">
-                                <table class="table table-bordered table-striped text-center">
-                                    <tbody>
-                                        <tr><th>Current Shares</th><td>${formatShares(results.current_shares)}</td></tr>
-                                        <tr><th>Average Buy Price</th><td>$${formatCurrency(results.average_buy_price)}</td></tr>
-                                        <tr><th>Current Market Price</th><td>$${formatCurrency(results.current_market_price)}</td></tr>
-                        `;
-
-                        if (results.calculation_mode === 'shares') {
-                            resultsHtml += `
-                                <tr><th>Additional Shares Purchased</th><td>${formatShares(results.additional_shares_entered)}</td></tr>
-                                <tr><th>Cost of New Shares</th><td>$${formatCurrency(results.cost_of_new_shares)}</td></tr>
-                                <tr><th>New Average Price</th><td>$${formatCurrency(results.new_average_price)}</td></tr>
-                            `;
-                        } else if (results.calculation_mode === 'price') {
-                            resultsHtml += `
-                                <tr><th>Target Average Price</th><td>$${formatCurrency(results.target_average_price_entered)}</td></tr>
-                                <tr><th>Shares to Buy for Target</th><td>${formatShares(results.calculated_shares_needed)}</td></tr>
-                                <tr><th>Cost to Reach Target</th><td>$${formatCurrency(results.cost_of_new_shares)}</td></tr>
-                            `;
-                        }
-                        
-                        // Common results for both modes
-                        resultsHtml += `
-                                <tr><th>Total Shares After Purchase</th><td>${formatShares(results.total_shares_after_purchase)}</td></tr>
-                                <tr><th>Total Investment</th><td>$${formatCurrency(results.total_investment)}</td></tr>
-                                <tr><th>New Portfolio Value</th><td>$${formatCurrency(results.portfolio_value_after_purchase)}</td></tr>
-                                <tr><th>New P&L</th><td>$${formatCurrency(results.p_l_after_purchase)}</td></tr>
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p class="alert alert-success text-center mt-3">${results.status_message}</p>
-                        `;
-                        dynamicResultsContent.innerHTML = resultsHtml;
-
-                    } else if (data.status === 'error') {
-                        // Display error message
-                        let errorMessage = data.message || "An error occurred during calculation.";
-                        
-                        // Display field-specific errors if provided
-                        if (data.errors) {
-                            for (const field in data.errors) {
-                                const errorDiv = document.getElementById(`error_${field}`);
-                                if (errorDiv) {
-                                    errorDiv.textContent = data.errors[field];
-                                } else if (field === 'non_field_errors') {
-                                    // Handle non-field errors if present
-                                    errorMessage += "<ul class='list-unstyled mt-2'>" + data.errors[field].map(e => `<li>${e}</li>`).join('') + "</ul>";
-                                }
-                            }
-                        }
-                        dynamicResultsContent.innerHTML = `<p class="alert alert-danger text-center mt-3">${errorMessage}</p>`;
-
-                        // Show modal if triggered
-                        if (data.show_modal_for_signup) {
-                            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) { 
-                                const loginSignupModal = new bootstrap.Modal(document.getElementById('loginSignupModal'));
-                                loginSignupModal.show();
-                            } else {
-                                console.warn("Bootstrap's modal JS not loaded. Cannot show login/signup modal.");
-                            }
-                        }
-
-                    }
-                })
-                .catch(error => {
-                    console.error('Fetch error:', error);
-                    dynamicResultsContent.innerHTML = `<p class="alert alert-danger text-center mt-3">An unexpected error occurred: ${error.message}. Please try again.</p>`;
-                });
-            }, 500); // 500ms debounce delay
+        function toggleStrategyInputs() {
+            sharesInputDiv.style.display = modeSelect.value === 'shares' ? 'block' : 'none';
+            priceInputDiv.style.display = modeSelect.value === 'price' ? 'block' : 'none';
         }
 
-        // --- Event Listeners ---
-        // Listen for input changes on all calculator fields
-        [...commonInputFields, sharesModeInput, priceModeInput].forEach(input => {
-            if (input) {
-                input.addEventListener('input', () => {
-                    updateInitialCalculations(); // Update initial P&L immediately
-                    updateCalculation(); // Trigger main AJAX calculation
-                });
-            }
-        });
+        function performAnalysis() {
+            analyzeBtn.disabled = true;
+            analyzeBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculating...';
 
-        // Listen for change on calculation mode radio buttons
-        calculationModeRadios.forEach(radio => {
-            radio.addEventListener('change', toggleModeFields); // Calls toggle & then updateCalculation
-        });
-
-        // Clear All Inputs button functionality
-        if (clearInputsButton) {
-            clearInputsButton.addEventListener('click', function() {
-                repriceForm.reset();
-                // Clear all dynamic content and error messages
-                dynamicResultsContent.innerHTML = `<p class="initial-message text-center">Enter your stock details above to see the reprice summary here.</p>`;
-                document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
+            // Simulate API call
+            setTimeout(() => {
+                const shares = parseFloat(document.getElementById('id_current_shares').value) || 0;
+                const avgPrice = parseFloat(document.getElementById('id_average_buy_price').value) || 0;
+                const marketPrice = parseFloat(document.getElementById('id_current_market_price').value) || 0;
+                const mode = modeSelect.value;
                 
-                // Reset radio to default and trigger its change event
-                const defaultRadio = repriceForm.querySelector('input[name="calculation_mode"][value="shares"]');
-                if (defaultRadio) {
-                    defaultRadio.checked = true;
-                    defaultRadio.dispatchEvent(new Event('change')); // This will call toggleModeFields and updateCalculation
+                let results;
+                
+                if (mode === 'shares') {
+                    const additionalShares = parseFloat(document.getElementById('id_additional_shares_to_buy').value) || 0;
+                    const totalShares = shares + additionalShares;
+                    const currentTotalCost = shares * avgPrice;
+                    const newSharesCost = additionalShares * marketPrice;
+                    const totalInvestment = currentTotalCost + newSharesCost;
+                    const newAvgPrice = totalInvestment / totalShares;
+                    
+                    results = {
+                        new_average_price: formatCurrency(newAvgPrice),
+                        total_investment: formatCurrency(totalInvestment),
+                        additional_shares_needed: additionalShares.toFixed(2),
+                        total_shares_after_purchase: totalShares.toFixed(2),
+                        cost_of_new_shares: formatCurrency(newSharesCost)
+                    };
+                } else {
+                    const targetPrice = parseFloat(document.getElementById('id_target_average_price').value) || 0;
+                    const currentTotalCost = shares * avgPrice;
+                    const requiredShares = (currentTotalCost - (shares * targetPrice)) / (targetPrice - marketPrice);
+                    const additionalShares = Math.max(0, requiredShares);
+                    const totalShares = shares + additionalShares;
+                    const newSharesCost = additionalShares * marketPrice;
+                    const totalInvestment = currentTotalCost + newSharesCost;
+                    
+                    results = {
+                        new_average_price: formatCurrency(targetPrice),
+                        total_investment: formatCurrency(totalInvestment),
+                        additional_shares_needed: additionalShares.toFixed(2),
+                        total_shares_after_purchase: totalShares.toFixed(2),
+                        cost_of_new_shares: formatCurrency(newSharesCost)
+                    };
                 }
-                updateInitialCalculations(); // Reset initial P&L displays
-            });
+                
+                const resultsHtml = `
+                    <div class="repriced-portfolio-grid">
+                        <div class="form-group mb-0"><label>New Average Price ($)</label><div class="calculated-field">${results.new_average_price}</div></div>
+                        <div class="form-group mb-0"><label>Total Investment ($)</label><div class="calculated-field">${results.total_investment}</div></div>
+                        <div class="form-group mb-0"><label>Additional Shares Needed</label><div class="calculated-field">${results.additional_shares_needed}</div></div>
+                        <div class="form-group mb-0"><label>Total Shares After Purchase</label><div class="calculated-field">${results.total_shares_after_purchase}</div></div>
+                    </div>
+                    <div class="form-group mt-3 mb-0"><label>Cost of New Shares ($)</label><div class="calculated-field">${results.cost_of_new_shares}</div></div>
+                `;
+                dynamicResultsContent.innerHTML = resultsHtml;
+                
+                analyzeBtn.disabled = false;
+                analyzeBtn.innerHTML = 'Calculate Reprice';
+            }, 1000);
         }
 
-        // --- Initial Load Logic ---
-        // Ensure the correct mode is displayed and initial calculations are made on page load
-        toggleModeFields(); 
-        updateInitialCalculations(); 
-
-        // Check if we need to show the modal (for non-AJAX initial page load after free uses exhausted)
-        const showModalOnLoad = "{{ show_modal_for_signup|yesno:'true,false' }}"; 
-        if (showModalOnLoad === 'true') {
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) { 
-                const loginSignupModal = new bootstrap.Modal(document.getElementById('loginSignupModal'));
-                loginSignupModal.show();
-            } else {
-                console.warn("Bootstrap's modal JS not loaded. Cannot show login/signup modal.");
+        form.querySelectorAll('input, select').forEach(input => {
+            input.addEventListener('input', updateInitialCalculations);
+            if(input.tagName === 'SELECT') { 
+                input.addEventListener('change', toggleStrategyInputs); 
             }
-        }
+        });
+        
+        analyzeBtn.addEventListener('click', performAnalysis);
+        
+        clearBtn.addEventListener('click', () => {
+            form.reset();
+            const event = new Event('input', { bubbles: true });
+            form.querySelectorAll('input, select').forEach(input => input.dispatchEvent(event));
+            dynamicResultsContent.innerHTML = placeholderResultsHtml;
+        });
+
+        updateInitialCalculations();
+        toggleStrategyInputs();
+        dynamicResultsContent.innerHTML = placeholderResultsHtml;
     });
-</script>
-{% endblock extra_body %}
+    </script>
+{% endblock content %}

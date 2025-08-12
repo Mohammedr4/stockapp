@@ -47,37 +47,37 @@ def get_gain_loss_type(purchase_date, sale_date):
 
 def calculate_uk_cgt(gross_gain, annual_income):
     """
-    Estimates UK Capital Gains Tax.
-    THIS IS A HIGHLY SIMPLIFIED ESTIMATION FOR DEMONSTRATION.
-    DO NOT USE FOR ACTUAL TAX ADVICE.
+    Calculates UK Capital Gains Tax (CGT) for the 2024/25 tax year.
+    This is a simplified estimation for demonstration purposes only.
+    It does not account for all circumstances and should not be used for actual tax advice.
     """
-    ANNUAL_EXEMPT_AMOUNT_UK = Decimal('3000.00') # For 2024/2025, check current year
-    BASIC_RATE_THRESHOLD_UK = Decimal('50270.00') # This is for income tax, CGT uses different bands generally
+    # Gross gain must be positive to be taxable
+    if gross_gain <= 0:
+        return Decimal('0.00')
     
-    # Simplified UK CGT rates for property/other assets (not shares)
-    # Shares have a different rate: 10% (basic) / 20% (higher)
-    BASIC_RATE_CGT = Decimal('0.10') # 10%
-    HIGHER_RATE_CGT = Decimal('0.20') # 20%
-
-    cgt_payable = Decimal('0.00')
-
-    taxable_gain = max(Decimal('0.00'), gross_gain - ANNUAL_EXEMPT_AMOUNT_UK)
-
+    # Correct values for the 2024/25 UK tax year
+    ANNUAL_EXEMPT_AMOUNT = Decimal('3000.00')
+    BASIC_RATE_THRESHOLD = Decimal('50270.00')
+    BASIC_RATE_CGT = Decimal('0.10')  # 10% for shares/assets
+    HIGHER_RATE_CGT = Decimal('0.20') # 20% for shares/assets
+    
+    # Calculate the taxable gain after the annual exemption
+    taxable_gain = max(Decimal('0.00'), gross_gain - ANNUAL_EXEMPT_AMOUNT)
     if taxable_gain <= 0:
         return Decimal('0.00')
-
-    # The threshold for higher rate CGT depends on your total taxable income (including income)
-    # This is a simplification. A full calculation would add gross_gain to income
-    # and then apply the relevant rate to the gain based on which band it falls into.
-    # For demonstration, we assume income uses up the basic rate band first.
-    remaining_basic_rate_band = max(Decimal('0.00'), BASIC_RATE_THRESHOLD_UK - annual_income)
-
-    if taxable_gain <= remaining_basic_rate_band:
-        cgt_payable = taxable_gain * BASIC_RATE_CGT
-    else:
-        cgt_payable += remaining_basic_rate_band * BASIC_RATE_CGT
-        cgt_payable += (taxable_gain - remaining_basic_rate_band) * HIGHER_RATE_CGT
-
+    
+    # Determine how much of the basic rate band is left
+    remaining_basic_rate_band = max(Decimal('0.00'), BASIC_RATE_THRESHOLD - annual_income)
+    
+    # Calculate tax on the portion of the gain that falls into the basic rate band
+    basic_rate_gain = min(remaining_basic_rate_band, taxable_gain)
+    
+    # Calculate tax on the remaining gain that falls into the higher rate band
+    higher_rate_gain = max(Decimal('0.00'), taxable_gain - basic_rate_gain)
+    
+    # Calculate the total tax payable
+    cgt_payable = (basic_rate_gain * BASIC_RATE_CGT) + (higher_rate_gain * HIGHER_RATE_CGT)
+    
     return cgt_payable.quantize(Decimal('0.01'))
 
 def calculate_us_cgt(gross_gain, annual_income, filing_status, holding_period_type):
@@ -239,7 +239,7 @@ def stock_reprice_calculator(request):
             if 'reprice_form_data' in request.session:
                 initial_data = json.loads(request.session.pop('reprice_form_data'))
                 for key, value in initial_data.items():
-                     if isinstance(value, str):
+                    if isinstance(value, str):
                         try: # Convert form data Decimal strings back
                             initial_data[key] = Decimal(value) if any(k_part in key for k_part in ['price', 'shares']) else value
                         except InvalidOperation:
@@ -328,18 +328,15 @@ def stock_reprice_calculator(request):
                     # Formula: additional_shares = (current_shares * (avg_buy_price - target_avg_price)) / (target_avg_price - current_market_price)
                     numerator = current_shares * (average_buy_price - target_average_price)
                     denominator = target_average_price - current_market_price
-
-                    if denominator == Decimal('0'):
-                        raise ZeroDivisionError("Target price is equal to current market price, cannot calculate.")
+                    
+                    if denominator <= 0:
+                        raise ValueError("Target price must be above current market price")
                     
                     calculated_shares_needed = numerator / denominator
                     
                     if calculated_shares_needed < 0:
-                         # This implies target average price is higher than current average, or calculation error
-                        raise ValueError("Target average price cannot be reached by buying more shares; it might require selling.")
+                        raise ValueError("Cannot achieve target price with these parameters. Target price might be too high.")
                     
-                    calculated_shares_needed = calculated_shares_needed.quantize(Decimal('0.0001')) # Quantize for precision
-
                     cost_of_new_shares = calculated_shares_needed * current_market_price
                     new_total_shares = current_shares + calculated_shares_needed
                     new_total_investment = initial_total_cost_price + cost_of_new_shares
@@ -349,17 +346,17 @@ def stock_reprice_calculator(request):
 
                     results.update({
                         'new_average_price': target_average_price, # The target is the new average
-                        'total_investment': new_total_investment,
-                        'calculated_shares_needed': calculated_shares_needed,
-                        'cost_of_new_shares': cost_of_new_shares,
-                        'total_shares_after_purchase': new_total_shares,
-                        'portfolio_value_after_purchase': portfolio_value_after_purchase,
-                        'p_l_after_purchase': p_l_after_purchase,
+                        'total_investment': new_total_investment.quantize(Decimal('0.01')),
+                        'calculated_shares_needed': calculated_shares_needed.quantize(Decimal('0.0001')),
+                        'cost_of_new_shares': cost_of_new_shares.quantize(Decimal('0.01')),
+                        'total_shares_after_purchase': new_total_shares.quantize(Decimal('0.0001')),
+                        'portfolio_value_after_purchase': portfolio_value_after_purchase.quantize(Decimal('0.01')),
+                        'p_l_after_purchase': p_l_after_purchase.quantize(Decimal('0.01')),
                     })
 
                 except (InvalidOperation, ZeroDivisionError, ValueError) as e:
                     results['calculation_successful'] = False
-                    results['status_message'] = f"Calculation error for target price: {e}"
+                    results['status_message'] = str(e)
                     # Clear specific results if calculation failed
                     results['new_average_price'] = results['total_investment'] = results['calculated_shares_needed'] = \
                     results['cost_of_new_shares'] = results['total_shares_after_purchase'] = \
