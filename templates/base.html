@@ -10,7 +10,7 @@
     {# Bootstrap 4 CSS (REQUIRED for Bootstrap classes like modal, btn etc.) #}
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" crossorigin="anonymous">
 
-    {# Google Fonts - Inter (used in styles.css) #}
+    {# Google Fonts - Inter #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -18,10 +18,87 @@
     {# Font Awesome for icons #}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    {# Your Custom Global Stylesheet (loads after Bootstrap to allow overrides) #}
+    {# Your Custom Global Stylesheet (loads after Bootstrap to allow general overrides) #}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
 
-    {% block extra_head %}{% endblock %} {# For page-specific CSS/JS #}
+    {# Your specific navbar styling (Loads last for high precedence) #}
+    <style>
+        .navbar {
+            background-color: #2c3e50; /* Dark blue/grey */
+            color: white;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .navbar .logo {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: white;
+            text-decoration: none;
+        }
+        .navbar .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 25px;
+            font-size: 1.1em;
+            transition: color 0.3s ease;
+        }
+        .navbar .nav-links a:hover {
+            color: #27ae60; /* Green highlight on hover */
+        }
+        .navbar .nav-links .cta-btn {
+            background-color: #27ae60;
+            padding: 8px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .navbar .nav-links .cta-btn:hover {
+            background-color: #2ecc71;
+            color: white;
+        }
+        .navbar .user-menu {
+            position: relative;
+            cursor: pointer;
+        }
+        .navbar .user-menu span {
+            margin-right: 10px;
+        }
+        .navbar .user-menu .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #34495e;
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            right: 0;
+            top: 100%; /* Position below the user name */
+            border-radius: 5px;
+            overflow: hidden; /* For rounded corners */
+        }
+        .navbar .user-menu:hover .dropdown-content {
+            display: block;
+        }
+        .navbar .user-menu .dropdown-content a {
+            color: white;
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            text-align: left;
+            margin: 0; /* Override default nav-links margin */
+        }
+        .navbar .user-menu .dropdown-content a:hover {
+            background-color: #2c3e50;
+            color: #27ae60;
+        }
+        .messages-container {
+            padding: 10px 20px;
+            text-align: center;
+        }
+    </style>
+
+    {% block extra_head %}{% endblock %}
 </head>
 <body>
     <nav class="navbar">
@@ -34,8 +111,8 @@
                 <div class="user-menu">
                     <span>Welcome, {{ user.username }}</span>
                     <div class="dropdown-content">
-                        <a href="#">Profile</a> {# Placeholder #}
-                        <a href="#">Settings</a> {# Placeholder #}
+                        <a href="#">Profile</a>
+                        <a href="#">Settings</a>
                         <a href="{% url 'accounts:logout' %}">Logout</a>
                     </div>
                 </div>
@@ -72,7 +149,7 @@
     {# Bootstrap JS (must be loaded after jQuery and Popper) #}
     <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
 
-    {% block extra_js %}{% endblock %} {# For page-specific JS #}
-    {% block extra_body %}{% endblock extra_body %} {# Added for consistency with my previous calculator template #}
+    {% block extra_js %}{% endblock %}
+    {% block extra_body %}{% endblock extra_body %}
 </body>
 </html>
