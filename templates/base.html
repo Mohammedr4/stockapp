@@ -8,7 +8,7 @@
     <title>{% block title %}StockSavvy{% endblock %}</title>
 
     {# Bootstrap 4 CSS (REQUIRED for Bootstrap classes like modal, btn etc.) #}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9yj0N" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" crossorigin="anonymous">
 
     {# Google Fonts - Inter (used in styles.css) #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -16,7 +16,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
     {# Font Awesome for icons #}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40NZMfz7SSLwWSKzQc2q/9yFJ5Lg1t22JjQ423y1xJ7f5+6yI+f4d2TzK9oU5m4K+r2u/a6gBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
     {# Your Custom Global Stylesheet (loads after Bootstrap to allow overrides) #}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
@@ -66,11 +66,11 @@
     </div>
 
     {# jQuery (must be loaded first, as Bootstrap depends on it) #}
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
     {# Popper.js (needed for Bootstrap 4 tooltips, popovers, and for some modal positioning) #}
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" crossorigin="anonymous"></script>
     {# Bootstrap JS (must be loaded after jQuery and Popper) #}
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtobF9LwZ8y7NlXl8tGq5t2C1j7M2B9lX9t5y8D1M1T9M" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
 
     {% block extra_js %}{% endblock %} {# For page-specific JS #}
     {% block extra_body %}{% endblock extra_body %} {# Added for consistency with my previous calculator template #}
