@@ -30,31 +30,30 @@ DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
 ALLOWED_HOSTS = ['.railway.app', 'localhost', '127.0.0.1', 'stocksavvyapp.com', '.stocksavvyapp.com']
 
-# Security settings for production
+# --- Start of Deployment/Security Settings for Production ---
 if not DEBUG:
-    # SSL Settings
+    # Tell Django that the 'X-Forwarded-Proto' header is trustworthy.
     SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
-    SECURE_SSL_REDIRECT = True
+    
+    # WhiteNoise will enforce a secure connection if this is True.
+    # We will let WhiteNoise and our proxy handle the redirect, not Django's middleware.
+    SECURE_SSL_REDIRECT = False 
+    
+    # These are good security practices for production.
     SESSION_COOKIE_SECURE = True
     CSRF_COOKIE_SECURE = True
-else:
-    # Development settings
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
 
-# Common security settings
-SECURE_BROWSER_XSS_FILTER = True
-SECURE_CONTENT_TYPE_NOSNIFF = True
+# We need to add our domain to the CSRF trusted origins list.
+CSRF_TRUSTED_ORIGINS = ['https://stocksavvyapp.com', 'https://www.stocksavvyapp.com']
 
-# HTTP Strict Transport Security
+# HTTP Strict Transport Security (good practice)
 SECURE_HSTS_SECONDS = 31536000  # 1 year
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
+# --- End of Deployment/Security Settings for Production ---
 
 
 # Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -62,19 +61,19 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-       # My Apps
+        # My Apps
     'accounts',
     'calculators',
     'portfolio',
     'core',
-    # ... other Django apps
     'crispy_forms',
     'crispy_bootstrap5',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise must be above all other middleware
+    # WhiteNoise must be above all other middleware that modifies responses
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -105,8 +104,6 @@ WSGI_APPLICATION = 'stock_savvy_project.wsgi.application'
 
 
 # Database
-# https://docs.djangoproject.com/en/5.2/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
@@ -116,8 +113,6 @@ DATABASES = {
 
 
 # Password validation
-# https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
 AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
@@ -135,35 +130,24 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # Internationalization
-# https://docs.djangoproject.com/en/5.2/topics/i18n/
-
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
 # Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = '/static/'  # The URL prefix for static files
+STATIC_URL = '/static/'
 STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'),  # Points to your project's static folder
+    os.path.join(BASE_DIR, 'static'),
 ]
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
-
-# Default primary key field type
-# https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Authentication settings
-LOGIN_REDIRECT_URL = '/'  # Redirects to homepage after login
-LOGIN_URL = '/accounts/login/' # URL for login page
-LOGOUT_REDIRECT_URL = '/' # Redirects to homepage after logout
+LOGIN_REDIRECT_URL = '/'
+LOGIN_URL = '/accounts/login/'
+LOGOUT_REDIRECT_URL = '/'
 
 # Crispy Forms settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
@@ -171,15 +155,3 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 
 # API Keys
 ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
-
-# Enable WhiteNoise for serving static files in production
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-
-# stock_savvy_project/settings.py
-# ... (other settings) ...
-
-CSRF_TRUSTED_ORIGINS = ['https://stocksavvyapp.com']
-
-CSRF_TRUSTED_ORIGINS = ['https://stocksavvyapp.com', 'https://www.stocksavvyapp.com']
