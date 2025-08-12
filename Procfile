@@ -1,1 +1,1 @@
-web: gunicorn stock_savvy_project.wsgi:application
+web: python manage.py collectstatic --noinput && waitress-serve --port=%PORT% stock_savvy_project.wsgi:application

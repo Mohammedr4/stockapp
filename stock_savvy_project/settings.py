@@ -52,13 +52,13 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',  # WhiteNoise must be above all other middleware
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware',
 ]
 
 ROOT_URLCONF = 'stock_savvy_project.urls'
@@ -127,40 +127,31 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
-STATIC_URL = 'static/'
+STATIC_URL = '/static/'  # The URL prefix for static files
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),  # Points to your project's static folder
+]
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')  # For collected static files
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-# ... other settings ...
-
+# Authentication settings
 LOGIN_REDIRECT_URL = '/'  # Redirects to homepage after login
 LOGIN_URL = '/accounts/login/' # URL for login page
 LOGOUT_REDIRECT_URL = '/' # Redirects to homepage after logout
 
-# stock_savvy_project/settings.py
-
+# Crispy Forms settings
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
+# API Keys
 ALPHA_VANTAGE_API_KEY = os.getenv('ALPHA_VANTAGE_API_KEY')
 
-STATIC_URL = 'static/'
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles') 
-
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/5.2/howto/static-files/
-
-STATIC_URL = '/static/' # The URL prefix for static files.
-
-
-STATICFILES_DIRS = [
-    os.path.join(BASE_DIR, 'static'), # Points to a 'static' folder at your project root
-]
-
-STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+# Enable WhiteNoise for serving static files in production
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
