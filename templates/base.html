@@ -101,6 +101,10 @@
     {% block extra_head %}{% endblock %}
 </head>
 <body>
+    {# --- DEVELOPMENT BANNER --- #}
+    <div style="background-color: #ffc107; color: #343a40; text-align: center; padding: 5px; font-weight: bold; font-size: 0.9em;">
+        This is an under-development version of StockSavvy. Functionality may be limited.
+    </div>
     <nav class="navbar">
         <a href="{% url 'home' %}" class="logo">StockSavvy</a>
         <div class="nav-links">
@@ -143,13 +147,3 @@
     </div>
 
     {# jQuery (must be loaded first, as Bootstrap depends on it) #}
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" crossorigin="anonymous"></script>
-    {# Popper.js (needed for Bootstrap 4 tooltips, popovers, and for some modal positioning) #}
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js" crossorigin="anonymous"></script>
-    {# Bootstrap JS (must be loaded after jQuery and Popper) #}
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js" crossorigin="anonymous"></script>
-
-    {% block extra_js %}{% endblock %}
-    {% block extra_body %}{% endblock extra_body %}
-</body>
-</html>
