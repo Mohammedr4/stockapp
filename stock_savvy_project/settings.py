@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # IMPORTANT: Set to False for production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['www.yourdomain.com', 'yourproject.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['stocksavvyapp.com', 'www.stocksavvyapp.com', '.railway.app', 'localhost', '127.0.0.1']
 
 # Application definition
 INSTALLED_APPS = [
@@ -128,8 +128,8 @@ AUTHENTICATION_BACKENDS = [
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_LOGIN_METHODS = ['username', 'email']
+ACCOUNT_SIGNUP_FIELDS = ['username', 'email']
 ACCOUNT_EMAIL_VERIFICATION = 'none' # Set to 'mandatory' for production
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGOUT_ON_GET = True
