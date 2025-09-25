@@ -1,5 +1,5 @@
-{# templates/base.html #}
-{% load static %} {# Load static files if you use them here, e.g., for logo #}
+{% load static %}
+{% load socialaccount %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,143 +7,88 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}StockSavvy{% endblock %}</title>
 
-    {# Bootstrap 4 CSS (REQUIRED for Bootstrap classes like modal, btn etc.) #}
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" crossorigin="anonymous">
+    {# Bootstrap 5.3 CSS #}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
 
-    {# Google Fonts - Inter #}
+    {# Google Fonts #}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    {# Font Awesome for icons #}
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    {# Font Awesome #}
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer" />
 
-    {# Your Custom Global Stylesheet (loads after Bootstrap to allow general overrides) #}
+    {# Your Custom Stylesheet #}
     <link rel="stylesheet" href="{% static 'css/styles.css' %}">
-
-    {# Your specific navbar styling (Loads last for high precedence) #}
-    <style>
-        .navbar {
-            background-color: #2c3e50; /* Dark blue/grey */
-            color: white;
-            padding: 15px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-        }
-        .navbar .logo {
-            font-size: 1.8em;
-            font-weight: bold;
-            color: white;
-            text-decoration: none;
-        }
-        .navbar .nav-links a {
-            color: white;
-            text-decoration: none;
-            margin-left: 25px;
-            font-size: 1.1em;
-            transition: color 0.3s ease;
-        }
-        .navbar .nav-links a:hover {
-            color: #27ae60; /* Green highlight on hover */
-        }
-        .navbar .nav-links .cta-btn {
-            background-color: #27ae60;
-            padding: 8px 15px;
-            border-radius: 5px;
-            font-weight: bold;
-        }
-        .navbar .nav-links .cta-btn:hover {
-            background-color: #2ecc71;
-            color: white;
-        }
-        .navbar .user-menu {
-            position: relative;
-            cursor: pointer;
-        }
-        .navbar .user-menu span {
-            margin-right: 10px;
-        }
-        .navbar .user-menu .dropdown-content {
-            display: none;
-            position: absolute;
-            background-color: #34495e;
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            right: 0;
-            top: 100%; /* Position below the user name */
-            border-radius: 5px;
-            overflow: hidden; /* For rounded corners */
-        }
-        .navbar .user-menu:hover .dropdown-content {
-            display: block;
-        }
-        .navbar .user-menu .dropdown-content a {
-            color: white;
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-            text-align: left;
-            margin: 0; /* Override default nav-links margin */
-        }
-        .navbar .user-menu .dropdown-content a:hover {
-            background-color: #2c3e50;
-            color: #27ae60;
-        }
-        .messages-container {
-            padding: 10px 20px;
-            text-align: center;
-        }
-    </style>
 
     {% block extra_head %}{% endblock %}
 </head>
 <body>
-    {# --- DEVELOPMENT BANNER --- #}
     <div style="background-color: #ffc107; color: #343a40; text-align: center; padding: 5px; font-weight: bold; font-size: 0.9em;">
         This is an under-development version of StockSavvy. Functionality may be limited.
     </div>
-    <nav class="navbar">
-        <a href="{% url 'home' %}" class="logo">StockSavvy</a>
-        <div class="nav-links">
-            {% if user.is_authenticated %}
-                <a href="{% url 'calculators:calculators_index' %}">Calculators</a>
-                <a href="{% url 'portfolio:portfolio_list' %}">My Portfolio</a>
 
-                <div class="user-menu">
-                    <span>Welcome, {{ user.username }}</span>
-                    <div class="dropdown-content">
-                        <a href="#">Profile</a>
-                        <a href="#">Settings</a>
-                        <a href="{% url 'accounts:logout' %}">Logout</a>
-                    </div>
-                </div>
-            {% else %}
-                <a href="{% url 'accounts:login' %}">Login</a>
-                <a href="{% url 'accounts:register' %}" class="cta-btn">Sign Up Free</a>
-            {% endif %}
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: #2c3e50;">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'home' %}" style="font-size: 1.8em; font-weight: bold;">StockSavvy</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto mb-2 mb-lg-0 align-items-center">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'calculators:calculators_index' %}">Calculators</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'portfolio:portfolio_list' %}">My Portfolio</a>
+                        </li>
+    
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                {% if user.socialaccount_set.all.0.get_avatar_url %}
+                                    <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="Avatar" class="rounded-circle" width="30" height="30" style="margin-right: 8px;">
+                                {% endif %}
+                                Welcome, {{ user.username }}
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+                                <li><a class="dropdown-item" href="{% url 'core:profile' %}">Profile</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'account_logout' %}">Logout</a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'account_login' %}">Login</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-success text-white" href="{% url 'account_signup' %}">Sign Up Free</a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
         </div>
     </nav>
-{# --- IMPROVED BOOTSTRAP MESSAGES SECTION --- #}
-{% if messages %}
-<div class="container" style="margin-top: 20px;">
-    {% for message in messages %}
-        <div class="alert {% if message.tags %}alert-{{ message.tags }}{% else %}alert-info{% endif %} alert-dismissible fade show" role="alert">
-            {{ message }}
-            <button type="button" class="close" data-dismiss="alert" aria-label="Close">
-                <span aria-hidden="true">&times;</span>
-            </button>
-        </div>
-    {% endfor %}
-</div>
-{% endif %}
-{# --- END OF DJANGO MESSAGES SECTION --- #}
+
+    {% if messages %}
+    <div class="container" style="margin-top: 20px;">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags %}{{ message.tags }}{% else %}info{% endif %} alert-dismissible fade show" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <div class="content">
         {% block content %}
-            {# Page-specific content will go here #}
         {% endblock %}
     </div>
 
-    {# jQuery (must be loaded first, as Bootstrap depends on it) #}
+    {# Bootstrap 5.3 JS Bundle #}
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+    
+    {% block extra_body %}{% endblock %}
+</body>
+</html>

@@ -18,4 +18,4 @@ class LandingPageTest(TestCase):
         Verify that the landing page renders its correct template.
         """
         response = self.client.get(reverse('home'))
-        self.assertTemplateUsed(response, 'core/landing_page.html')
+        self.assertTemplateUsed(response, 'core/landing_page.html')b

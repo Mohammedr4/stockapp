@@ -1,0 +1,273 @@
+{% extends 'base.html' %}
+
+{% block title %}My Portfolio Dashboard{% endblock %}
+
+{% block extra_head %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+{% endblock extra_head %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <h1 class="mb-0">My Portfolio Dashboard</h1>
+        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#holdingModal" id="addHoldingBtn">
+            <i class="fas fa-plus"></i> Add Holding
+        </button>
+    </div>
+
+    <div id="loading-spinner" class="text-center">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
+    <p class="mt-2 lead text-muted">Fetching live market prices... <br> This can take a moment to ensure your data is fresh. Thank you for your patience.</p>
+</div>
+
+    <div id="dashboard-content" class="visually-hidden">
+        <div class="row mb-4">
+            <div class="col-md-3"><div class="card shadow-sm text-center h-100"><div class="card-body"><h6 class="card-title text-muted">Total Value</h6><p class="h3" id="summary-total-value">$0.00</p></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm text-center h-100"><div class="card-body"><h6 class="card-title text-muted">Total Invested</h6><p class="h3" id="summary-total-invested">$0.00</p></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm text-center h-100"><div class="card-body"><h6 class="card-title text-muted">Overall P&L ($)</h6><p class="h3" id="summary-pnl-amount">$0.00</p></div></div></div>
+            <div class="col-md-3"><div class="card shadow-sm text-center h-100"><div class="card-body"><h6 class="card-title text-muted">Overall P&L (%)</h6><p class="h3" id="summary-pnl-percent">0.00%</p></div></div></div>
+        </div>
+
+        <div class="row g-4">
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Historical Performance</h5>
+                        <div style="position: relative; height:300px;">
+                            <canvas id="performanceChart"></canvas>
+                            <div id="no-chart-data" class="d-flex align-items-center justify-content-center h-100 text-muted" style="display: none;">
+                                Check back tomorrow to see your historical performance chart begin tracking your portfolio's growth over time.
+                            </div>
+                        </div>
+                    </div>
+                    <div class="card-footer bg-transparent border-top-0">
+                        <small class="text-muted">
+                            Note: The historical chart updates with your portfolio's closing value once per day.
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-12">
+                <div class="card shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">Current Holdings</h5>
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Quantity</th>
+                                        <th>Avg. Price</th>
+                                        <th>Cost Basis</th>
+                                        <th>Market Price</th>
+                                        <th>Market Value</th>
+                                        <th>P&L</th>
+                                        <th>Allocation</th>
+                                        <th>Purchase Date</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="holdings-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="holdingModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalTitle">Add New Holding</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="holdingForm">
+                    <input type="hidden" id="holdingId">
+                    <div class="mb-3"><label for="stock_symbol" class="form-label">Stock Symbol</label><input type="text" class="form-control" id="stock_symbol" required></div>
+                    <div class="mb-3"><label for="quantity" class="form-label">Quantity</label><input type="number" step="any" class="form-control" id="quantity" required></div>
+                    <div class="mb-3"><label for="purchase_price" class="form-label">Average Purchase Price</label><input type="number" step="any" class="form-control" id="purchase_price" required></div>
+                    <div class="mb-3"><label for="purchase_date" class="form-label">Purchase Date</label><input type="date" class="form-control" id="purchase_date" required></div>
+                </form>
+                 <div id="form-errors" class="alert alert-danger" style="display: none;"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveHoldingBtn">Save Holding</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_body %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const spinner = document.getElementById('loading-spinner');
+    const dashboardContent = document.getElementById('dashboard-content');
+    const holdingModal = new bootstrap.Modal(document.getElementById('holdingModal'));
+    const holdingForm = document.getElementById('holdingForm');
+    const formErrors = document.getElementById('form-errors');
+    let performanceChart = null;
+
+    async function fetchDashboardData() {
+        spinner.style.display = 'block';
+        dashboardContent.classList.add('visually-hidden');
+        try {
+            const response = await fetch(`/portfolio/api/summary/`);
+            if (!response.ok) throw new Error((await response.json()).error || 'Failed to fetch portfolio data.');
+            const data = await response.json();
+            renderDashboard(data);
+        } catch (error) {
+            spinner.innerHTML = `<div class="alert alert-danger mx-auto" style="max-width: 80%;">${error.message}</div>`;
+        }
+    }
+
+    function renderDashboard(data) {
+        // Render Cards, Table, and Chart
+        const summary = data.summary;
+        document.getElementById('summary-total-value').textContent = `$${parseFloat(summary.total_value).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        document.getElementById('summary-total-invested').textContent = `$${parseFloat(summary.total_investment).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        const pnlAmountEl = document.getElementById('summary-pnl-amount');
+        const pnlPercentEl = document.getElementById('summary-pnl-percent');
+        pnlAmountEl.textContent = `$${parseFloat(summary.overall_pnl).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        pnlPercentEl.textContent = `${parseFloat(summary.overall_pnl_percent).toFixed(2)}%`;
+        const pnlColor = parseFloat(summary.overall_pnl) >= 0 ? 'text-success' : 'text-danger';
+        pnlAmountEl.className = `h3 ${pnlColor}`;
+        pnlPercentEl.className = `h3 ${pnlColor}`;
+
+        const tableBody = document.getElementById('holdings-table-body');
+        tableBody.innerHTML = '';
+        if (data.holdings.length === 0) {
+            tableBody.innerHTML = `<tr><td colspan="10" class="text-center text-muted">You have no holdings yet.</td></tr>`;
+        } else {
+            data.holdings.forEach(h => {
+                const hPnlColor = parseFloat(h.pnl_amount) >= 0 ? 'text-success' : 'text-danger';
+                const row = `
+                    <tr>
+                        <td><strong>${h.symbol}</strong></td>
+                        <td>${h.quantity}</td>
+                        <td>$${h.average_price}</td>
+                        <td>$${h.cost_basis}</td>
+                        <td>${h.market_price}</td>
+                        <td>$${h.market_value}</td>
+                        <td class="${hPnlColor}">$${h.pnl_amount} (${h.pnl_percent}%)</td>
+                        <td>${h.allocation}%</td>
+                        <td>${h.purchase_date || 'N/A'}</td>
+                        <td>
+                            <button class="btn btn-sm btn-info edit-btn" data-id="${h.id}" data-symbol="${h.symbol}" data-quantity="${h.quantity}" data-price="${h.average_price}" data-date="${h.purchase_date || ''}">Edit</button>
+                            <button class="btn btn-sm btn-danger delete-btn" data-id="${h.id}" data-symbol="${h.symbol}">Delete</button>
+                        </td>
+                    </tr>`;
+                tableBody.insertAdjacentHTML('beforeend', row);
+            });
+        }
+
+        const chartCanvas = document.getElementById('performanceChart');
+        const noChartDataMessage = document.getElementById('no-chart-data');
+        if (performanceChart) performanceChart.destroy();
+        
+        if (data.chart_data.labels.length > 1) {
+            chartCanvas.style.display = 'block';
+            noChartDataMessage.style.display = 'none';
+            performanceChart = new Chart(chartCanvas.getContext('2d'), { type: 'line', data: { labels: data.chart_data.labels, datasets: [{ label: 'Portfolio Value ($)', data: data.chart_data.values, borderColor: 'rgb(54, 162, 235)', tension: 0.1, fill: false }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { type: 'time', time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' } }, y: { beginAtZero: false, ticks: { callback: value => '$' + value.toLocaleString() } } } } });
+        } else {
+            chartCanvas.style.display = 'none';
+            noChartDataMessage.style.display = 'flex';
+        }
+
+        spinner.style.display = 'none';
+        dashboardContent.classList.remove('visually-hidden');
+    }
+
+    document.getElementById('addHoldingBtn').addEventListener('click', () => {
+        document.getElementById('modalTitle').textContent = 'Add New Holding';
+        holdingForm.reset();
+        document.getElementById('holdingId').value = '';
+        formErrors.style.display = 'none';
+    });
+
+    document.getElementById('holdings-table-body').addEventListener('click', e => {
+        if (e.target.classList.contains('edit-btn')) {
+            const btn = e.target;
+            document.getElementById('modalTitle').textContent = `Edit ${btn.dataset.symbol}`;
+            holdingForm.reset();
+            formErrors.style.display = 'none';
+            document.getElementById('holdingId').value = btn.dataset.id;
+            document.getElementById('stock_symbol').value = btn.dataset.symbol;
+            document.getElementById('quantity').value = parseFloat(btn.dataset.quantity);
+            document.getElementById('purchase_price').value = parseFloat(btn.dataset.price);
+            document.getElementById('purchase_date').value = btn.dataset.date || '';
+            holdingModal.show();
+        }
+        if (e.target.classList.contains('delete-btn')) {
+            if (confirm(`Are you sure you want to delete your ${e.target.dataset.symbol} holding?`)) {
+                deleteHolding(e.target.dataset.id);
+            }
+        }
+    });
+
+    document.getElementById('saveHoldingBtn').addEventListener('click', saveHolding);
+
+    async function saveHolding() {
+        const id = document.getElementById('holdingId').value;
+        const url = id ? `/portfolio/api/holdings/${id}/` : '/portfolio/api/holdings/';
+        const method = id ? 'PUT' : 'POST';
+        const payload = {
+            stock_symbol: document.getElementById('stock_symbol').value.toUpperCase(),
+            quantity: document.getElementById('quantity').value,
+            purchase_price: document.getElementById('purchase_price').value,
+            purchase_date: document.getElementById('purchase_date').value,
+        };
+        try {
+            const response = await fetch(url, { method: method, headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') }, body: JSON.stringify(payload) });
+            const data = await response.json();
+            if (!response.ok) {
+                let errorHtml = '<ul>';
+                for (const field in data) { errorHtml += `<li>${field}: ${data[field].join(', ')}</li>`; }
+                errorHtml += '</ul>';
+                formErrors.innerHTML = errorHtml;
+                formErrors.style.display = 'block';
+            } else {
+                holdingModal.hide();
+                fetchDashboardData();
+            }
+        } catch (error) {
+            formErrors.innerHTML = 'A network error occurred.';
+            formErrors.style.display = 'block';
+        }
+    }
+
+    async function deleteHolding(id) {
+        try {
+            const response = await fetch(`/portfolio/api/holdings/${id}/`, { method: 'DELETE', headers: { 'X-CSRFToken': getCookie('csrftoken') } });
+            if (!response.ok) throw new Error('Failed to delete holding.');
+            fetchDashboardData();
+        } catch (error) {
+            alert(error.message);
+        }
+    }
+    
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    fetchDashboardData();
+});
+</script>
+{% endblock extra_body %}

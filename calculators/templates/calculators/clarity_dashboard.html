@@ -1,0 +1,300 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Capital Gains Estimator{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="row">
+        <div class="col-lg-10 mx-auto">
+            
+            <div class="text-center mb-5">
+                <h1>Capital Gains Clarity Dashboard</h1>
+                <p class="lead text-muted">A step-by-step tool to provide insight into your investment gains.</p>
+            </div>
+
+            <form id="gains-form">
+                
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">Step 1: Purchase History</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label for="assetName" class="form-label">Asset Name</label>
+                            <input type="text" class="form-control" id="assetName" placeholder="e.g., Apple Inc. (AAPL)" required>
+                        </div>
+                        <hr>
+                        <table class="table table-borderless">
+                            <thead>
+                                <tr>
+                                    <th>Purchase Date</th>
+                                    <th>Quantity</th>
+                                    <th>Price Per Share ($)</th>
+                                    <th>Fees ($)</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody id="purchase-lots-body">
+                                </tbody>
+                        </table>
+                        <button type="button" id="add-lot-btn" class="btn btn-secondary btn-sm">Add Purchase Lot</button>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">Step 2: Sale Details</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <label for="saleDate" class="form-label">Sale Date</label>
+                                <input type="date" class="form-control" id="saleDate" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="saleQuantity" class="form-label">Quantity Sold</label>
+                                <input type="number" class="form-control" id="saleQuantity" placeholder="10.0" step="any" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="salePrice" class="form-label">Price Per Share ($)</label>
+                                <input type="number" class="form-control" id="salePrice" placeholder="200.00" step="any" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="saleFees" class="form-label">Fees ($)</label>
+                                <input type="number" class="form-control" id="saleFees" placeholder="5.00" step="any">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card shadow-sm mb-4">
+                    <div class="card-header">
+                        <h4 class="my-0 font-weight-normal">Step 3: Tax Profile</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <label for="taxJurisdiction" class="form-label">Tax Jurisdiction</label>
+                                <select id="taxJurisdiction" class="form-select" required>
+                                    <option value="" selected disabled>Choose...</option>
+                                    <option value="US">United States</option>
+                                    <option value="UK">United Kingdom</option>
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="annualIncome" class="form-label">Annual Taxable Income ($ or £)</label>
+                                <input type="number" class="form-control" id="annualIncome" placeholder="80000" step="any" required>
+                            </div>
+                            <div class="col-md-4" id="filing-status-wrapper" style="display: none;">
+                                <label for="filingStatus" class="form-label">Filing Status (US Only)</label>
+                                <select id="filingStatus" class="form-select">
+                                    <option value="single">Single</option>
+                                    <option value="married_jointly">Married Filing Jointly</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" id="calculate-btn" class="btn btn-primary btn-lg">Calculate</button>
+                </div>
+            </form>
+
+            <div id="results-dashboard" class="mt-5" style="display: none;">
+                </div>
+
+        </div>
+    </div>
+</div>
+
+<template id="purchase-lot-template">
+    <tr>
+        <td><input type="date" class="form-control purchase-date" required></td>
+        <td><input type="number" class="form-control purchase-quantity" placeholder="10.0" step="any" required></td>
+        <td><input type="number" class="form-control purchase-price" placeholder="150.00" step="any" required></td>
+        <td><input type="number" class="form-control purchase-fees" placeholder="5.00" step="any"></td>
+        <td><button type="button" class="btn btn-danger btn-sm remove-lot-btn">Remove</button></td>
+    </tr>
+</template>
+{% endblock %}
+
+{% block extra_body %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- DOM Element References ---
+    const form = document.getElementById('gains-form');
+    const addLotBtn = document.getElementById('add-lot-btn');
+    const purchaseLotsBody = document.getElementById('purchase-lots-body');
+    const lotTemplate = document.getElementById('purchase-lot-template');
+    const taxJurisdictionSelect = document.getElementById('taxJurisdiction');
+    const filingStatusWrapper = document.getElementById('filing-status-wrapper');
+    const resultsDashboard = document.getElementById('results-dashboard');
+    const calculateBtn = document.getElementById('calculate-btn');
+
+    // --- Function to add a new purchase lot row ---
+    function addPurchaseLot() {
+        const clone = lotTemplate.content.cloneNode(true);
+        purchaseLotsBody.appendChild(clone);
+    }
+
+    // --- Initial State ---
+    addPurchaseLot(); // Start with one purchase lot row by default
+
+    // --- Event Listeners ---
+    addLotBtn.addEventListener('click', addPurchaseLot);
+
+    purchaseLotsBody.addEventListener('click', function (e) {
+        if (e.target && e.target.classList.contains('remove-lot-btn')) {
+            e.target.closest('tr').remove();
+        }
+    });
+
+    taxJurisdictionSelect.addEventListener('change', function () {
+        filingStatusWrapper.style.display = this.value === 'US' ? 'block' : 'none';
+    });
+
+    form.addEventListener('submit', function (e) {
+        e.preventDefault(); // Prevent traditional form submission
+        calculateGains();
+    });
+
+    // --- Main Calculation and API Call Function ---
+    async function calculateGains() {
+        calculateBtn.disabled = true;
+        calculateBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculating...`;
+        resultsDashboard.style.display = 'none';
+        resultsDashboard.innerHTML = ''; // Clear previous results
+
+        // 1. Construct the JSON payload from the form inputs
+        const payload = {
+            asset_name: document.getElementById('assetName').value,
+            purchase_lots: [],
+            sale: {
+                date: document.getElementById('saleDate').value,
+                quantity: document.getElementById('saleQuantity').value,
+                price: document.getElementById('salePrice').value,
+                fees: document.getElementById('saleFees').value || 0,
+            },
+            tax_profile: {
+                jurisdiction: taxJurisdictionSelect.value,
+                annual_income: document.getElementById('annualIncome').value,
+                filing_status: document.getElementById('filingStatus').value,
+            }
+        };
+
+        purchaseLotsBody.querySelectorAll('tr').forEach(row => {
+            payload.purchase_lots.push({
+                date: row.querySelector('.purchase-date').value,
+                quantity: row.querySelector('.purchase-quantity').value,
+                price: row.querySelector('.purchase-price').value,
+                fees: row.querySelector('.purchase-fees').value || 0,
+            });
+        });
+
+        // 2. Call the API
+        try {
+            const response = await fetch('/calculators/api/calculate-gains/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken'), // Important for Django's security
+                },
+                body: JSON.stringify(payload),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                // If API returns an error (e.g., 400), render the error message
+                renderError(data);
+            } else {
+                // If API call is successful, render the results dashboard
+                renderResults(data);
+            }
+        } catch (error) {
+            renderError({ 'network_error': ['A network error occurred. Please try again.'] });
+        } finally {
+            calculateBtn.disabled = false;
+            calculateBtn.innerHTML = 'Calculate';
+        }
+    }
+
+    // --- Rendering Functions ---
+    function renderResults(data) {
+        const { results, summary } = data;
+        const gainLossColor = parseFloat(results.gross_gain_loss) >= 0 ? 'text-success' : 'text-danger';
+
+        const resultsHTML = `
+            <div class="card shadow-sm">
+                <div class="card-header text-center">
+                    <h2 class="my-0">Clarity Dashboard for ${summary.asset_name}</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-md-4">
+                            <h4>Gross Gain / Loss</h4>
+                            <p class="h2 ${gainLossColor}">${results.gross_gain_loss}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Estimated Tax</h4>
+                            <p class="h2 text-warning">${results.estimated_tax}</p>
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Net Gain / Loss</h4>
+                            <p class="h2 ${gainLossColor}">${results.net_gain_loss}</p>
+                        </div>
+                    </div>
+                    <hr class="my-4">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><strong>Total Sale Proceeds:</strong> <span>${results.total_sale_proceeds}</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><strong>Total Purchase Cost:</strong> <span>${results.total_purchase_cost}</span></li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item d-flex justify-content-between"><strong>Holding Period:</strong> <span>${summary.holding_period}</span></li>
+                                <li class="list-group-item d-flex justify-content-between"><strong>Gain Type:</strong> <span>${summary.gain_loss_type}</span></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        resultsDashboard.innerHTML = resultsHTML;
+        resultsDashboard.style.display = 'block';
+    }
+
+    function renderError(errors) {
+        let errorHTML = '<div class="alert alert-danger"><h5>Calculation Failed</h5><ul class="mb-0">';
+        for (const field in errors) {
+            errors[field].forEach(error => {
+                errorHTML += `<li>${error}</li>`;
+            });
+        }
+        errorHTML += '</ul></div>';
+        resultsDashboard.innerHTML = errorHTML;
+        resultsDashboard.style.display = 'block';
+    }
+
+    // --- Helper function to get CSRF token ---
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+</script>
+{% endblock extra_body %}

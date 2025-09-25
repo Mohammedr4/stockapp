@@ -1,0 +1,199 @@
+{% extends 'base.html' %}
+
+{% block title %}Repricing Strategy Dashboard{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1>Repricing Strategy Console</h1>
+        <p class="lead text-muted">An interactive workspace to model your stock positions and strategies.</p>
+    </div>
+
+    <div class="row g-5">
+        <div class="col-lg-5">
+            <div class="card shadow-sm h-100">
+                <div class="card-header"><h4 class="my-0">Your Current Position</h4></div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="currentShares" class="form-label">Current Shares Held</label>
+                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="averagePrice" class="form-label">Current Average Price ($)</label>
+                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00">
+                    </div>
+                    <div class="mb-3">
+                        <label for="marketPrice" class="form-label">Current Market Price ($)</label>
+                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00">
+                    </div>
+                    <hr>
+                    <h5 class="mb-3">Live Summary</h5>
+                    <dl class="row mb-0">
+                        <dt class="col-sm-6">Total Cost Basis</dt>
+                        <dd class="col-sm-6 text-end" id="displayCostBasis">$0.00</dd>
+                        <dt class="col-sm-6">Current Market Value</dt>
+                        <dd class="col-sm-6 text-end" id="displayMarketValue">$0.00</dd>
+                        <dt class="col-sm-6">Unrealized P&L</dt>
+                        <dd class="col-sm-6 text-end fw-bold" id="displayPnl">$0.00</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-7">
+            <div class="card shadow-sm h-100">
+                <div class="card-header"><h4 class="my-0">Your Strategy Engine</h4></div>
+                <div class="card-body d-flex flex-column">
+                    <div class="mb-4 text-center">
+                        <div class="btn-group" role="group">
+                            <input type="radio" class="btn-check" name="strategyMode" id="modeShares" value="shares" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="modeShares">Calculate by Shares</label>
+                            <input type="radio" class="btn-check" name="strategyMode" id="modePrice" value="price" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="modePrice">Calculate by Target Price</label>
+                        </div>
+                    </div>
+                    <div id="strategyInputShares" class="mb-4">
+                        <label for="strategyValueShares" class="form-label">Additional Shares to Buy</label>
+                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50">
+                    </div>
+                    <div id="strategyInputPrice" class="mb-4" style="display: none;">
+                        <label for="strategyValuePrice" class="form-label">Desired New Average Price ($)</label>
+                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00">
+                    </div>
+                    <hr>
+                    <div id="results-wrapper" class="mt-auto">
+                        <div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock content %}
+
+{% block extra_body %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const inputs = {
+        currentShares: document.getElementById('currentShares'),
+        averagePrice: document.getElementById('averagePrice'),
+        marketPrice: document.getElementById('marketPrice'),
+        strategyMode: document.querySelectorAll('input[name="strategyMode"]'),
+        strategyValueShares: document.getElementById('strategyValueShares'),
+        strategyValuePrice: document.getElementById('strategyValuePrice'),
+    };
+    const displays = {
+        costBasis: document.getElementById('displayCostBasis'),
+        marketValue: document.getElementById('displayMarketValue'),
+        pnl: document.getElementById('displayPnl'),
+    };
+    const strategyInputShares = document.getElementById('strategyInputShares');
+    const strategyInputPrice = document.getElementById('strategyInputPrice');
+    const resultsWrapper = document.getElementById('results-wrapper');
+    let debounceTimer;
+
+    function updatePositionDashboard() {
+        const shares = parseFloat(inputs.currentShares.value) || 0;
+        const avgPrice = parseFloat(inputs.averagePrice.value) || 0;
+        const marketPrice = parseFloat(inputs.marketPrice.value) || 0;
+        const costBasis = shares * avgPrice;
+        const marketValue = shares * marketPrice;
+        const pnl = marketValue - costBasis;
+        displays.costBasis.textContent = `$${costBasis.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        displays.marketValue.textContent = `$${marketValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        displays.pnl.textContent = `$${pnl.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        displays.pnl.classList.remove('text-success', 'text-danger');
+        if (pnl > 0) displays.pnl.classList.add('text-success');
+        if (pnl < 0) displays.pnl.classList.add('text-danger');
+    }
+
+    function renderApiResults(data, isSuccess) {
+        if (!isSuccess) {
+            resultsWrapper.innerHTML = `<div class="alert alert-danger">${data.error || 'An unknown error occurred.'}</div>`;
+            return;
+        }
+        let resultsHTML = '';
+        if (data.new_average_price) {
+            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>`;
+        } else {
+            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>`;
+        }
+        resultsWrapper.innerHTML = resultsHTML;
+    }
+    
+    function handleInputChange() {
+        updatePositionDashboard();
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(callRepriceAPI, 500);
+    }
+
+    async function callRepriceAPI() {
+        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
+        if (!inputs.currentShares.value || !inputs.averagePrice.value || !inputs.marketPrice.value || !strategyValue) {
+            resultsWrapper.innerHTML = `<div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>`;
+            return;
+        }
+        resultsWrapper.innerHTML = `<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
+        const payload = {
+            position: { current_shares: inputs.currentShares.value, average_price: inputs.averagePrice.value, market_price: inputs.marketPrice.value },
+            strategy: { mode, value: strategyValue }
+        };
+        try {
+            const response = await fetch('/calculators/api/calculate-reprice/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload),
+            });
+            const data = await response.json();
+            renderApiResults(data, response.ok);
+        } catch (error) {
+            renderApiResults({ error: 'A network error occurred.' }, false);
+        }
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function initialize() {
+        // Attach listeners to all text/number inputs
+        ['currentShares', 'averagePrice', 'marketPrice', 'strategyValueShares', 'strategyValuePrice'].forEach(id => {
+            document.getElementById(id).addEventListener('input', handleInputChange);
+        });
+        
+        // Attach listeners to radio buttons
+        inputs.strategyMode.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const mode = radio.value;
+                strategyInputShares.style.display = mode === 'shares' ? 'block' : 'none';
+                strategyInputPrice.style.display = mode === 'price' ? 'none';
+                handleInputChange();
+            });
+        });
+
+        // Set initial visibility
+        const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
+        strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
+        strategyInputPrice.style.display = initialMode === 'price' ? 'none';
+
+        // Run calculations on page load
+        updatePositionDashboard();
+        handleInputChange();
+    }
+
+    initialize();
+});
+</script>
+{% endblock extra_body %}

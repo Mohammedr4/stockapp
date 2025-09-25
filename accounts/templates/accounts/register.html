@@ -1,35 +1,17 @@
-{# accounts/templates/accounts/register.html OR templates/registration/register.html #}
-{% extends 'base.html' %} {# Make sure it extends your base template #}
+{% extends 'base.html' %}
 {% load static %}
+{% load socialaccount %}
 
-{% block title %}Register - StockSavvy{% endblock %}
+{% block title %}Sign Up{% endblock %}
 
 {% block content %}
-    <div class="registration-container" style="max-width: 500px; padding: 40px; margin-top: 50px; background-color: white; border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); text-align: left;">
-        <h1>Create Your StockSavvy Account</h1>
-
-        {% if form.errors %}
-            <p style="color: red; margin-bottom: 20px;">Please correct the errors below.</p>
-            {% for field in form %}
-                {% for error in field.errors %}
-                    <p style="color: red;">{{ field.label }}: {{ error }}</p>
-                {% endfor %}
-            {% endfor %}
-            {% for error in form.non_field_errors %}
-                <p style="color: red;">{{ error }}</p>
-            {% endfor %}
-        {% endif %}
-
-        <form method="post">
-            {% csrf_token %} {# Django security token #}
-            {{ form.as_p }} {# This renders all form fields as paragraphs #}
-            <button type="submit" style="background-color: #27ae60; color: white; padding: 12px 25px; border: none; border-radius: 5px; font-size: 1.1em; cursor: pointer; transition: background-color 0.3s ease; width: 100%; margin-top: 20px;">
-                Register
-            </button>
-        </form>
-
-        <p style="margin-top: 30px; text-align: center;">
-            Already have an account? <a href="{% url 'accounts:login' %}" style="color: #3498db; text-decoration: none; font-weight: bold;">Log In Here</a>
-        </p>
+    <div class="container text-center mt-5">
+        <div class="card p-4 mx-auto" style="max-width: 400px;">
+            <h1 class="h3 mb-3 font-weight-normal">Create an Account</h1>
+            <p>Use your Google account to sign up.</p>
+            <a href="{% provider_login_url 'google' %}" class="btn btn-lg btn-block btn-google mt-3">
+                <i class="fab fa-google"></i> Sign Up with Google
+            </a>
+        </div>
     </div>
-{% endblock content %}
+{% endblock %}

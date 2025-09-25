@@ -6,7 +6,17 @@ app_name = 'calculators'
 
 urlpatterns = [
     path('', views.calculators_index, name='calculators_index'),
-    path('stock-reprice/', views.stock_reprice_calculator, name='stock_reprice_calculator'),
-    path('capital-gains/', views.capital_gains_estimator, name='capital_gains_estimator')
-    # Add other calculator URLs here later (e.g., 'capital-gains/', 'compound-interest/')
+    
+    # The new Repricing Strategy Dashboard UI
+    path('stock-reprice/', views.reprice_dashboard_view, name='stock_reprice_calculator'),
+    
+    # The new Clarity Dashboard UI and its API
+    path('capital-gains/', views.clarity_dashboard_view, name='clarity_dashboard'),
+    path('api/calculate-gains/', views.CapitalGainsAPIView.as_view(), name='api_calculate_gains'),
+
+    # The new Reprice API
+    path('api/calculate-reprice/', views.RepriceAPIView.as_view(), name='api_calculate_reprice'),
+    
+    path('portfolio-rebalance/', views.rebalance_dashboard_view, name='rebalance_dashboard'),
+    path('api/calculate-rebalance/', views.RebalanceAPIView.as_view(), name='api_calculate_rebalance'),
 ]

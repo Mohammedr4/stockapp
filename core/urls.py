@@ -5,5 +5,5 @@ from . import views
 app_name = 'core'
 
 urlpatterns = [
-    path('signup-prompt/', views.signup_prompt, name='signup_prompt'),
+    path('profile/', views.profile_view, name='profile'),
 ]

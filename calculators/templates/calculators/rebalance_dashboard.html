@@ -1,0 +1,307 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Portfolio Rebalancing Console{% endblock %}
+
+{% block content %}
+<div class="container my-5">
+    <div class="text-center mb-5">
+        <h1>Portfolio Rebalancing Console</h1>
+        <p class="lead text-muted">Define your target asset allocation and get a clear action plan to rebalance your portfolio.</p>
+    </div>
+
+    <div id="rebalance-console">
+
+        <div id="step-1-targets">
+            <div class="card shadow-sm">
+                <div class="card-header"><h4 class="my-0">Step 1: Define Your Target Allocation</h4></div>
+                <div class="card-body">
+                    <p>Create categories for your portfolio and set a target percentage for each. The total must equal 100%.</p>
+                    <div id="categories-container">
+                        </div>
+                    <div class="d-flex justify-content-between align-items-center mt-3">
+                        <button type="button" id="add-category-btn" class="btn btn-secondary btn-sm">Add Category</button>
+                        <div>
+                            <strong>Total: <span id="category-total-percent">0</span>%</strong>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="d-grid">
+                        <button type="button" id="to-step-2-btn" class="btn btn-primary" disabled>Next: Assign Holdings</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-2-assign" style="display:none;">
+            <div class="card shadow-sm">
+                <div class="card-header"><h4 class="my-0">Step 2: Assign Holdings to Categories</h4></div>
+                <div class="card-body">
+                    <p>Assign each of your portfolio holdings to the categories you created. Holdings without a category will be ignored.</p>
+                    <div id="holdings-container" class="list-group">
+                        </div>
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                         <button type="button" id="back-to-step-1-btn" class="btn btn-secondary">Back: Edit Targets</button>
+                         <button type="button" id="to-step-3-btn" class="btn btn-primary">Calculate Rebalancing Plan</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="step-3-results" style="display:none;">
+            </div>
+
+    </div>
+</div>
+
+<template id="category-row-template">
+    <div class="row g-2 mb-2 align-items-center category-row">
+        <div class="col-md-6">
+            <input type="text" class="form-control category-name" placeholder="Category Name (e.g., US Stocks)">
+        </div>
+        <div class="col-md-4">
+            <div class="input-group">
+                <input type="number" class="form-control category-target" placeholder="Target %" min="0" max="100">
+                <span class="input-group-text">%</span>
+            </div>
+        </div>
+        <div class="col-md-2">
+            <button type="button" class="btn btn-danger btn-sm w-100 remove-category-btn">Remove</button>
+        </div>
+    </div>
+</template>
+
+{% endblock content %}
+
+{% block extra_body %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    // --- STATE MANAGEMENT ---
+    let userPortfolio = []; // This will hold the user's actual portfolio data
+
+    // --- DOM REFERENCES ---
+    const steps = {
+        step1: document.getElementById('step-1-targets'),
+        step2: document.getElementById('step-2-assign'),
+        step3: document.getElementById('step-3-results'),
+    };
+    const categoriesContainer = document.getElementById('categories-container');
+    const categoryTemplate = document.getElementById('category-row-template');
+    const addCategoryBtn = document.getElementById('add-category-btn');
+    const totalPercentEl = document.getElementById('category-total-percent');
+    const toStep2Btn = document.getElementById('to-step-2-btn');
+    const backToStep1Btn = document.getElementById('back-to-step-1-btn');
+    const toStep3Btn = document.getElementById('to-step-3-btn');
+    const holdingsContainer = document.getElementById('holdings-container');
+
+    // --- FUNCTIONS ---
+    function navigateToStep(stepNumber) {
+        Object.values(steps).forEach(step => step.style.display = 'none');
+        steps[`step${stepNumber}`].style.display = 'block';
+    }
+
+    function addCategoryRow(name = '', target = '') {
+        const clone = categoryTemplate.content.cloneNode(true);
+        clone.querySelector('.category-name').value = name;
+        clone.querySelector('.category-target').value = target;
+        categoriesContainer.appendChild(clone);
+    }
+
+    function updateTotalPercent() {
+        let total = 0;
+        categoriesContainer.querySelectorAll('.category-target').forEach(input => {
+            total += parseInt(input.value) || 0;
+        });
+        totalPercentEl.textContent = total;
+        if (total === 100) {
+            totalPercentEl.classList.remove('text-danger');
+            totalPercentEl.classList.add('text-success');
+            toStep2Btn.disabled = false;
+        } else {
+            totalPercentEl.classList.remove('text-success');
+            totalPercentEl.classList.add('text-danger');
+            toStep2Btn.disabled = true;
+        }
+    }
+
+    function populateHoldingsForAssignment() {
+        const categories = [];
+        categoriesContainer.querySelectorAll('.category-name').forEach(input => {
+            if (input.value) categories.push(input.value);
+        });
+
+        holdingsContainer.innerHTML = ''; // Clear previous
+        userPortfolio.forEach(holding => {
+            let optionsHTML = '<option selected value="">-- Do not rebalance --</option>';
+            categories.forEach(cat => {
+                optionsHTML += `<option value="${cat}">${cat}</option>`;
+            });
+
+            const holdingHTML = `
+                <div class="list-group-item d-flex justify-content-between align-items-center">
+                    <div>
+                        <strong>${holding.symbol}</strong>
+                        <small class="text-muted d-block">$${parseFloat(holding.value).toLocaleString()}</small>
+                    </div>
+                    <div class="w-50">
+                        <select class="form-select holding-category-select" data-symbol="${holding.symbol}" data-value="${holding.value}">
+                            ${optionsHTML}
+                        </select>
+                    </div>
+                </div>
+            `;
+            holdingsContainer.insertAdjacentHTML('beforeend', holdingHTML);
+        });
+    }
+
+    function renderResults(data) {
+        const allocationRows = Object.keys(data.target_allocation).map(catName => {
+            const current = data.current_allocation[catName];
+            const target = data.target_allocation[catName];
+            const diff = parseFloat(target.value) - parseFloat(current.value);
+            const diffColor = diff > 0 ? 'text-success' : (diff < 0 ? 'text-danger' : '');
+            
+            return `
+                <tr>
+                    <td><strong>${catName}</strong></td>
+                    <td>${current.percent}%</td>
+                    <td>${target.percent}%</td>
+                    <td>$${parseFloat(current.value).toLocaleString()}</td>
+                    <td>$${parseFloat(target.value).toLocaleString()}</td>
+                    <td class="${diffColor}">${diff >= 0 ? '+' : ''}$${diff.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                </tr>
+            `;
+        }).join('');
+
+        const orderRows = data.rebalancing_orders.filter(order => order.action !== 'HOLD').map(order => {
+            const actionColor = order.action === 'BUY' ? 'text-success' : 'text-danger';
+            return `
+                <li class="list-group-item d-flex justify-content-between">
+                    <span><strong class="${actionColor}">${order.action}</strong> ${order.category}</span>
+                    <strong class="${actionColor}">$${Math.abs(parseFloat(order.difference_value)).toLocaleString()}</strong>
+                </li>
+            `;
+        }).join('');
+
+        const resultsHTML = `
+            <div class="card shadow-sm">
+                <div class="card-header"><h4 class="my-0">Step 3: Your Rebalancing Plan</h4></div>
+                <div class="card-body">
+                    <p>Based on a total portfolio value of <strong>$${parseFloat(data.total_portfolio_value).toLocaleString()}</strong>.</p>
+                    
+                    <h5 class="mt-4">Allocation Summary</h5>
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Current</th>
+                                    <th>Target</th>
+                                    <th>Current Value</th>
+                                    <th>Target Value</th>
+                                    <th>Difference</th>
+                                </tr>
+                            </thead>
+                            <tbody>${allocationRows}</tbody>
+                        </table>
+                    </div>
+
+                    <h5 class="mt-4">Actionable Orders</h5>
+                    <ul class="list-group mb-3">${orderRows}</ul>
+
+                    <hr>
+                    <button type="button" id="back-to-step-2-btn" class="btn btn-secondary">Back: Edit Assignments</button>
+                </div>
+            </div>
+        `;
+        steps.step3.innerHTML = resultsHTML;
+        // Re-add event listener for the new "back" button
+        document.getElementById('back-to-step-2-btn').addEventListener('click', () => navigateToStep(2));
+    }
+
+    async function runRebalanceCalculation() {
+        const payload = { holdings: [], categories: [] };
+        document.querySelectorAll('.holding-category-select').forEach(select => {
+            if (select.value) {
+                payload.holdings.push({
+                    symbol: select.dataset.symbol,
+                    value: select.dataset.value,
+                    category: select.value
+                });
+            }
+        });
+        document.querySelectorAll('.category-row').forEach(row => {
+            payload.categories.push({
+                name: row.querySelector('.category-name').value,
+                target: row.querySelector('.category-target').value
+            });
+        });
+
+        steps.step3.innerHTML = `<div class="card shadow-sm"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Calculating...</p></div></div>`;
+        navigateToStep(3);
+
+        try {
+            const response = await fetch('/calculators/api/calculate-rebalance/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error(data.error || 'Calculation failed.');
+            renderResults(data);
+        } catch (error) {
+            steps.step3.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+        }
+    }
+    
+    function fetchUserPortfolio() {
+        userPortfolio = [
+            { symbol: 'AAPL', value: '15000.00' },
+            { symbol: 'GOOGL', value: '10000.00' },
+            { symbol: 'VTI', value: '25000.00' },
+            { symbol: 'BND', value: '8000.00' },
+            { symbol: 'VXUS', value: '12000.00' }
+        ];
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // --- EVENT LISTENERS ---
+    addCategoryBtn.addEventListener('click', () => addCategoryRow());
+    categoriesContainer.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-category-btn')) {
+            e.target.closest('.category-row').remove();
+            updateTotalPercent();
+        }
+    });
+    categoriesContainer.addEventListener('input', updateTotalPercent);
+    toStep2Btn.addEventListener('click', () => {
+        populateHoldingsForAssignment();
+        navigateToStep(2);
+    });
+    backToStep1Btn.addEventListener('click', () => navigateToStep(1));
+    toStep3Btn.addEventListener('click', runRebalanceCalculation);
+
+    // --- INITIALIZATION ---
+    addCategoryRow('US Stocks', '60');
+    addCategoryRow('International Stocks', '20');
+    addCategoryRow('Bonds', '20');
+    updateTotalPercent();
+    fetchUserPortfolio();
+});
+</script>
+{% endblock extra_body %}
