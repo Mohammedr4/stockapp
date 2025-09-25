@@ -14,7 +14,7 @@ SECRET_KEY = os.getenv('SECRET_KEY')
 # IMPORTANT: Set to False for production!
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['stocksavvyapp.com', 'www.stocksavvyapp.com', '.railway.app', 'localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['stocksavvyapp.com', 'www.stocksavvyapp.com', '.railway.app']
 
 # Application definition
 INSTALLED_APPS = [
