@@ -1,1 +1,1 @@
-web: python manage.py migrate && python manage.py collectstatic --noinput && waitress-serve --listen=*:$PORT stock_savvy_project.wsgi:application
+web: python manage.py collectstatic --noinput && waitress-serve --listen=*:$PORT stock_savvy_project.wsgi:application
