@@ -11,4 +11,5 @@ urlpatterns = [
     path('', core_views.landing_page, name='home'),
     path('core/', include('core.urls', namespace='core')),
     path('portfolio/', include('portfolio.urls', namespace='portfolio')),
+    
 ]

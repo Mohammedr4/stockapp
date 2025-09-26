@@ -11,3 +11,4 @@ def landing_page(request):
 def profile_view(request):
     """ Renders the user's profile page. """
     return render(request, 'core/profile.html')
+
