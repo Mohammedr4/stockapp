@@ -1,30 +1,32 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
 {% load static %}
 {% load allauth socialaccount %}
 
 {% block title %}StockSavvy: Your Smart Investment Navigator{% endblock %}
 
 {% block content %}
+<div class="container my-5">
     {% if user.is_authenticated %}
-        <header class="hero-section" style="padding-bottom: 60px;">
+        <header class="hero-section text-center">
             <h1>Welcome back, {{ user.username }}!</h1>
-            <p>Ready to manage your investments or start a new calculation?</p>
-            <div style="margin-top: 40px;">
-                <a href="{% url 'calculators:calculators_index' %}" class="cta-button">Go to Calculators</a>
-                <a href="{% url 'portfolio:portfolio_list' %}" class="cta-button" style="background-color: #3498db; margin-left: 15px;">View My Portfolio</a>
+            <p class="lead">Ready to manage your investments or start a new calculation?</p>
+            <div class="mt-4">
+                <a href="{% url 'calculators:calculators_index' %}" class="btn btn-primary btn-lg mx-2">Go to Calculators</a>
+                <a href="{% url 'portfolio:portfolio_list' %}" class="btn btn-secondary btn-lg mx-2">View My Portfolio</a>
             </div>
         </header>
     {% else %}
-        <header class="hero-section">
-            <h1>Unlock Smarter Investment Decisions.</h1>
-            <p>Calculate stock gains, manage your portfolio, and project future wealth with intuitive, powerful tools. Your first step is instantly free.</p>
-            <a href="{% url 'calculators:stock_reprice_calculator' %}" class="cta-button">Try the Strategy Console (No Account Needed!)</a>
-            <p style="font-size: 0.9em; margin-top: 15px;">See how it works instantly. No credit card, no commitment, just clarity.</p>
+        <header class="hero-section text-center">
+            <h1 class="display-4">Unlock Smarter Investment Decisions.</h1>
+            <p class="lead">Calculate stock gains, manage your portfolio, and project future wealth with intuitive, powerful tools.</p>
+            <div class="mt-4">
+                <a href="{% url 'calculators:stock_reprice_calculator' %}" class="cta-button">Try the Strategy Console Instantly</a>
+            </div>
         </header>
     {% endif %}
 
     <section class="features-section">
-        <h2>Tools Designed for Your Financial Growth.</h2>
+        <h2>Tools Designed for Your Financial Growth</h2>
         <div class="feature-cards">
             <div class="card">
                 <h3>Repricing Strategy Console</h3>
@@ -49,16 +51,13 @@
     </section>
 
     {% if not user.is_authenticated %}
-        <section class="signup-section">
+        <section class="signup-section text-center">
             <h2>Unlock Your Full Investment Potential – It's Free.</h2>
             <ul>
                 <li>✔ Save Your Progress: Keep a historical record of all your calculations and insights.</li>
                 <li>✔ Personalized Portfolio: Track your actual stock holdings, their performance, and overall portfolio value.</li>
                 <li>✔ Unlimited Access: Enjoy every calculator and feature without restriction, anytime you need them.</li>
-                <li>✔ Access Anywhere: Your data is securely stored and available across all your devices.</li>
-                <li>✔ Ready for More: Position yourself for future enhancements and advanced tracking features.</li>
             </ul>
-            
             <a href="{% provider_login_url 'google' %}" class="cta-button">Sign Up with Google</a>
             <p class="mt-3">
                 <a href="{% url 'account_signup' %}" style="color: white;">Or sign up with your email</a>
@@ -66,11 +65,11 @@
             <p class="mt-4" style="font-size: 0.9em;">
                 Already have an account? <a href="{% url 'account_login' %}" style="color: white; font-weight: bold;">Log In</a>
             </p>
-
         </section>
     {% endif %}
 
     <footer class="footer">
         <p>© 2025 StockSavvy. All rights reserved.</p>
     </footer>
+</div>
 {% endblock content %}
