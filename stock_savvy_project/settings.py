@@ -128,17 +128,20 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# --- Definitive Email-Only Settings ---
+# Definitive Email-Only Settings
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Change to 'mandatory' for production
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_UNIQUE_EMAIL = True # This is the critical missing piece
 ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
 
-# --- Quality of Life Settings ---
+# Quality of Life Settings
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_ADAPTER = 'accounts.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter' # This was missing
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
@@ -146,11 +149,13 @@ SOCIALACCOUNT_PROVIDERS = {
             'client_id': os.getenv('GOOGLE_CLIENT_ID'),
             'secret': os.getenv('GOOGLE_CLIENT_SECRET'),
             'key': ''
-        }
+        },
+        'SCOPE': [  # This ensures we get the user's name from Google
+            'profile',
+            'email',
+        ],
     }
 }
-SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter'
-
 # --- Security Settings (for Production) ---
 CSRF_TRUSTED_ORIGINS = ['https://stocksavvyapp.com', 'https://*.railway.app']
 if not DEBUG:
