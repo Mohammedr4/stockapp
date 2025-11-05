@@ -69,6 +69,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'allauth.account.context_processors.account', # This was missing
             ],
         },
     },
@@ -76,11 +77,20 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stock_savvy_project.wsgi.application'
 
-# --- Database Configuration ---
+# --- CORRECTED DATABASE CONFIGURATION ---
 if 'DATABASE_URL' in os.environ:
-    DATABASES = {'default': dj_database_url.config(conn_max_age=600, ssl_require=True)}
+    # Production database (from Railway/Heroku)
+    DATABASES = {
+        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
+    }
 else:
-    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}}
+    # Development database (local sqlite3)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -94,13 +104,13 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# --- Static Files Configuration ---
+# --- STATIC FILES CONFIGURATION ---
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# --- Email Configuration ---
+# --- EMAIL CONFIGURATION ---
 if not DEBUG:
     # Production Email Settings (e.g., SendGrid)
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -114,7 +124,7 @@ else:
     # Development Email Settings (prints to console)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# --- Crispy Forms ---
+# --- CRISPY FORMS ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
@@ -128,17 +138,20 @@ SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
-# --- Definitive Email-Only Settings ---
+# Definitive Email-Only Settings
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Change to 'mandatory' for production
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_EMAIL_VERIFICATION = 'none'
+ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
 
-# --- Quality of Life Settings ---
+# Quality of Life Settings
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_ADAPTER = 'accounts.adapters.CustomAccountAdapter'
+SOCIALACCOUNT_ADAPTER = 'accounts.adapters.CustomSocialAccountAdapter' # This was missing
 
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
