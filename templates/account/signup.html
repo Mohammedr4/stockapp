@@ -1,6 +1,5 @@
 {% extends "base.html" %}
-{% load i18n %}
-{% load allauth socialaccount %}
+{% load i18n crispy_forms_tags socialaccount %}
 
 {% block title %}{% trans "Sign Up" %}{% endblock %}
 
@@ -24,18 +23,7 @@
                     <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
                         {% csrf_token %}
                         
-                        {% for field in form %}
-                        <div class="mb-3">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field }}
-                            {% if field.help_text %}
-                                <small class="form-text text-muted">{{ field.help_text }}</small>
-                            {% endif %}
-                            {% for error in field.errors %}
-                                <div class="invalid-feedback d-block">{{ error }}</div>
-                            {% endfor %}
-                        </div>
-                        {% endfor %}
+                        {{ form|crispy }}
                         
                         {% if redirect_field_value %}
                             <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />

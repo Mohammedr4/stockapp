@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
-import dj_database_url # <-- Required import
+import dj_database_url
 
 load_dotenv()
 
@@ -11,10 +11,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 SECRET_KEY = os.getenv('SECRET_KEY')
 
-# IMPORTANT: Set to False for production!
+# Reads from .env file. Set DEBUG=True in .env for local.
+# On Railway, leave this variable unset to default to False.
 DEBUG = os.getenv('DEBUG', 'False') == 'True'
 
-ALLOWED_HOSTS = ['stocksavvyapp.com', 'www.stocksavvyapp.com', '.railway.app']
+ALLOWED_HOSTS = [
+    'stocksavvyapp.com',
+    'www.stocksavvyapp.com',
+    '.railway.app',
+    'localhost',
+    '127.0.0.1',
+]
 
 # Application definition
 INSTALLED_APPS = [
@@ -39,7 +46,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # Whitenoise for serving static files
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -69,20 +76,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'stock_savvy_project.wsgi.application'
 
-# --- CORRECTED DATABASE CONFIGURATION ---
+# --- Database Configuration ---
 if 'DATABASE_URL' in os.environ:
-    # Production database (from Railway/Heroku)
-    DATABASES = {
-        'default': dj_database_url.config(conn_max_age=600, ssl_require=True)
-    }
+    DATABASES = {'default': dj_database_url.config(conn_max_age=600, ssl_require=True)}
 else:
-    # Development database (local sqlite3)
-    DATABASES = {
-        'default': {
-            'ENGINE': 'django.db.backends.sqlite3',
-            'NAME': BASE_DIR / 'db.sqlite3',
-        }
-    }
+    DATABASES = {'default': {'ENGINE': 'django.db.backends.sqlite3', 'NAME': BASE_DIR / 'db.sqlite3'}}
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -96,13 +94,13 @@ TIME_ZONE = 'UTC'
 USE_I18N = True
 USE_TZ = True
 
-# --- STATIC FILES CONFIGURATION (for Whitenoise) ---
+# --- Static Files Configuration ---
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# --- EMAIL CONFIGURATION ---
+# --- Email Configuration ---
 if not DEBUG:
     # Production Email Settings (e.g., SendGrid)
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
@@ -116,7 +114,7 @@ else:
     # Development Email Settings (prints to console)
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
-# --- CRISPY FORMS ---
+# --- Crispy Forms ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
 CRISPY_TEMPLATE_PACK = "bootstrap5"
 
@@ -125,11 +123,19 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
     'allauth.account.auth_backends.AuthenticationBackend',
 ]
+
 SITE_ID = 1
 LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
-ACCOUNT_AUTHENTICATION_METHOD = 'username_email'
-ACCOUNT_EMAIL_VERIFICATION = 'none' # Set to 'mandatory' for production
+
+# --- Definitive Email-Only Settings ---
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
+ACCOUNT_EMAIL_VERIFICATION = 'none' # Change to 'mandatory' for production
+ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
+
+# --- Quality of Life Settings ---
 SOCIALACCOUNT_LOGIN_ON_GET = True
 ACCOUNT_LOGOUT_ON_GET = True
 ACCOUNT_ADAPTER = 'accounts.adapters.CustomAccountAdapter'
@@ -144,6 +150,12 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
+# --- Security Settings (for Production) ---
 CSRF_TRUSTED_ORIGINS = ['https://stocksavvyapp.com', 'https://*.railway.app']
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+if not DEBUG:
+    SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
+    SECURE_HSTS_SECONDS = 31536000
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    SECURE_HSTS_PRELOAD = True

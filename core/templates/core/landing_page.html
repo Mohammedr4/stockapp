@@ -8,7 +8,7 @@
 <div class="container my-5">
     {% if user.is_authenticated %}
         <header class="hero-section text-center">
-            <h1>Welcome back, {{ user.username }}!</h1>
+            <h1>Welcome back, {{ user.first_name }}!</h1>
             <p class="lead">Ready to manage your investments or start a new calculation?</p>
             <div class="mt-4">
                 <a href="{% url 'calculators:calculators_index' %}" class="btn btn-primary btn-lg mx-2">Go to Calculators</a>
