@@ -10,6 +10,6 @@ urlpatterns = [
     path('calculators/', include('calculators.urls', namespace='calculators')),
     path('', core_views.landing_page, name='home'),
     path('core/', include('core.urls', namespace='core')),
-    path('portfolio/', include('portfolio.urls', namespace='portfolio')),
+    # path('portfolio/', include('portfolio.urls', namespace='portfolio')),
     
 ]

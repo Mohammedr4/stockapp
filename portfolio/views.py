@@ -17,8 +17,6 @@ from rest_framework import status
 from .models import StockHolding, PortfolioSnapshot
 from calculators.views import get_alpha_vantage_data # Reusing our helper
 
-from datetime import timedelta
-
 @login_required
 def portfolio_dashboard_view(request):
     """ Renders the new portfolio dashboard. """

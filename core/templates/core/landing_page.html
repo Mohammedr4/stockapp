@@ -8,17 +8,16 @@
 <div class="container my-5">
     {% if user.is_authenticated %}
         <header class="hero-section text-center">
-            <h1>Welcome back, {{ user.first_name }}!</h1>
-            <p class="lead">Ready to manage your investments or start a new calculation?</p>
+            <h1>Welcome back, {{ user.first_name|default:user.email }}!</h1>
+            <p class="lead">Ready to start a new calculation?</p>
             <div class="mt-4">
                 <a href="{% url 'calculators:calculators_index' %}" class="btn btn-primary btn-lg mx-2">Go to Calculators</a>
-                <a href="{% url 'portfolio:portfolio_list' %}" class="btn btn-secondary btn-lg mx-2">View My Portfolio</a>
             </div>
         </header>
     {% else %}
         <header class="hero-section text-center">
             <h1 class="display-4">Unlock Smarter Investment Decisions.</h1>
-            <p class="lead">Calculate stock gains, manage your portfolio, and project future wealth with intuitive, powerful tools.</p>
+            <p class="lead">Calculate stock gains and analyze investment strategies with intuitive, powerful tools.</p>
             <div class="mt-4">
                 <a href="{% url 'calculators:stock_reprice_calculator' %}" class="cta-button">Try the Strategy Console Instantly</a>
             </div>
@@ -42,11 +41,6 @@
                 <p>Keep Your Strategy on Track.</p>
                 <p>Define your target asset allocation and get a clear, actionable plan to buy or sell assets to maintain your desired risk level.</p>
             </div>
-            <div class="card">
-                <h3>Portfolio Dashboard</h3>
-                <p>Track & Master Your Holdings.</p>
-                <p>Manage your investments with a comprehensive dashboard, see real-time P&L with interactive charts, and gain insights into your overall portfolio health.</p>
-            </div>
         </div>
     </section>
 
@@ -55,8 +49,8 @@
             <h2>Unlock Your Full Investment Potential – It's Free.</h2>
             <ul>
                 <li>✔ Save Your Progress: Keep a historical record of all your calculations and insights.</li>
-                <li>✔ Personalized Portfolio: Track your actual stock holdings, their performance, and overall portfolio value.</li>
                 <li>✔ Unlimited Access: Enjoy every calculator and feature without restriction, anytime you need them.</li>
+                <li>✔ Access Anywhere: Your data is securely stored and available across all your devices.</li>
             </ul>
             <a href="{% provider_login_url 'google' %}" class="cta-button">Sign Up with Google</a>
             <p class="mt-3">
@@ -65,6 +59,7 @@
             <p class="mt-4" style="font-size: 0.9em;">
                 Already have an account? <a href="{% url 'account_login' %}" style="color: white; font-weight: bold;">Log In</a>
             </p>
+
         </section>
     {% endif %}
 
