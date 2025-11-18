@@ -72,6 +72,7 @@
         </div>
     </div>
 
+    {% if user.is_authenticated %}
     <div class="row mt-5">
         <div class="col-12">
             <hr class="mb-5">
@@ -81,6 +82,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
 </div>
 
 <div class="modal fade" id="saveStrategyModal" tabindex="-1">
@@ -108,6 +110,11 @@
 {% block extra_body %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // --- USER AUTH STATUS ---
+    // We inject the Django user status directly into JS as a boolean
+    const isUserAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
+
     // --- ELEMENT REFERENCES ---
     const inputs = {
         currentShares: document.getElementById('currentShares'),
@@ -130,6 +137,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const saveStrategyModal = new bootstrap.Modal(document.getElementById('saveStrategyModal'));
     const confirmSaveBtn = document.getElementById('confirmSaveBtn');
     let debounceTimer;
+    let lastCalculationData = null; 
+    let savedStrategies = [];
 
     // --- UI UPDATE FUNCTIONS ---
     function updatePositionDashboard() {
@@ -147,7 +156,6 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pnl < 0) displays.pnl.classList.add('text-danger');
     }
 
-    // --- RENDER RESULTS (With Save Button) ---
     function renderApiResults(data, isSuccess) {
         if (!isSuccess) {
             let errorMsg = data.error || 'An unknown error occurred.';
@@ -169,40 +177,43 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
-        // Helper for the button HTML
-        const saveButtonHTML = `
-            <div class="d-grid mt-3">
+        lastCalculationData = data; 
+
+        const actionsHtml = `
+            <div class="d-grid gap-2 mt-3">
                 <button class="btn btn-outline-primary" id="saveStrategyTriggerBtn">💾 Save Strategy</button>
+                <button class="btn btn-outline-dark" id="exportPdfBtn">📄 Export PDF Report</button>
             </div>`;
 
         let resultsHTML = '';
         if (data.new_average_price) {
-            resultsHTML = `
-                <h5 class="mb-3">Projected Outcome:</h5>
-                <dl class="row">
-                    <dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd>
-                    <dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd>
-                    <dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd>
-                </dl>${saveButtonHTML}`;
+            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>${actionsHtml}`;
         } else {
-            resultsHTML = `
-                <h5 class="mb-3">Projected Outcome:</h5>
-                <dl class="row">
-                    <dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd>
-                    <dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd>
-                    <dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd>
-                </dl>${saveButtonHTML}`;
+            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>${actionsHtml}`;
         }
         resultsWrapper.innerHTML = resultsHTML;
 
-        // Attach listener to the new Save button (dynamically created)
+        // --- THE GATEKEEPER LOGIC ---
+        // Attach listeners to the buttons and check auth status
         document.getElementById('saveStrategyTriggerBtn')?.addEventListener('click', () => {
-            document.getElementById('strategyName').value = ''; 
+            if (!isUserAuthenticated) {
+                window.location.href = signupUrl;
+                return;
+            }
+            document.getElementById('strategyName').value = '';
             saveStrategyModal.show();
+        });
+
+        document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
+            if (!isUserAuthenticated) {
+                window.location.href = signupUrl;
+                return;
+            }
+            exportToPDF();
         });
     }
     
-    // --- EVENT HANDLING & API CALL ---
+    // --- API CALLS ---
     function handleInputChange() {
         updatePositionDashboard();
         clearTimeout(debounceTimer);
@@ -234,14 +245,51 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    // --- SAVED STRATEGIES LOGIC ---
+    // --- EXPORT PDF LOGIC ---
+    async function exportToPDF() {
+        if (!lastCalculationData) return;
+
+        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
+        
+        const payload = {
+            ...lastCalculationData,
+            current_shares: inputs.currentShares.value,
+            average_price: inputs.averagePrice.value,
+            market_price: inputs.marketPrice.value,
+            strategy_mode: mode,
+            strategy_value: strategyValue
+        };
+
+        try {
+            const response = await fetch('/calculators/api/reprice-export-pdf/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload),
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = "StockSavvy_Report.pdf";
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("Failed to generate PDF.");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Network error downloading PDF.");
+        }
+    }
+
+    // --- SAVE LOGIC ---
     async function saveStrategy() {
         const name = document.getElementById('strategyName').value;
-        if (!name) {
-            alert("Please enter a name for your strategy.");
-            return;
-        }
-        
+        if (!name) { alert("Please enter a name."); return; }
         const mode = document.querySelector('input[name="strategyMode"]:checked').value;
         const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
 
@@ -260,26 +308,31 @@ document.addEventListener('DOMContentLoaded', function () {
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
                 body: JSON.stringify(payload),
             });
+            
             if (response.ok) {
                 saveStrategyModal.hide();
-                fetchStrategies(); // Refresh list
+                fetchStrategies();
             } else {
-                alert("Failed to save strategy.");
+                alert("Error saving strategy.");
             }
         } catch (error) {
-            alert("Network error while saving.");
+            alert("Network error.");
         }
     }
 
     async function fetchStrategies() {
+        // Only fetch if the library element exists (it's wrapped in an if-auth block in HTML)
+        if (!strategyLibrary) return; 
+
         try {
             const response = await fetch('/calculators/api/reprice-strategies/');
             if (response.ok) {
-                const strategies = await response.json();
-                renderStrategies(strategies);
+                const data = await response.json();
+                savedStrategies = data;
+                renderStrategies(data);
             }
         } catch (error) {
-            console.error("Failed to fetch strategies", error);
+            console.error("Error fetching strategies", error);
         }
     }
 
@@ -300,7 +353,6 @@ document.addEventListener('DOMContentLoaded', function () {
                             <h6 class="card-subtitle mb-2 text-muted">${new Date(s.created_at).toLocaleDateString()}</h6>
                             <p class="card-text small">
                                 <strong>Pos:</strong> ${parseFloat(s.current_shares)} @ $${parseFloat(s.average_price)}<br>
-                                <strong>Mkt:</strong> $${parseFloat(s.market_price)}<br>
                                 <strong>Plan:</strong> ${modeText}
                             </p>
                             <div class="d-flex justify-content-between mt-3">
@@ -309,12 +361,10 @@ document.addEventListener('DOMContentLoaded', function () {
                             </div>
                         </div>
                     </div>
-                </div>
-            `;
+                </div>`;
             strategyLibrary.insertAdjacentHTML('beforeend', card);
         });
 
-        // Attach listeners
         document.querySelectorAll('.load-strategy-btn').forEach(btn => {
             btn.addEventListener('click', (e) => loadStrategy(e.target.dataset.id, strategies));
         });
@@ -331,19 +381,11 @@ document.addEventListener('DOMContentLoaded', function () {
             inputs.marketPrice.value = s.market_price;
             
             const radio = document.querySelector(`input[name="strategyMode"][value="${s.strategy_mode}"]`);
-            if (radio) {
-                radio.checked = true;
-                radio.dispatchEvent(new Event('change')); // Trigger UI toggle
-            }
-            
-            // Small delay to allow UI to update before setting value
+            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
             setTimeout(() => {
-                if (s.strategy_mode === 'shares') {
-                    inputs.strategyValueShares.value = s.strategy_value;
-                } else {
-                    inputs.strategyValuePrice.value = s.strategy_value;
-                }
-                handleInputChange(); // Trigger calculation
+                if (s.strategy_mode === 'shares') inputs.strategyValueShares.value = s.strategy_value;
+                else inputs.strategyValuePrice.value = s.strategy_value;
+                handleInputChange();
                 window.scrollTo({ top: 0, behavior: 'smooth' });
             }, 50);
         }
@@ -356,12 +398,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'DELETE',
                 headers: { 'X-CSRFToken': getCookie('csrftoken') }
             });
-            if (response.ok) {
-                fetchStrategies();
-            }
-        } catch (error) {
-            alert("Network error.");
-        }
+            if (response.ok) fetchStrategies();
+        } catch (error) { alert("Network error."); }
     }
 
     function getCookie(name) {
@@ -380,20 +418,13 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function resetForm() {
-        Object.values(inputs).forEach(input => {
-            input.value = '';
-        });
+        Object.values(inputs).forEach(input => { input.value = ''; });
         updatePositionDashboard();
         resultsWrapper.innerHTML = `<div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>`;
     }
 
-    // --- INITIALIZATION ---
     function initialize() {
-        Object.values(inputs).forEach(input => {
-            if (input.id) {
-                input.addEventListener('input', handleInputChange);
-            }
-        });
+        Object.values(inputs).forEach(input => { input.addEventListener('input', handleInputChange); });
         radioButtons.forEach(radio => {
             radio.addEventListener('change', () => {
                 const mode = radio.value;
@@ -402,16 +433,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 handleInputChange();
             });
         });
-        
         resetBtn.addEventListener('click', resetForm);
         confirmSaveBtn.addEventListener('click', saveStrategy);
 
         const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
         strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
         strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
-
         updatePositionDashboard();
-        fetchStrategies(); // Load library on page load
+        
+        fetchStrategies();
     }
 
     initialize();

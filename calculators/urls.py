@@ -23,4 +23,6 @@ urlpatterns = [
     # Saved Strategies API
     path('api/reprice-strategies/', views.SavedRepriceStrategyAPIView.as_view(), name='api_reprice_strategies_list_create'),
     path('api/reprice-strategies/<int:pk>/', views.SavedRepriceStrategyAPIView.as_view(), name='api_reprice_strategies_delete'),
+
+    path('api/reprice-export-pdf/', views.ExportRepricePDFView.as_view(), name='api_reprice_export_pdf'),
 ]

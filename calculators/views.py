@@ -31,6 +31,8 @@ from .tax_engine import (
 )
 from .reprice_engine import calculate_reprice_by_shares, calculate_reprice_by_target
 
+from .utils import render_to_pdf
+from django.http import HttpResponse
 
 # --- Page Views ---
 
@@ -278,3 +280,31 @@ class SavedRepriceStrategyAPIView(APIView):
             return Response(status=status.HTTP_204_NO_CONTENT)
         except SavedRepriceStrategy.DoesNotExist:
             return Response({'error': 'Strategy not found'}, status=status.HTTP_404_NOT_FOUND)
+    
+class ExportRepricePDFView(APIView):
+    def post(self, request, *args, **kwargs):
+        data = request.data
+
+        # Format data for the template
+        context = {
+            'data': {
+                'current_shares': data.get('current_shares'),
+                'average_price': data.get('average_price'),
+                'market_price': data.get('market_price'),
+                'strategy_name': "Buy Shares" if data.get('strategy_mode') == 'shares' else "Target Price",
+                'strategy_desc': f"Value input: {data.get('strategy_value')}"
+            },
+            'results': {
+                'New Average Price': f"${data.get('new_average_price', 'N/A')}",
+                'Total Shares': data.get('total_shares', 'N/A'),
+                'Additional Investment': f"${data.get('additional_investment', 'N/A')}"
+            }
+        }
+
+        pdf = render_to_pdf('calculators/pdf_report.html', context)
+        if pdf:
+            response = HttpResponse(pdf, content_type='application/pdf')
+            filename = f"StockSavvy_Report.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        return Response({'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
