@@ -19,4 +19,8 @@ urlpatterns = [
     
     path('portfolio-rebalance/', views.rebalance_dashboard_view, name='rebalance_dashboard'),
     path('api/calculate-rebalance/', views.RebalanceAPIView.as_view(), name='api_calculate_rebalance'),
+
+    # Saved Strategies API
+    path('api/reprice-strategies/', views.SavedRepriceStrategyAPIView.as_view(), name='api_reprice_strategies_list_create'),
+    path('api/reprice-strategies/<int:pk>/', views.SavedRepriceStrategyAPIView.as_view(), name='api_reprice_strategies_delete'),
 ]

@@ -11,7 +11,16 @@ from rest_framework import status
 from decimal import Decimal
 
 # Serializer Imports
-from .serializers import CapitalGainsRequestSerializer, RepriceRequestSerializer, RebalanceRequestSerializer
+from .serializers import (
+    CapitalGainsRequestSerializer, 
+    RepriceRequestSerializer, 
+    RebalanceRequestSerializer, 
+    SavedRepriceStrategySerializer
+)
+
+# Model Imports
+# This was the missing piece causing the NameError
+from .models import SavedRepriceStrategy
 
 # Engine Imports
 from .tax_engine import (
@@ -52,6 +61,7 @@ def calculators_index(request):
         'calculators': calculators,
     }
     return render(request, 'calculators/index.html', context)
+
 def clarity_dashboard_view(request):
     """ Renders the template for the new Capital Gains Clarity Dashboard. """
     return render(request, 'calculators/clarity_dashboard.html')
@@ -78,14 +88,21 @@ def get_alpha_vantage_data(symbol, function):
         response.raise_for_status()
         data = response.json()
         
-        # --- THIS IS THE CORRECTED LOGIC ---
-        # First, check for any kind of error or informational message from the API.
         if "Error Message" in data or "Note" in data or "Information" in data:
             error_message = data.get("Error Message", data.get("Note", data.get("Information", "API error.")))
+            if 'premium endpoint' in error_message.lower():
+                return {'error': f'Historical dividend data for "{symbol}" is a premium feature and is currently unavailable.'}
             return {'error': error_message}
             
-        # If there's no error, we assume the data is valid and return it.
-        # The view that calls this function will be responsible for finding the data it needs.
+        if not data or "Time Series (Daily)" not in data:
+            # For GLOBAL_QUOTE, the key is "Global Quote", not Time Series
+            if function == 'GLOBAL_QUOTE' and 'Global Quote' in data:
+                 return data
+            elif function == 'TIME_SERIES_DAILY_ADJUSTED':
+                 return data
+            else:
+                 return {'error': f'Invalid or empty response from API for symbol {symbol}.'}
+            
         return data
 
     except requests.exceptions.RequestException as e:
@@ -144,7 +161,17 @@ class RepriceAPIView(APIView):
     def post(self, request, *args, **kwargs):
         serializer = RepriceRequestSerializer(data=request.data)
         if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            # PROFESSIONAL FIX: Extract the first validation error message
+            error_data = serializer.errors
+            first_key = next(iter(error_data))
+            first_error_list = error_data[first_key]
+            
+            if isinstance(first_error_list, dict):
+                first_error = next(iter(first_error_list.values()))[0]
+            else:
+                first_error = first_error_list[0]
+            
+            return Response({'error': first_error}, status=status.HTTP_400_BAD_REQUEST)
 
         data = serializer.validated_data
         position = data['position']
@@ -185,7 +212,6 @@ class RebalanceAPIView(APIView):
                 current_allocation[h['category']]['value'] += h['value']
         
         for cat_name, values in current_allocation.items():
-            # THIS LINE IS NOW CORRECTED
             values['percent'] = round((values['value'] / total_portfolio_value) * 100, 2)
 
         # 3. Calculate Target Allocation and Difference
@@ -217,3 +243,38 @@ class RebalanceAPIView(APIView):
         }
 
         return Response(response_data, status=status.HTTP_200_OK)
+
+class SavedRepriceStrategyAPIView(APIView):
+    """ Handles listing, creating, and deleting saved strategies. """
+    
+    def get(self, request, *args, **kwargs):
+        """ List all saved strategies for the logged-in user. """
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        strategies = SavedRepriceStrategy.objects.filter(user=request.user)
+        serializer = SavedRepriceStrategySerializer(strategies, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        """ Save a new strategy. """
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = SavedRepriceStrategySerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        """ Delete a specific strategy by ID. """
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            strategy = SavedRepriceStrategy.objects.get(pk=pk, user=request.user)
+            strategy.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except SavedRepriceStrategy.DoesNotExist:
+            return Response({'error': 'Strategy not found'}, status=status.HTTP_404_NOT_FOUND)

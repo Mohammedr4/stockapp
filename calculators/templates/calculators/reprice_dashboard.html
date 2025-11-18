@@ -13,18 +13,18 @@
         <div class="col-lg-5">
             <div class="card shadow-sm h-100">
                 <div class="card-header"><h4 class="my-0">Your Current Position</h4></div>
-                <div class="card-body">
+                <div class="card-body d-flex flex-column">
                     <div class="mb-3">
                         <label for="currentShares" class="form-label">Current Shares Held</label>
-                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100">
+                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
                     </div>
                     <div class="mb-3">
                         <label for="averagePrice" class="form-label">Current Average Price ($)</label>
-                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00">
+                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
                     </div>
                     <div class="mb-3">
                         <label for="marketPrice" class="form-label">Current Market Price ($)</label>
-                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00">
+                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
                     </div>
                     <hr>
                     <h5 class="mb-3">Live Summary</h5>
@@ -36,6 +36,9 @@
                         <dt class="col-sm-6">Unrealized P&L</dt>
                         <dd class="col-sm-6 text-end fw-bold" id="displayPnl">$0.00</dd>
                     </dl>
+                    <div class="mt-auto pt-3 text-center">
+                        <button class="btn btn-sm btn-outline-secondary" id="resetBtn">Reset Fields</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -54,11 +57,11 @@
                     </div>
                     <div id="strategyInputShares" class="mb-4">
                         <label for="strategyValueShares" class="form-label">Additional Shares to Buy</label>
-                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50">
+                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
                     </div>
                     <div id="strategyInputPrice" class="mb-4" style="display: none;">
                         <label for="strategyValuePrice" class="form-label">Desired New Average Price ($)</label>
-                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00">
+                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
                     </div>
                     <hr>
                     <div id="results-wrapper" class="mt-auto">
@@ -74,7 +77,6 @@
 {% block extra_body %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- ELEMENT REFERENCES ---
     const inputs = {
         currentShares: document.getElementById('currentShares'),
         averagePrice: document.getElementById('averagePrice'),
@@ -91,9 +93,9 @@ document.addEventListener('DOMContentLoaded', function () {
     const strategyInputShares = document.getElementById('strategyInputShares');
     const strategyInputPrice = document.getElementById('strategyInputPrice');
     const resultsWrapper = document.getElementById('results-wrapper');
+    const resetBtn = document.getElementById('resetBtn');
     let debounceTimer;
 
-    // --- UI UPDATE FUNCTIONS ---
     function updatePositionDashboard() {
         const shares = parseFloat(inputs.currentShares.value) || 0;
         const avgPrice = parseFloat(inputs.averagePrice.value) || 0;
@@ -109,11 +111,24 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pnl < 0) displays.pnl.classList.add('text-danger');
     }
 
+    // --- UPGRADED renderApiResults function ---
     function renderApiResults(data, isSuccess) {
         if (!isSuccess) {
-            resultsWrapper.innerHTML = `<div class="alert alert-danger">${data.error || 'An unknown error occurred.'}</div>`;
+            let errorMsg = data.error || 'An unknown error occurred.';
+            
+            if (!data.error) {
+                try {
+                    const firstErrorKey = Object.keys(data)[0];
+                    const firstErrorField = Object.keys(data[firstErrorKey])[0];
+                    errorMsg = data[firstErrorKey][firstErrorField][0];
+                } catch (e) {
+                    errorMsg = 'Invalid data submitted. Please check your inputs.';
+                }
+            }
+            resultsWrapper.innerHTML = `<div class="alert alert-danger">${errorMsg}</div>`;
             return;
         }
+        
         let resultsHTML = '';
         if (data.new_average_price) {
             resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>`;
@@ -170,35 +185,35 @@ document.addEventListener('DOMContentLoaded', function () {
         return cookieValue;
     }
 
-// --- INITIALIZATION ---
-function initialize() {
-    // 1. Attach listeners to all text/number inputs
-    Object.values(inputs).forEach(input => {
-        if (input.id) { // Ensure it's a single element
-            input.addEventListener('input', handleInputChange);
-        }
-    });
-
-    // 2. Attach listeners to radio buttons
-    radioButtons.forEach(radio => {
-        radio.addEventListener('change', () => {
-            const mode = radio.value;
-            strategyInputShares.style.display = mode === 'shares' ? 'block' : 'none';
-            // CORRECTED: Now correctly SHOWS the price input when selected
-            strategyInputPrice.style.display = mode === 'price' ? 'block' : 'none';
-            handleInputChange(); // Recalculate when the mode changes
+    function resetForm() {
+        Object.values(inputs).forEach(input => {
+            input.value = '';
         });
-    });
+        updatePositionDashboard();
+        resultsWrapper.innerHTML = `<div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>`;
+    }
 
-    // 3. Set initial UI state
-    const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
-    strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
-    // CORRECTED: Changed 'mode' to the correct variable 'initialMode'
-    strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
-
-    // 4. Run calculations once on page load
-    updatePositionDashboard();
-}
+    // --- INITIALIZATION ---
+    function initialize() {
+        Object.values(inputs).forEach(input => {
+            if (input.id) {
+                input.addEventListener('input', handleInputChange);
+            }
+        });
+        radioButtons.forEach(radio => {
+            radio.addEventListener('change', () => {
+                const mode = radio.value;
+                strategyInputShares.style.display = mode === 'shares' ? 'block' : 'none';
+                strategyInputPrice.style.display = mode === 'price' ? 'block' : 'none';
+                handleInputChange();
+            });
+        });
+        resetBtn.addEventListener('click', resetForm);
+        const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
+        strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
+        strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
+        updatePositionDashboard();
+    }
 
     initialize();
 });
