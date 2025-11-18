@@ -16,15 +16,15 @@
                 <div class="card-body d-flex flex-column">
                     <div class="mb-3">
                         <label for="currentShares" class="form-label">Current Shares Held</label>
-                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
+                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
                     </div>
                     <div class="mb-3">
                         <label for="averagePrice" class="form-label">Current Average Price ($)</label>
-                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
+                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
                     </div>
                     <div class="mb-3">
                         <label for="marketPrice" class="form-label">Current Market Price ($)</label>
-                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
+                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
                     </div>
                     <hr>
                     <h5 class="mb-3">Live Summary</h5>
@@ -57,11 +57,11 @@
                     </div>
                     <div id="strategyInputShares" class="mb-4">
                         <label for="strategyValueShares" class="form-label">Additional Shares to Buy</label>
-                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
+                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
                     </div>
                     <div id="strategyInputPrice" class="mb-4" style="display: none;">
                         <label for="strategyValuePrice" class="form-label">Desired New Average Price ($)</label>
-                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00" oninput="if(this.value.length > 18) this.value = this.value.slice(0, 18);">
+                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
                     </div>
                     <hr>
                     <div id="results-wrapper" class="mt-auto">
@@ -71,12 +71,44 @@
             </div>
         </div>
     </div>
+
+    <div class="row mt-5">
+        <div class="col-12">
+            <hr class="mb-5">
+            <h3 class="mb-4">My Strategy Library</h3>
+            <div id="strategy-library" class="row g-4">
+                <div class="col-12 text-center text-muted">Loading strategies...</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="saveStrategyModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Strategy</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="strategyName" class="form-label">Strategy Name</label>
+                    <input type="text" class="form-control" id="strategyName" placeholder="e.g., Tesla Aggressive Buy">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
 </div>
 {% endblock content %}
 
 {% block extra_body %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // --- ELEMENT REFERENCES ---
     const inputs = {
         currentShares: document.getElementById('currentShares'),
         averagePrice: document.getElementById('averagePrice'),
@@ -94,8 +126,12 @@ document.addEventListener('DOMContentLoaded', function () {
     const strategyInputPrice = document.getElementById('strategyInputPrice');
     const resultsWrapper = document.getElementById('results-wrapper');
     const resetBtn = document.getElementById('resetBtn');
+    const strategyLibrary = document.getElementById('strategy-library');
+    const saveStrategyModal = new bootstrap.Modal(document.getElementById('saveStrategyModal'));
+    const confirmSaveBtn = document.getElementById('confirmSaveBtn');
     let debounceTimer;
 
+    // --- UI UPDATE FUNCTIONS ---
     function updatePositionDashboard() {
         const shares = parseFloat(inputs.currentShares.value) || 0;
         const avgPrice = parseFloat(inputs.averagePrice.value) || 0;
@@ -111,16 +147,20 @@ document.addEventListener('DOMContentLoaded', function () {
         if (pnl < 0) displays.pnl.classList.add('text-danger');
     }
 
-    // --- UPGRADED renderApiResults function ---
+    // --- RENDER RESULTS (With Save Button) ---
     function renderApiResults(data, isSuccess) {
         if (!isSuccess) {
             let errorMsg = data.error || 'An unknown error occurred.';
-            
-            if (!data.error) {
+            if (!data.error && typeof data === 'object') {
                 try {
-                    const firstErrorKey = Object.keys(data)[0];
-                    const firstErrorField = Object.keys(data[firstErrorKey])[0];
-                    errorMsg = data[firstErrorKey][firstErrorField][0];
+                    const firstKey = Object.keys(data)[0];
+                    const firstValue = data[firstKey];
+                    if (typeof firstValue === 'object' && !Array.isArray(firstValue)) {
+                        const nestedKey = Object.keys(firstValue)[0];
+                        errorMsg = firstValue[nestedKey][0];
+                    } else if (Array.isArray(firstValue)) {
+                        errorMsg = firstValue[0];
+                    }
                 } catch (e) {
                     errorMsg = 'Invalid data submitted. Please check your inputs.';
                 }
@@ -129,13 +169,37 @@ document.addEventListener('DOMContentLoaded', function () {
             return;
         }
         
+        // Helper for the button HTML
+        const saveButtonHTML = `
+            <div class="d-grid mt-3">
+                <button class="btn btn-outline-primary" id="saveStrategyTriggerBtn">💾 Save Strategy</button>
+            </div>`;
+
         let resultsHTML = '';
         if (data.new_average_price) {
-            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>`;
+            resultsHTML = `
+                <h5 class="mb-3">Projected Outcome:</h5>
+                <dl class="row">
+                    <dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd>
+                    <dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd>
+                    <dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd>
+                </dl>${saveButtonHTML}`;
         } else {
-            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>`;
+            resultsHTML = `
+                <h5 class="mb-3">Projected Outcome:</h5>
+                <dl class="row">
+                    <dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd>
+                    <dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd>
+                    <dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd>
+                </dl>${saveButtonHTML}`;
         }
         resultsWrapper.innerHTML = resultsHTML;
+
+        // Attach listener to the new Save button (dynamically created)
+        document.getElementById('saveStrategyTriggerBtn')?.addEventListener('click', () => {
+            document.getElementById('strategyName').value = ''; 
+            saveStrategyModal.show();
+        });
     }
     
     // --- EVENT HANDLING & API CALL ---
@@ -167,6 +231,136 @@ document.addEventListener('DOMContentLoaded', function () {
             renderApiResults(data, response.ok);
         } catch (error) {
             renderApiResults({ error: 'A network error occurred.' }, false);
+        }
+    }
+
+    // --- SAVED STRATEGIES LOGIC ---
+    async function saveStrategy() {
+        const name = document.getElementById('strategyName').value;
+        if (!name) {
+            alert("Please enter a name for your strategy.");
+            return;
+        }
+        
+        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
+
+        const payload = {
+            name: name,
+            current_shares: inputs.currentShares.value,
+            average_price: inputs.averagePrice.value,
+            market_price: inputs.marketPrice.value,
+            strategy_mode: mode,
+            strategy_value: strategyValue
+        };
+
+        try {
+            const response = await fetch('/calculators/api/reprice-strategies/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload),
+            });
+            if (response.ok) {
+                saveStrategyModal.hide();
+                fetchStrategies(); // Refresh list
+            } else {
+                alert("Failed to save strategy.");
+            }
+        } catch (error) {
+            alert("Network error while saving.");
+        }
+    }
+
+    async function fetchStrategies() {
+        try {
+            const response = await fetch('/calculators/api/reprice-strategies/');
+            if (response.ok) {
+                const strategies = await response.json();
+                renderStrategies(strategies);
+            }
+        } catch (error) {
+            console.error("Failed to fetch strategies", error);
+        }
+    }
+
+    function renderStrategies(strategies) {
+        strategyLibrary.innerHTML = '';
+        if (strategies.length === 0) {
+            strategyLibrary.innerHTML = '<div class="col-12 text-center text-muted"><p>No saved strategies yet.</p></div>';
+            return;
+        }
+
+        strategies.forEach(s => {
+            const modeText = s.strategy_mode === 'shares' ? `Buy ${parseFloat(s.strategy_value)} shares` : `Target $${parseFloat(s.strategy_value)}`;
+            const card = `
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${s.name}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">${new Date(s.created_at).toLocaleDateString()}</h6>
+                            <p class="card-text small">
+                                <strong>Pos:</strong> ${parseFloat(s.current_shares)} @ $${parseFloat(s.average_price)}<br>
+                                <strong>Mkt:</strong> $${parseFloat(s.market_price)}<br>
+                                <strong>Plan:</strong> ${modeText}
+                            </p>
+                            <div class="d-flex justify-content-between mt-3">
+                                <button class="btn btn-sm btn-primary load-strategy-btn" data-id="${s.id}">Load</button>
+                                <button class="btn btn-sm btn-danger delete-strategy-btn" data-id="${s.id}">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            strategyLibrary.insertAdjacentHTML('beforeend', card);
+        });
+
+        // Attach listeners
+        document.querySelectorAll('.load-strategy-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => loadStrategy(e.target.dataset.id, strategies));
+        });
+        document.querySelectorAll('.delete-strategy-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => deleteStrategy(e.target.dataset.id));
+        });
+    }
+
+    function loadStrategy(id, strategies) {
+        const s = strategies.find(strat => strat.id == id);
+        if (s) {
+            inputs.currentShares.value = s.current_shares;
+            inputs.averagePrice.value = s.average_price;
+            inputs.marketPrice.value = s.market_price;
+            
+            const radio = document.querySelector(`input[name="strategyMode"][value="${s.strategy_mode}"]`);
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change')); // Trigger UI toggle
+            }
+            
+            // Small delay to allow UI to update before setting value
+            setTimeout(() => {
+                if (s.strategy_mode === 'shares') {
+                    inputs.strategyValueShares.value = s.strategy_value;
+                } else {
+                    inputs.strategyValuePrice.value = s.strategy_value;
+                }
+                handleInputChange(); // Trigger calculation
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }, 50);
+        }
+    }
+
+    async function deleteStrategy(id) {
+        if (!confirm("Delete this strategy?")) return;
+        try {
+            const response = await fetch(`/calculators/api/reprice-strategies/${id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (response.ok) {
+                fetchStrategies();
+            }
+        } catch (error) {
+            alert("Network error.");
         }
     }
 
@@ -208,11 +402,16 @@ document.addEventListener('DOMContentLoaded', function () {
                 handleInputChange();
             });
         });
+        
         resetBtn.addEventListener('click', resetForm);
+        confirmSaveBtn.addEventListener('click', saveStrategy);
+
         const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
         strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
         strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
+
         updatePositionDashboard();
+        fetchStrategies(); // Load library on page load
     }
 
     initialize();
