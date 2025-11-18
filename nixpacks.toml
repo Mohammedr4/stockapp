@@ -6,7 +6,7 @@ nixPkgs = [
     "gdk-pixbuf",
     "libffi",
     "zlib",
-    "jpeg",
+    "libjpeg",  # Changed from "jpeg"
     "gcc",
     "pkg-config"
 ]
