@@ -6,16 +6,19 @@ nixPkgs = [
     "gdk-pixbuf",
     "libffi",
     "zlib",
-    "libjpeg",  # Changed from "jpeg"
+    "libjpeg",
     "gcc",
     "pkg-config"
 ]
 
 [phases.install]
-cmds = ["pip install -r requirements.txt"]
+# CORRECTED LINE: Create venv, activate it, THEN install
+cmds = ["python3 -m venv /opt/venv && . /opt/venv/bin/activate && pip install -r requirements.txt"]
 
 [phases.build]
-cmds = ["python manage.py collectstatic --noinput", "python manage.py migrate"]
+# CORRECTED LINE: Ensure we use the venv python for manage.py commands too
+cmds = [". /opt/venv/bin/activate && python manage.py collectstatic --noinput", ". /opt/venv/bin/activate && python manage.py migrate"]
 
 [start]
-cmd = "waitress-serve --listen=0.0.0.0:$PORT stock_savvy_project.wsgi:application"
+# CORRECTED LINE: Use the venv python/waitress
+cmd = ". /opt/venv/bin/activate && waitress-serve --listen=0.0.0.0:$PORT stock_savvy_project.wsgi:application"
