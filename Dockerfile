@@ -1,4 +1,4 @@
-# Use python:3.12-slim-bookworm to ensure a stable Linux version
+# Use an official Python runtime, pinned to the stable 'bookworm' release
 FROM python:3.12-slim-bookworm
 
 # Set environment variables
@@ -9,7 +9,7 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-# We use 'libgdk-pixbuf-2.0-0' which is the correct name for Debian Bookworm
+# UPDATED: Added 'pkg-config' which was missing and causing the build failure
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
     libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
+    pkg-config \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
