@@ -8,9 +8,9 @@ dj-database-url==3.0.0
 psycopg2-binary==2.9.10
 whitenoise==6.9.0
 requests==2.32.4
-# Downgrade xhtml2pdf to a version with broader wheel support
 xhtml2pdf==0.2.11
-# Explicitly use a version of pycairo that pairs with this
 pycairo==1.25.1
 waitress==3.0.2
 gunicorn==23.0.0
+PyJWT==2.8.0
+cryptography
