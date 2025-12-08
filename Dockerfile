@@ -9,7 +9,6 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 # Install system dependencies
-# UPDATED: Added 'pkg-config' which was missing and causing the build failure
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
@@ -18,7 +17,9 @@ RUN apt-get update && apt-get install -y \
     python3-wheel \
     python3-cffi \
     libcairo2 \
+    libcairo2-dev \
     libpango-1.0-0 \
+    libpango1.0-dev \
     libpangocairo-1.0-0 \
     libgdk-pixbuf-2.0-0 \
     libffi-dev \
