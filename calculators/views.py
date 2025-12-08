@@ -15,12 +15,13 @@ from .serializers import (
     CapitalGainsRequestSerializer, 
     RepriceRequestSerializer, 
     RebalanceRequestSerializer, 
-    SavedRepriceStrategySerializer
+    SavedRepriceStrategySerializer,
+    SavedCapitalGainsScenarioSerializer
 )
 
 # Model Imports
 # This was the missing piece causing the NameError
-from .models import SavedRepriceStrategy
+from .models import SavedRepriceStrategy, SavedCapitalGainsScenario
 
 # Engine Imports
 from .tax_engine import (
@@ -305,6 +306,61 @@ class ExportRepricePDFView(APIView):
         if pdf:
             response = HttpResponse(pdf, content_type='application/pdf')
             filename = f"StockSavvy_Report.pdf"
+            response['Content-Disposition'] = f'attachment; filename="{filename}"'
+            return response
+        return Response({'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+class SavedCapitalGainsScenarioAPIView(APIView):
+    """ Handles listing, creating, and deleting saved tax scenarios. """
+    
+    def get(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        scenarios = SavedCapitalGainsScenario.objects.filter(user=request.user)
+        serializer = SavedCapitalGainsScenarioSerializer(scenarios, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = SavedCapitalGainsScenarioSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        if not request.user.is_authenticated:
+             return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        
+        try:
+            scenario = SavedCapitalGainsScenario.objects.get(pk=pk, user=request.user)
+            scenario.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except SavedCapitalGainsScenario.DoesNotExist:
+            return Response({'error': 'Scenario not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class ExportCapitalGainsPDFView(APIView):
+    """ Generates a PDF report for a capital gains calculation. """
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        
+        # We expect the frontend to pass the full 'input_data' and 'result_data' structure
+        # This matches how we save scenarios, making the data structure consistent.
+        
+        context = {
+            'purchase_lots': data.get('purchase_lots', []),
+            'sale': data.get('sale', {}),
+            'results': data.get('results', {}),
+            'summary': data.get('summary', {}),
+        }
+        
+        pdf = render_to_pdf('calculators/pdf_capital_gains.html', context)
+        if pdf:
+            response = HttpResponse(pdf, content_type='application/pdf')
+            filename = f"TaxReport_{data.get('summary', {}).get('asset_name', 'Asset')}.pdf"
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
         return Response({'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

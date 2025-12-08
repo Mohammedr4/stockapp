@@ -25,4 +25,8 @@ urlpatterns = [
     path('api/reprice-strategies/<int:pk>/', views.SavedRepriceStrategyAPIView.as_view(), name='api_reprice_strategies_delete'),
 
     path('api/reprice-export-pdf/', views.ExportRepricePDFView.as_view(), name='api_reprice_export_pdf'),
+
+    path('api/tax-scenarios/', views.SavedCapitalGainsScenarioAPIView.as_view(), name='api_tax_scenarios_list_create'),
+    path('api/tax-scenarios/<int:pk>/', views.SavedCapitalGainsScenarioAPIView.as_view(), name='api_tax_scenarios_delete'),
+    path('api/tax-export-pdf/', views.ExportCapitalGainsPDFView.as_view(), name='api_tax_export_pdf'),
 ]

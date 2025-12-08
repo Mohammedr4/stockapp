@@ -99,11 +99,24 @@
 
                 <div class="d-grid gap-2">
                     <button type="submit" id="calculate-btn" class="btn btn-primary btn-lg">Calculate</button>
+                    <button type="button" id="reset-btn" class="btn btn-outline-secondary">Reset Form</button>
                 </div>
             </form>
 
             <div id="results-dashboard" class="mt-5" style="display: none;">
+            </div>
+
+            {% if user.is_authenticated %}
+            <div class="row mt-5">
+                <div class="col-12">
+                    <hr class="mb-5">
+                    <h3 class="mb-4">My Saved Scenarios</h3>
+                    <div id="scenario-library" class="row g-4">
+                        <div class="col-12 text-center text-muted">Loading scenarios...</div>
+                    </div>
                 </div>
+            </div>
+            {% endif %}
 
         </div>
     </div>
@@ -118,11 +131,37 @@
         <td><button type="button" class="btn btn-danger btn-sm remove-lot-btn">Remove</button></td>
     </tr>
 </template>
+
+<div class="modal fade" id="saveScenarioModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Scenario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="scenarioName" class="form-label">Scenario Name</label>
+                    <input type="text" class="form-control" id="scenarioName" placeholder="e.g., TSLA Sale 2025">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="confirmSaveBtn">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}
 
 {% block extra_body %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // --- AUTH STATUS ---
+    const isUserAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
+    const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
+
     // --- DOM Element References ---
     const form = document.getElementById('gains-form');
     const addLotBtn = document.getElementById('add-lot-btn');
@@ -132,6 +171,16 @@ document.addEventListener('DOMContentLoaded', function () {
     const filingStatusWrapper = document.getElementById('filing-status-wrapper');
     const resultsDashboard = document.getElementById('results-dashboard');
     const calculateBtn = document.getElementById('calculate-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    
+    // New Elements
+    const scenarioLibrary = document.getElementById('scenario-library');
+    const saveScenarioModal = new bootstrap.Modal(document.getElementById('saveScenarioModal'));
+    const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+    
+    let lastPayload = null; // Store for Save/PDF
+    let lastResults = null;
+    let savedScenarios = [];
 
     // --- Function to add a new purchase lot row ---
     function addPurchaseLot() {
@@ -141,13 +190,21 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // --- Initial State ---
     addPurchaseLot(); // Start with one purchase lot row by default
+    fetchScenarios(); // Load library
 
     // --- Event Listeners ---
     addLotBtn.addEventListener('click', addPurchaseLot);
 
     purchaseLotsBody.addEventListener('click', function (e) {
         if (e.target && e.target.classList.contains('remove-lot-btn')) {
-            e.target.closest('tr').remove();
+            // Don't remove the last row
+            if (purchaseLotsBody.rows.length > 1) {
+                e.target.closest('tr').remove();
+            } else {
+                // Clear the row instead
+                const row = e.target.closest('tr');
+                row.querySelectorAll('input').forEach(input => input.value = '');
+            }
         }
     });
 
@@ -159,15 +216,18 @@ document.addEventListener('DOMContentLoaded', function () {
         e.preventDefault(); // Prevent traditional form submission
         calculateGains();
     });
+    
+    resetBtn.addEventListener('click', resetForm);
+    confirmSaveBtn.addEventListener('click', saveScenario);
 
     // --- Main Calculation and API Call Function ---
     async function calculateGains() {
         calculateBtn.disabled = true;
         calculateBtn.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Calculating...`;
         resultsDashboard.style.display = 'none';
-        resultsDashboard.innerHTML = ''; // Clear previous results
+        resultsDashboard.innerHTML = ''; 
 
-        // 1. Construct the JSON payload from the form inputs
+        // 1. Construct the JSON payload
         const payload = {
             asset_name: document.getElementById('assetName').value,
             purchase_lots: [],
@@ -192,6 +252,8 @@ document.addEventListener('DOMContentLoaded', function () {
                 fees: row.querySelector('.purchase-fees').value || 0,
             });
         });
+        
+        lastPayload = payload; // Store for later use
 
         // 2. Call the API
         try {
@@ -199,18 +261,17 @@ document.addEventListener('DOMContentLoaded', function () {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken'), // Important for Django's security
+                    'X-CSRFToken': getCookie('csrftoken'),
                 },
                 body: JSON.stringify(payload),
             });
 
             const data = await response.json();
+            lastResults = data;
 
             if (!response.ok) {
-                // If API returns an error (e.g., 400), render the error message
                 renderError(data);
             } else {
-                // If API call is successful, render the results dashboard
                 renderResults(data);
             }
         } catch (error) {
@@ -225,6 +286,23 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderResults(data) {
         const { results, summary } = data;
         const gainLossColor = parseFloat(results.gross_gain_loss) >= 0 ? 'text-success' : 'text-danger';
+        
+        // Gatekeeper Logic
+        let buttonsHtml;
+        let warningHtml = '';
+
+        if (isUserAuthenticated) {
+            buttonsHtml = `
+                <button class="btn btn-outline-primary" id="saveScenarioTriggerBtn">💾 Save Scenario</button>
+                <button class="btn btn-outline-dark" id="exportPdfBtn">📄 Export PDF</button>
+            `;
+        } else {
+            warningHtml = `<div class="alert alert-warning text-center mt-3 mb-2 py-2 small"><i class="fas fa-exclamation-circle"></i> <strong>Guest Mode:</strong> Sign up to save this report forever.</div>`;
+            buttonsHtml = `
+                <button class="btn btn-outline-secondary" id="saveScenarioTriggerBtn"><i class="fas fa-lock"></i> Save Scenario</button>
+                <button class="btn btn-outline-secondary" id="exportPdfBtn"><i class="fas fa-lock"></i> Export PDF</button>
+            `;
+        }
 
         const resultsHTML = `
             <div class="card shadow-sm">
@@ -261,26 +339,213 @@ document.addEventListener('DOMContentLoaded', function () {
                             </ul>
                         </div>
                     </div>
+                    
+                    ${warningHtml}
+                    <div class="d-grid gap-2 mt-4">
+                        ${buttonsHtml}
+                    </div>
                 </div>
             </div>
         `;
         resultsDashboard.innerHTML = resultsHTML;
         resultsDashboard.style.display = 'block';
+        
+        // Attach Listeners
+        document.getElementById('saveScenarioTriggerBtn')?.addEventListener('click', () => {
+            if (!isUserAuthenticated) { window.location.href = signupUrl; return; }
+            document.getElementById('scenarioName').value = `${summary.asset_name} Sale`;
+            saveScenarioModal.show();
+        });
+        document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
+             if (!isUserAuthenticated) { window.location.href = signupUrl; return; }
+             exportToPDF();
+        });
     }
 
     function renderError(errors) {
         let errorHTML = '<div class="alert alert-danger"><h5>Calculation Failed</h5><ul class="mb-0">';
         for (const field in errors) {
-            errors[field].forEach(error => {
-                errorHTML += `<li>${error}</li>`;
-            });
+            if (Array.isArray(errors[field])) {
+                errors[field].forEach(error => errorHTML += `<li>${error}</li>`);
+            } else {
+                errorHTML += `<li>${errors[field]}</li>`;
+            }
         }
         errorHTML += '</ul></div>';
         resultsDashboard.innerHTML = errorHTML;
         resultsDashboard.style.display = 'block';
     }
 
-    // --- Helper function to get CSRF token ---
+    // --- EXPORT PDF LOGIC ---
+    async function exportToPDF() {
+        if (!lastPayload || !lastResults) return;
+        
+        // Merge input + result
+        const fullPayload = {
+            ...lastPayload,
+            results: lastResults.results,
+            summary: lastResults.summary
+        };
+
+        try {
+            const response = await fetch('/calculators/api/tax-export-pdf/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(fullPayload),
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `TaxReport_${lastResults.summary.asset_name}.pdf`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+            } else {
+                alert("Failed to generate PDF.");
+            }
+        } catch (error) {
+            alert("Network error downloading PDF.");
+        }
+    }
+
+    // --- SAVE LOGIC ---
+    async function saveScenario() {
+        const name = document.getElementById('scenarioName').value;
+        if (!name) { alert("Please enter a name."); return; }
+
+        const payload = {
+            name: name,
+            input_data: lastPayload,
+            result_data: lastResults
+        };
+
+        try {
+            const response = await fetch('/calculators/api/tax-scenarios/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload)
+            });
+            
+            if (response.ok) {
+                saveScenarioModal.hide();
+                fetchScenarios();
+            } else {
+                alert("Error saving scenario.");
+            }
+        } catch (error) {
+            alert("Network error.");
+        }
+    }
+
+    async function fetchScenarios() {
+        if (!scenarioLibrary) return;
+        try {
+            const response = await fetch('/calculators/api/tax-scenarios/');
+            if (response.ok) {
+                const data = await response.json();
+                savedScenarios = data;
+                renderScenarios(data);
+            }
+        } catch (error) { console.error(error); }
+    }
+
+    function renderScenarios(scenarios) {
+        scenarioLibrary.innerHTML = '';
+        if (scenarios.length === 0) {
+            scenarioLibrary.innerHTML = '<div class="col-12 text-center text-muted">No saved scenarios yet.</div>';
+            return;
+        }
+
+        scenarios.forEach(s => {
+            const summary = s.result_data.summary;
+            const results = s.result_data.results;
+            
+            const card = `
+                <div class="col-md-4">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">${s.name}</h5>
+                            <h6 class="card-subtitle mb-2 text-muted">${new Date(s.created_at).toLocaleDateString()}</h6>
+                            <p class="card-text small">
+                                <strong>Asset:</strong> ${summary.asset_name}<br>
+                                <strong>Jurisdiction:</strong> ${summary.jurisdiction}<br>
+                                <strong>Net Gain:</strong> <span class="${parseFloat(results.net_gain_loss) >= 0 ? 'text-success' : 'text-danger'}">${results.net_gain_loss}</span>
+                            </p>
+                            <div class="d-flex justify-content-between mt-3">
+                                <button class="btn btn-sm btn-primary load-scenario-btn" data-id="${s.id}">Load</button>
+                                <button class="btn btn-sm btn-danger delete-scenario-btn" data-id="${s.id}">Delete</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>`;
+            scenarioLibrary.insertAdjacentHTML('beforeend', card);
+        });
+
+        document.querySelectorAll('.load-scenario-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => loadScenario(e.target.dataset.id));
+        });
+        document.querySelectorAll('.delete-scenario-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => deleteScenario(e.target.dataset.id));
+        });
+    }
+
+    function loadScenario(id) {
+        const s = savedScenarios.find(scen => scen.id == id);
+        if (!s) return;
+        
+        const input = s.input_data;
+        
+        // Load Form Fields
+        document.getElementById('assetName').value = input.asset_name;
+        document.getElementById('saleDate').value = input.sale.date;
+        document.getElementById('saleQuantity').value = input.sale.quantity;
+        document.getElementById('salePrice').value = input.sale.price;
+        document.getElementById('saleFees').value = input.sale.fees;
+        
+        taxJurisdictionSelect.value = input.tax_profile.jurisdiction;
+        taxJurisdictionSelect.dispatchEvent(new Event('change')); // Trigger UI update
+        document.getElementById('annualIncome').value = input.tax_profile.annual_income;
+        if(input.tax_profile.filing_status) {
+             document.getElementById('filingStatus').value = input.tax_profile.filing_status;
+        }
+
+        // Rebuild Purchase Lot Table
+        purchaseLotsBody.innerHTML = '';
+        input.purchase_lots.forEach(lot => {
+            addPurchaseLot(); // Add row
+            const newRow = purchaseLotsBody.lastElementChild;
+            newRow.querySelector('.purchase-date').value = lot.date;
+            newRow.querySelector('.purchase-quantity').value = lot.quantity;
+            newRow.querySelector('.purchase-price').value = lot.price;
+            newRow.querySelector('.purchase-fees').value = lot.fees;
+        });
+
+        // Trigger Calculation
+        calculateGains();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteScenario(id) {
+        if (!confirm("Delete this scenario?")) return;
+        try {
+            const response = await fetch(`/calculators/api/tax-scenarios/${id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (response.ok) fetchScenarios();
+        } catch (error) { alert("Network error."); }
+    }
+
+    function resetForm() {
+        form.reset();
+        purchaseLotsBody.innerHTML = '';
+        addPurchaseLot();
+        resultsDashboard.style.display = 'none';
+    }
+
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
