@@ -1,5 +1,5 @@
-# Use an official Python runtime as a parent image
-FROM python:3.12-slim
+# Use python:3.12-slim-bookworm to ensure a stable Linux version
+FROM python:3.12-slim-bookworm
 
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
@@ -8,7 +8,8 @@ ENV PYTHONUNBUFFERED=1
 # Set work directory
 WORKDIR /app
 
-# Install system dependencies required for pycairo/xhtml2pdf
+# Install system dependencies
+# We use 'libgdk-pixbuf-2.0-0' which is the correct name for Debian Bookworm
 RUN apt-get update && apt-get install -y \
     build-essential \
     python3-dev \
@@ -19,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     libcairo2 \
     libpango-1.0-0 \
     libpangocairo-1.0-0 \
-    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf-2.0-0 \
     libffi-dev \
     shared-mime-info \
     && apt-get clean \
