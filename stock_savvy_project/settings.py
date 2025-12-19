@@ -102,18 +102,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- Email Configuration ---
 if not DEBUG:
-    # Live Settings: Use Gmail with SSL (Port 465)
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 465          # <--- Changed to 465 (SSL)
-    EMAIL_USE_SSL = True      # <--- Turned ON SSL
-    EMAIL_USE_TLS = False     # <--- Turned OFF TLS
+    EMAIL_PORT = 465          # <--- Must be 465
+    EMAIL_USE_SSL = True      # <--- Must be True
+    EMAIL_USE_TLS = False     # <--- Must be False
     
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 else:
-    # Local Settings
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
 CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
