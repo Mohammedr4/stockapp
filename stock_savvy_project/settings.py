@@ -102,17 +102,21 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- Email Configuration ---
 if not DEBUG:
-    # FORCE Port 587 (TLS) - The only one that works reliably on cloud
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
     EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False  # Must be False for Port 587
+    EMAIL_USE_SSL = False
     
-    # Credentials from Railway Variables
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+
+    # --- DEBUGGING: PRINT SETTINGS TO LOGS ---
+    print("--------------------------------------------------")
+    print(f"DEBUG: EMAIL_PORT is set to: {EMAIL_PORT}")
+    print(f"DEBUG: EMAIL_USE_TLS is set to: {EMAIL_USE_TLS}")
+    print("--------------------------------------------------")
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
