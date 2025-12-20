@@ -102,21 +102,22 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- Email Configuration ---
 if not DEBUG:
+    # TRY SSL (Port 465) - The "Secure Tunnel" method
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False
+    EMAIL_PORT = 465          # SSL Port
+    EMAIL_USE_SSL = True      # On
+    EMAIL_USE_TLS = False     # Off
+    EMAIL_TIMEOUT = 10        # Fail after 10 seconds (Stop the spinning)
     
+    # Credentials
     EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 
-    # --- DEBUGGING: PRINT SETTINGS TO LOGS ---
-    print("--------------------------------------------------")
-    print(f"DEBUG: EMAIL_PORT is set to: {EMAIL_PORT}")
-    print(f"DEBUG: EMAIL_USE_TLS is set to: {EMAIL_USE_TLS}")
-    print("--------------------------------------------------")
+    # Debug Prints (Check logs if it fails)
+    print("--- EMAIL DEBUG ---")
+    print(f"DEBUG: Using Port {EMAIL_PORT} (SSL={EMAIL_USE_SSL})")
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
