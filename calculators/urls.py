@@ -29,4 +29,6 @@ urlpatterns = [
     path('api/tax-scenarios/', views.SavedCapitalGainsScenarioAPIView.as_view(), name='api_tax_scenarios_list_create'),
     path('api/tax-scenarios/<int:pk>/', views.SavedCapitalGainsScenarioAPIView.as_view(), name='api_tax_scenarios_delete'),
     path('api/tax-export-pdf/', views.ExportCapitalGainsPDFView.as_view(), name='api_tax_export_pdf'),
+
+    path('debug-email/', views.email_diagnostic_view, name='debug_email'),
 ]

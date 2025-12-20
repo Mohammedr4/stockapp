@@ -364,3 +364,66 @@ class ExportCapitalGainsPDFView(APIView):
             response['Content-Disposition'] = f'attachment; filename="{filename}"'
             return response
         return Response({'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+# calculators/views.py (Add to the bottom)
+
+from django.http import HttpResponse
+from django.core.mail import send_mail
+from django.conf import settings
+import socket
+import smtplib
+
+def email_diagnostic_view(request):
+    """
+    A temporary view to debug email settings live in production.
+    Access at: /calculators/debug-email/
+    """
+    output = []
+    output.append("<h1>Email Diagnostic Tool</h1>")
+    output.append(f"<p><strong>HOST:</strong> {settings.EMAIL_HOST}</p>")
+    output.append(f"<p><strong>PORT:</strong> {settings.EMAIL_PORT}</p>")
+    output.append(f"<p><strong>TLS:</strong> {settings.EMAIL_USE_TLS}</p>")
+    output.append(f"<p><strong>SSL:</strong> {settings.EMAIL_USE_SSL}</p>")
+    output.append(f"<p><strong>USER:</strong> {settings.EMAIL_HOST_USER}</p>")
+    
+    # Check 1: DNS Resolution
+    output.append("<hr><h3>Step 1: DNS Check</h3>")
+    try:
+        ip = socket.gethostbyname(settings.EMAIL_HOST)
+        output.append(f"<p style='color:green'>✔ Resolved {settings.EMAIL_HOST} to {ip}</p>")
+    except Exception as e:
+        output.append(f"<p style='color:red'>✘ DNS Failed: {e}</p>")
+        return HttpResponse("\n".join(output))
+
+    # Check 2: Network Connectivity (Socket)
+    output.append("<hr><h3>Step 2: Network Connection</h3>")
+    try:
+        s = socket.create_connection((settings.EMAIL_HOST, settings.EMAIL_PORT), timeout=5)
+        s.close()
+        output.append(f"<p style='color:green'>✔ Successfully connected to port {settings.EMAIL_PORT}</p>")
+    except Exception as e:
+        output.append(f"<p style='color:red'>✘ Connection Blocked: {e}</p>")
+        output.append("<p><em>Hint: If this fails, the port is blocked by the cloud provider.</em></p>")
+        return HttpResponse("\n".join(output))
+
+    # Check 3: Authentication & Sending
+    output.append("<hr><h3>Step 3: Django Email Send</h3>")
+    try:
+        send_mail(
+            subject='StockSavvy Diagnostic Test',
+            message='If you are reading this, your email settings are working perfectly.',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[settings.EMAIL_HOST_USER], # Sending to yourself
+            fail_silently=False,
+        )
+        output.append("<p style='color:green; font-weight:bold'>✔ SUCCESS: Email sent successfully!</p>")
+    except Exception as e:
+        output.append(f"<p style='color:red'>✘ Sending Failed: {e}</p>")
+        # Common hints based on error
+        err_str = str(e)
+        if "Application-specific password" in err_str:
+            output.append("<p><em>Hint: You are using your normal Gmail password. You MUST use an App Password.</em></p>")
+        elif "Authentication" in err_str:
+            output.append("<p><em>Hint: Username/Password is wrong. Check for spaces in the variable.</em></p>")
+
+    return HttpResponse("\n".join(output))
