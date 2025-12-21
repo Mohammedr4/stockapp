@@ -42,6 +42,7 @@ INSTALLED_APPS = [
     'crispy_forms',
     'crispy_bootstrap5',
     'rest_framework',
+    'anymail',
 ]
 
 MIDDLEWARE = [
@@ -100,18 +101,14 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# --- Email Configuration (SendGrid API - HTTPS) ---
+# --- Email Configuration (SendGrid HTTPS API) ---
 if not DEBUG:
-    # We use Anymail to send via HTTPS (Port 443), which Railway allows.
-    INSTALLED_APPS += ['anymail']  # Temporarily adds it to apps
-    
     EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
-    
+
     ANYMAIL = {
         "SENDGRID_API_KEY": os.getenv('SENDGRID_API_KEY'),
     }
-    
-    # This must match the email you verified on SendGrid
+
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
     SERVER_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 else:
