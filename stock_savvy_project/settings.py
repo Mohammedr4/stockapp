@@ -100,20 +100,20 @@ STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# --- Email Configuration ---
+# --- Email Configuration (SendGrid API - HTTPS) ---
 if not DEBUG:
-    # Use Port 587 (TLS) - The standard "Open" door for cloud servers
-    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-    EMAIL_HOST = 'smtp.gmail.com'
-    EMAIL_PORT = 587
-    EMAIL_USE_TLS = True
-    EMAIL_USE_SSL = False    # Must be False for Port 587
-    EMAIL_TIMEOUT = 10       # Fail fast if it hangs
+    # We use Anymail to send via HTTPS (Port 443), which Railway allows.
+    INSTALLED_APPS += ['anymail']  # Temporarily adds it to apps
     
-    # Credentials
-    EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER')
-    EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD')
+    EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
+    
+    ANYMAIL = {
+        "SENDGRID_API_KEY": os.getenv('SENDGRID_API_KEY'),
+    }
+    
+    # This must match the email you verified on SendGrid
     DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+    SERVER_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
