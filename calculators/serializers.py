@@ -1,6 +1,6 @@
 # calculators/serializers.py
 from rest_framework import serializers
-from .models import SavedRepriceStrategy, SavedCapitalGainsScenario
+from .models import SavedRepriceStrategy, SavedCapitalGainsScenario, SavedRebalanceScenario
 
 # GLOBAL SETTING: Max digits 30, Decimal places 10
 # This ensures consistency and safety across all calculators.
@@ -64,4 +64,10 @@ class SavedCapitalGainsScenarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = SavedCapitalGainsScenario
         fields = ['id', 'name', 'created_at', 'input_data', 'result_data']
+        read_only_fields = ['id', 'created_at']
+
+class SavedRebalanceScenarioSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SavedRebalanceScenario
+        fields = ['id', 'name', 'created_at', 'holdings_data', 'categories_data']
         read_only_fields = ['id', 'created_at']

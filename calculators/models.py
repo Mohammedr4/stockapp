@@ -38,3 +38,18 @@ class SavedCapitalGainsScenario(models.Model):
 
     def __str__(self):
         return f"{self.name} - Tax Scenario ({self.user.username})"
+    
+class SavedRebalanceScenario(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # We store the rows as JSON because they are flexible lists
+    # Structure: [{'symbol': 'AAPL', 'value': '100', 'category': 'US Stocks'}]
+    holdings_data = models.JSONField(default=list) 
+    
+    # Structure: [{'name': 'US Stocks', 'target': 60}]
+    categories_data = models.JSONField(default=list)
+
+    def __str__(self):
+        return f"{self.name} - {self.user.username}"

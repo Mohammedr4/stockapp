@@ -1,5 +1,5 @@
 # calculators/views.py
-
+import io
 import os
 import requests
 from datetime import datetime, timedelta
@@ -9,6 +9,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from decimal import Decimal
+from django.utils import timezone
 
 # Serializer Imports
 from .serializers import (
@@ -16,12 +17,13 @@ from .serializers import (
     RepriceRequestSerializer, 
     RebalanceRequestSerializer, 
     SavedRepriceStrategySerializer,
-    SavedCapitalGainsScenarioSerializer
+    SavedCapitalGainsScenarioSerializer,
+    SavedRebalanceScenarioSerializer
 )
 
 # Model Imports
 # This was the missing piece causing the NameError
-from .models import SavedRepriceStrategy, SavedCapitalGainsScenario
+from .models import SavedRepriceStrategy, SavedCapitalGainsScenario, SavedRebalanceScenario
 
 # Engine Imports
 from .tax_engine import (
@@ -35,6 +37,10 @@ from .reprice_engine import calculate_reprice_by_shares, calculate_reprice_by_ta
 from .utils import render_to_pdf
 from django.http import HttpResponse
 
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
 # --- Page Views ---
 
 @login_required
@@ -365,65 +371,138 @@ class ExportCapitalGainsPDFView(APIView):
             return response
         return Response({'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
     
-# calculators/views.py (Add to the bottom)
+class SavedRebalanceScenarioAPIView(APIView):
+    """ Handles listing, creating, and deleting saved rebalance scenarios. """
 
-from django.http import HttpResponse
-from django.core.mail import send_mail
-from django.conf import settings
-import socket
-import smtplib
+    def get(self, request, *args, **kwargs):
+        """ List all saved scenarios for the logged-in user. """
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
 
-def email_diagnostic_view(request):
+        scenarios = SavedRebalanceScenario.objects.filter(user=request.user).order_by('-created_at')
+        serializer = SavedRebalanceScenarioSerializer(scenarios, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request, *args, **kwargs):
+        """ Save a new scenario. """
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        serializer = SavedRebalanceScenarioSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, pk=None, *args, **kwargs):
+        """ Delete a specific scenario. """
+        if not request.user.is_authenticated:
+            return Response({'error': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+
+        try:
+            scenario = SavedRebalanceScenario.objects.get(pk=pk, user=request.user)
+            scenario.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except SavedRebalanceScenario.DoesNotExist:
+            return Response({'error': 'Scenario not found'}, status=status.HTTP_404_NOT_FOUND)
+
+class ExportRebalancePDFView(APIView):
     """
-    A temporary view to debug email settings live in production.
-    Access at: /calculators/debug-email/
+    Generates a PDF report for the Portfolio Rebalancing Calculator.
+    Receives the calculation result JSON from the frontend.
     """
-    output = []
-    output.append("<h1>Email Diagnostic Tool</h1>")
-    output.append(f"<p><strong>HOST:</strong> {settings.EMAIL_HOST}</p>")
-    output.append(f"<p><strong>PORT:</strong> {settings.EMAIL_PORT}</p>")
-    output.append(f"<p><strong>TLS:</strong> {settings.EMAIL_USE_TLS}</p>")
-    output.append(f"<p><strong>SSL:</strong> {settings.EMAIL_USE_SSL}</p>")
-    output.append(f"<p><strong>USER:</strong> {settings.EMAIL_HOST_USER}</p>")
-    
-    # Check 1: DNS Resolution
-    output.append("<hr><h3>Step 1: DNS Check</h3>")
-    try:
-        ip = socket.gethostbyname(settings.EMAIL_HOST)
-        output.append(f"<p style='color:green'>✔ Resolved {settings.EMAIL_HOST} to {ip}</p>")
-    except Exception as e:
-        output.append(f"<p style='color:red'>✘ DNS Failed: {e}</p>")
-        return HttpResponse("\n".join(output))
+    def post(self, request, *args, **kwargs):
+        data = request.data
+        
+        # Create a file-like buffer to receive PDF data
+        buffer = io.BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=letter)
+        elements = []
+        styles = getSampleStyleSheet()
 
-    # Check 2: Network Connectivity (Socket)
-    output.append("<hr><h3>Step 2: Network Connection</h3>")
-    try:
-        s = socket.create_connection((settings.EMAIL_HOST, settings.EMAIL_PORT), timeout=5)
-        s.close()
-        output.append(f"<p style='color:green'>✔ Successfully connected to port {settings.EMAIL_PORT}</p>")
-    except Exception as e:
-        output.append(f"<p style='color:red'>✘ Connection Blocked: {e}</p>")
-        output.append("<p><em>Hint: If this fails, the port is blocked by the cloud provider.</em></p>")
-        return HttpResponse("\n".join(output))
+        # 1. Header
+        elements.append(Paragraph("Portfolio Rebalancing Plan", styles['Title']))
+        elements.append(Paragraph(f"Generated on: {timezone.now().strftime('%Y-%m-%d')}", styles['Normal']))
+        elements.append(Spacer(1, 12))
+        
+        # 2. Total Value
+        total_value = data.get('total_portfolio_value', 0)
+        elements.append(Paragraph(f"<b>Total Portfolio Value:</b> ${float(total_value):,.2f}", styles['Normal']))
+        elements.append(Spacer(1, 20))
 
-    # Check 3: Authentication & Sending
-    output.append("<hr><h3>Step 3: Django Email Send</h3>")
-    try:
-        send_mail(
-            subject='StockSavvy Diagnostic Test',
-            message='If you are reading this, your email settings are working perfectly.',
-            from_email=settings.DEFAULT_FROM_EMAIL,
-            recipient_list=[settings.EMAIL_HOST_USER], # Sending to yourself
-            fail_silently=False,
-        )
-        output.append("<p style='color:green; font-weight:bold'>✔ SUCCESS: Email sent successfully!</p>")
-    except Exception as e:
-        output.append(f"<p style='color:red'>✘ Sending Failed: {e}</p>")
-        # Common hints based on error
-        err_str = str(e)
-        if "Application-specific password" in err_str:
-            output.append("<p><em>Hint: You are using your normal Gmail password. You MUST use an App Password.</em></p>")
-        elif "Authentication" in err_str:
-            output.append("<p><em>Hint: Username/Password is wrong. Check for spaces in the variable.</em></p>")
+        # 3. Allocation Summary Table
+        elements.append(Paragraph("<b>Allocation Summary</b>", styles['Heading2']))
+        elements.append(Spacer(1, 10))
+        
+        # Table Header
+        table_data = [['Category', 'Current %', 'Target %', 'Current $', 'Target $', 'Difference']]
+        
+        # Table Rows
+        target_allocation = data.get('target_allocation', {})
+        current_allocation = data.get('current_allocation', {})
+        
+        for category, target_info in target_allocation.items():
+            current_info = current_allocation.get(category, {})
+            
+            # Format numbers
+            curr_pct = f"{current_info.get('percent', 0)}%"
+            tgt_pct = f"{target_info.get('percent', 0)}%"
+            curr_val = f"${float(current_info.get('value', 0)):,.2f}"
+            tgt_val = f"${float(target_info.get('value', 0)):,.2f}"
+            
+            # Calculate diff for display
+            diff = float(target_info.get('value', 0)) - float(current_info.get('value', 0))
+            diff_str = f"${diff:,.2f}"
+            if diff > 0: diff_str = f"+{diff_str}"
+            
+            table_data.append([category, curr_pct, tgt_pct, curr_val, tgt_val, diff_str])
 
-    return HttpResponse("\n".join(output))
+        # Draw Table 1
+        t1 = Table(table_data)
+        t1.setStyle(TableStyle([
+            ('BACKGROUND', (0, 0), (-1, 0), colors.grey),
+            ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+            ('BOTTOMPADDING', (0, 0), (-1, 0), 12),
+            ('BACKGROUND', (0, 1), (-1, -1), colors.beige),
+            ('GRID', (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(t1)
+        elements.append(Spacer(1, 20))
+
+        # 4. Actionable Orders Table
+        elements.append(Paragraph("<b>Actionable Orders</b>", styles['Heading2']))
+        elements.append(Spacer(1, 10))
+        
+        orders_data = [['Action', 'Asset/Category', 'Amount']]
+        rebalancing_orders = data.get('rebalancing_orders', [])
+        
+        for order in rebalancing_orders:
+            if order['action'] == 'HOLD':
+                continue
+            
+            amount = f"${abs(float(order['difference_value'])):,.2f}"
+            orders_data.append([order['action'], order['category'], amount])
+            
+        if len(orders_data) > 1:
+            t2 = Table(orders_data, colWidths=[100, 200, 100])
+            t2.setStyle(TableStyle([
+                ('BACKGROUND', (0, 0), (-1, 0), colors.navy),
+                ('TEXTCOLOR', (0, 0), (-1, 0), colors.whitesmoke),
+                ('ALIGN', (0, 0), (-1, -1), 'LEFT'),
+                ('FONTNAME', (0, 0), (-1, 0), 'Helvetica-Bold'),
+                ('GRID', (0, 0), (-1, -1), 1, colors.black),
+            ]))
+            elements.append(t2)
+        else:
+            elements.append(Paragraph("No trades needed. Your portfolio is balanced.", styles['Normal']))
+
+        # Build PDF
+        doc.build(elements)
+        buffer.seek(0)
+        
+        # Return as File Download
+        response = HttpResponse(buffer, content_type='application/pdf')
+        response['Content-Disposition'] = 'attachment; filename="rebalancing_plan.pdf"'
+        return response

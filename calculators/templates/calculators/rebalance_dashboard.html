@@ -5,9 +5,17 @@
 
 {% block content %}
 <div class="container my-5">
-    <div class="text-center mb-5">
-        <h1>Portfolio Rebalancing Console</h1>
-        <p class="lead text-muted">Define your target asset allocation and get a clear action plan to rebalance your portfolio.</p>
+    
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div class="text-center flex-grow-1">
+            <h1>Portfolio Rebalancing Console</h1>
+            <p class="lead text-muted">Define your target asset allocation and get a clear action plan.</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#loadScenarioModal" id="btn-open-load-modal">
+                <i class="fas fa-folder-open"></i> Load Saved Setup
+            </button>
+        </div>
     </div>
 
     <div id="rebalance-console">
@@ -16,7 +24,7 @@
             <div class="card shadow-sm">
                 <div class="card-header"><h4 class="my-0">Step 1: Define Your Target Allocation</h4></div>
                 <div class="card-body">
-                    <p>Create categories for your portfolio and set a target percentage for each. The total must equal 100%.</p>
+                    <p>Create categories for your portfolio and set a target percentage for each. Total must equal 100%.</p>
                     <div id="categories-container">
                         </div>
                     <div class="d-flex justify-content-between align-items-center mt-3">
@@ -27,7 +35,7 @@
                     </div>
                     <hr>
                     <div class="d-grid">
-                        <button type="button" id="to-step-2-btn" class="btn btn-primary" disabled>Next: Assign Holdings</button>
+                        <button type="button" id="to-step-2-btn" class="btn btn-primary" disabled>Next: Enter & Assign Holdings</button>
                     </div>
                 </div>
             </div>
@@ -35,15 +43,46 @@
 
         <div id="step-2-assign" style="display:none;">
             <div class="card shadow-sm">
-                <div class="card-header"><h4 class="my-0">Step 2: Assign Holdings to Categories</h4></div>
+                <div class="card-header"><h4 class="my-0">Step 2: Enter & Assign Holdings</h4></div>
                 <div class="card-body">
-                    <p>Assign each of your portfolio holdings to the categories you created. Holdings without a category will be ignored.</p>
-                    <div id="holdings-container" class="list-group">
+                    <p>Enter your current stock holdings and assign them to a category.</p>
+                    
+                    <div class="row g-2 align-items-end mb-4 border-bottom pb-4">
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Symbol</label>
+                            <input type="text" id="new-holding-symbol" class="form-control" placeholder="e.g. VOO">
                         </div>
+                        <div class="col-md-3">
+                            <label class="form-label small text-muted">Current Value ($)</label>
+                            <input type="number" id="new-holding-value" class="form-control" placeholder="0.00">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label small text-muted">Category</label>
+                            <select id="new-holding-category" class="form-select">
+                                <option value="" selected disabled>Select Category...</option>
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <button type="button" id="add-holding-btn" class="btn btn-success w-100">Add</button>
+                        </div>
+                    </div>
+
+                    <div id="holdings-container" class="list-group mb-3">
+                        </div>
+
+                    <div class="alert alert-info py-2 small" id="unassigned-warning" style="display:none;">
+                        Note: Unassigned holdings will be excluded from the rebalance calculation.
+                    </div>
+
                     <hr>
                     <div class="d-flex justify-content-between">
-                         <button type="button" id="back-to-step-1-btn" class="btn btn-secondary">Back: Edit Targets</button>
-                         <button type="button" id="to-step-3-btn" class="btn btn-primary">Calculate Rebalancing Plan</button>
+                         <div>
+                            <button type="button" id="back-to-step-1-btn" class="btn btn-secondary">Back</button>
+                            <button type="button" class="btn btn-outline-success ms-2" data-bs-toggle="modal" data-bs-target="#saveScenarioModal">
+                                <i class="fas fa-save"></i> Save Setup
+                            </button>
+                         </div>
+                         <button type="button" id="to-step-3-btn" class="btn btn-primary">Calculate Plan</button>
                     </div>
                 </div>
             </div>
@@ -55,10 +94,45 @@
     </div>
 </div>
 
+<div class="modal fade" id="saveScenarioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Save Rebalancing Setup</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <label class="form-label">Scenario Name</label>
+                <input type="text" id="save-scenario-name" class="form-control" placeholder="e.g. My Retirement Portfolio">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary" id="btn-confirm-save">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="loadScenarioModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Load Saved Setup</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="saved-scenarios-list" class="list-group">
+                    <div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <template id="category-row-template">
     <div class="row g-2 mb-2 align-items-center category-row">
         <div class="col-md-6">
-            <input type="text" class="form-control category-name" placeholder="Category Name (e.g., US Stocks)">
+            <input type="text" class="form-control category-name" placeholder="e.g., US Large Cap">
         </div>
         <div class="col-md-4">
             <div class="input-group">
@@ -77,30 +151,71 @@
 {% block extra_body %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {
-    // --- STATE MANAGEMENT ---
-    let userPortfolio = []; // This will hold the user's actual portfolio data
-
     // --- DOM REFERENCES ---
     const steps = {
         step1: document.getElementById('step-1-targets'),
         step2: document.getElementById('step-2-assign'),
         step3: document.getElementById('step-3-results'),
     };
+    
+    // Step 1
     const categoriesContainer = document.getElementById('categories-container');
     const categoryTemplate = document.getElementById('category-row-template');
     const addCategoryBtn = document.getElementById('add-category-btn');
     const totalPercentEl = document.getElementById('category-total-percent');
     const toStep2Btn = document.getElementById('to-step-2-btn');
+    
+    // Step 2
     const backToStep1Btn = document.getElementById('back-to-step-1-btn');
     const toStep3Btn = document.getElementById('to-step-3-btn');
     const holdingsContainer = document.getElementById('holdings-container');
+    const addHoldingBtn = document.getElementById('add-holding-btn');
+    const newSymbolInput = document.getElementById('new-holding-symbol');
+    const newValueInput = document.getElementById('new-holding-value');
+    const newCategorySelect = document.getElementById('new-holding-category');
 
-    // --- FUNCTIONS ---
+    // Save/Load Elements
+    const btnConfirmSave = document.getElementById('btn-confirm-save');
+    const saveNameInput = document.getElementById('save-scenario-name');
+    const btnOpenLoadModal = document.getElementById('btn-open-load-modal');
+    const savedScenariosList = document.getElementById('saved-scenarios-list');
+
+    // --- NAVIGATION ---
     function navigateToStep(stepNumber) {
         Object.values(steps).forEach(step => step.style.display = 'none');
         steps[`step${stepNumber}`].style.display = 'block';
     }
 
+    // --- HELPER: GET DATA FROM UI ---
+    function getUIData() {
+        const payload = { holdings: [], categories: [] };
+        
+        // Categories
+        document.querySelectorAll('.category-row').forEach(row => {
+            const name = row.querySelector('.category-name').value;
+            const target = row.querySelector('.category-target').value;
+            if(name || target) {
+                 payload.categories.push({ name: name, target: target });
+            }
+        });
+
+        // Holdings
+        document.querySelectorAll('.holding-row').forEach(row => {
+            const select = row.querySelector('.holding-category-select');
+            const symbol = row.querySelector('.holding-symbol').textContent;
+            const value = row.querySelector('.holding-value').value;
+            // Save everything, even unassigned ones, for the save feature
+            payload.holdings.push({
+                symbol: symbol,
+                value: value,
+                category: select.value
+            });
+        });
+        
+        return payload;
+    }
+
+    // --- STEP 1 LOGIC (CATEGORIES) ---
     function addCategoryRow(name = '', target = '') {
         const clone = categoryTemplate.content.cloneNode(true);
         clone.querySelector('.category-name').value = name;
@@ -125,35 +240,159 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
 
-    function populateHoldingsForAssignment() {
-        const categories = [];
-        categoriesContainer.querySelectorAll('.category-name').forEach(input => {
-            if (input.value) categories.push(input.value);
+    // --- STEP 2 LOGIC (HOLDINGS) ---
+    function updateAddFormCategories() {
+        let optionsHTML = '<option value="" disabled selected>Select Category...</option>';
+        document.querySelectorAll('.category-name').forEach(input => {
+            if (input.value) {
+                optionsHTML += `<option value="${input.value}">${input.value}</option>`;
+            }
         });
-
-        holdingsContainer.innerHTML = ''; // Clear previous
-        userPortfolio.forEach(holding => {
-            let optionsHTML = '<option selected value="">-- Do not rebalance --</option>';
-            categories.forEach(cat => {
-                optionsHTML += `<option value="${cat}">${cat}</option>`;
-            });
-
-            const holdingHTML = `
-                <div class="list-group-item d-flex justify-content-between align-items-center">
-                    <div>
-                        <strong>${holding.symbol}</strong>
-                        <small class="text-muted d-block">$${parseFloat(holding.value).toLocaleString()}</small>
-                    </div>
-                    <div class="w-50">
-                        <select class="form-select holding-category-select" data-symbol="${holding.symbol}" data-value="${holding.value}">
-                            ${optionsHTML}
-                        </select>
-                    </div>
-                </div>
-            `;
-            holdingsContainer.insertAdjacentHTML('beforeend', holdingHTML);
-        });
+        newCategorySelect.innerHTML = optionsHTML;
     }
+
+    function renderHoldingRow(symbol, value, selectedCategory) {
+        let optionsHTML = '<option value="" disabled>-- Select Category --</option>';
+        document.querySelectorAll('.category-name').forEach(input => {
+            if (input.value) {
+                const isSelected = (input.value === selectedCategory) ? 'selected' : '';
+                optionsHTML += `<option value="${input.value}" ${isSelected}>${input.value}</option>`;
+            }
+        });
+
+        const html = `
+            <div class="list-group-item d-flex justify-content-between align-items-center holding-row">
+                <div>
+                    <strong class="holding-symbol">${symbol}</strong>
+                    <small class="text-muted d-block">$${parseFloat(value).toLocaleString()}</small>
+                    <input type="hidden" class="holding-value" value="${value}">
+                </div>
+                <div class="d-flex align-items-center gap-2" style="width: 50%;">
+                    <select class="form-select form-select-sm holding-category-select">
+                        ${optionsHTML}
+                    </select>
+                    <button type="button" class="btn btn-outline-danger btn-sm remove-holding-btn">&times;</button>
+                </div>
+            </div>
+        `;
+        holdingsContainer.insertAdjacentHTML('beforeend', html);
+    }
+
+    // --- SAVE & LOAD LOGIC ---
+
+    async function saveScenario() {
+        const name = saveNameInput.value;
+        if(!name) { alert("Please enter a name."); return; }
+        
+        const data = getUIData();
+        const payload = {
+            name: name,
+            holdings_data: data.holdings,
+            categories_data: data.categories
+        };
+
+        try {
+            const response = await fetch('/calculators/api/rebalance-scenarios/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload)
+            });
+            if(response.ok) {
+                // Close modal
+                const modalEl = document.getElementById('saveScenarioModal');
+                const modal = bootstrap.Modal.getInstance(modalEl);
+                modal.hide();
+                alert("Setup saved successfully!");
+            } else {
+                alert("Error saving setup.");
+            }
+        } catch(e) {
+            console.error(e);
+            alert("Network error.");
+        }
+    }
+
+    async function fetchSavedScenarios() {
+        savedScenariosList.innerHTML = '<div class="text-center p-3"><div class="spinner-border text-primary" role="status"></div></div>';
+        try {
+            const response = await fetch('/calculators/api/rebalance-scenarios/');
+            const data = await response.json();
+            
+            if(data.length === 0) {
+                savedScenariosList.innerHTML = '<div class="p-3 text-center text-muted">No saved setups found.</div>';
+                return;
+            }
+
+            savedScenariosList.innerHTML = '';
+            data.forEach(item => {
+                const date = new Date(item.created_at).toLocaleDateString();
+                const itemHTML = `
+                    <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>${item.name}</strong> <small class="text-muted">(${date})</small>
+                        </div>
+                        <div>
+                            <button class="btn btn-sm btn-primary me-2 btn-load-scenario" data-id="${item.id}">Load</button>
+                            <button class="btn btn-sm btn-outline-danger btn-delete-scenario" data-id="${item.id}">Delete</button>
+                        </div>
+                    </div>
+                `;
+                savedScenariosList.insertAdjacentHTML('beforeend', itemHTML);
+            });
+            
+            // Store data locally so we can load it without another fetch
+            window.scenarioCache = data;
+
+        } catch(e) {
+            savedScenariosList.innerHTML = '<div class="alert alert-danger">Failed to load scenarios.</div>';
+        }
+    }
+
+    function loadScenario(id) {
+        const scenario = window.scenarioCache.find(s => s.id == id);
+        if(!scenario) return;
+
+        // 1. Clear current UI
+        categoriesContainer.innerHTML = '';
+        holdingsContainer.innerHTML = '';
+        
+        // 2. Load Categories
+        scenario.categories_data.forEach(cat => {
+            addCategoryRow(cat.name, cat.target);
+        });
+        updateTotalPercent();
+
+        // 3. Load Holdings
+        // Must update dropdown options first
+        navigateToStep(1); // Quick toggle to ensure logic runs, or just:
+        updateAddFormCategories();
+
+        scenario.holdings_data.forEach(h => {
+            renderHoldingRow(h.symbol, h.value, h.category);
+        });
+
+        // 4. Close Modal
+        const modalEl = document.getElementById('loadScenarioModal');
+        const modal = bootstrap.Modal.getInstance(modalEl);
+        modal.hide();
+        
+        alert("Setup loaded!");
+    }
+
+    async function deleteScenario(id) {
+        if(!confirm("Are you sure you want to delete this setup?")) return;
+        try {
+            const response = await fetch(`/calculators/api/rebalance-scenarios/${id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if(response.ok) {
+                fetchSavedScenarios(); // Refresh list
+            }
+        } catch(e) { alert("Error deleting."); }
+    }
+
+    // --- STEP 3 LOGIC (CALCULATION & RESULTS) ---
 
     function renderResults(data) {
         const allocationRows = Object.keys(data.target_allocation).map(catName => {
@@ -178,7 +417,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const actionColor = order.action === 'BUY' ? 'text-success' : 'text-danger';
             return `
                 <li class="list-group-item d-flex justify-content-between">
-                    <span><strong class="${actionColor}">${order.action}</strong> ${order.category}</span>
+                    <span><strong class="${actionColor}">${order.action}</strong> assets in <strong>${order.category}</strong></span>
                     <strong class="${actionColor}">$${Math.abs(parseFloat(order.difference_value)).toLocaleString()}</strong>
                 </li>
             `;
@@ -211,32 +450,64 @@ document.addEventListener('DOMContentLoaded', function () {
                     <ul class="list-group mb-3">${orderRows}</ul>
 
                     <hr>
-                    <button type="button" id="back-to-step-2-btn" class="btn btn-secondary">Back: Edit Assignments</button>
+                    <div class="d-flex justify-content-between">
+                        <button type="button" id="back-to-step-2-btn" class="btn btn-secondary">Back: Edit Assignments</button>
+                        <button type="button" id="export-pdf-btn" class="btn btn-danger"><i class="fas fa-file-pdf"></i> Export Plan as PDF</button>
+                    </div>
                 </div>
             </div>
         `;
         steps.step3.innerHTML = resultsHTML;
-        // Re-add event listener for the new "back" button
+
+        // 1. Back Button Listener
         document.getElementById('back-to-step-2-btn').addEventListener('click', () => navigateToStep(2));
+
+        // 2. NEW: Export PDF Listener (MOVED INSIDE HERE)
+        document.getElementById('export-pdf-btn').addEventListener('click', async () => {
+            try {
+                const response = await fetch('/calculators/api/rebalance-export-pdf/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCookie('csrftoken')
+                    },
+                    body: JSON.stringify(data) // We use the 'data' passed to renderResults
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "rebalancing_plan.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert("Failed to generate PDF.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Error exporting PDF.");
+            }
+        });
     }
 
     async function runRebalanceCalculation() {
-        const payload = { holdings: [], categories: [] };
-        document.querySelectorAll('.holding-category-select').forEach(select => {
-            if (select.value) {
-                payload.holdings.push({
-                    symbol: select.dataset.symbol,
-                    value: select.dataset.value,
-                    category: select.value
-                });
-            }
-        });
-        document.querySelectorAll('.category-row').forEach(row => {
-            payload.categories.push({
-                name: row.querySelector('.category-name').value,
-                target: row.querySelector('.category-target').value
-            });
-        });
+        const data = getUIData();
+        
+        // Gatekeeper: Filter out unassigned holdings for calculation
+        const validHoldings = data.holdings.filter(h => h.category !== "" && h.category !== null);
+        
+        if (validHoldings.length === 0) {
+            alert("Please add at least one holding and assign it to a category before calculating.");
+            return; 
+        }
+
+        const payload = {
+            holdings: validHoldings,
+            categories: data.categories
+        };
 
         steps.step3.innerHTML = `<div class="card shadow-sm"><div class="card-body text-center"><div class="spinner-border text-primary" role="status"></div><p class="mt-2">Calculating...</p></div></div>`;
         navigateToStep(3);
@@ -251,20 +522,15 @@ document.addEventListener('DOMContentLoaded', function () {
             if (!response.ok) throw new Error(data.error || 'Calculation failed.');
             renderResults(data);
         } catch (error) {
-            steps.step3.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            steps.step3.innerHTML = `
+                <div class="alert alert-danger">${error.message}</div>
+                <button type="button" class="btn btn-secondary" onclick="document.getElementById('back-to-step-2-btn-hidden').click()">Back to Inputs</button>
+                <button id="back-to-step-2-btn-hidden" style="display:none;"></button>
+            `;
+            document.getElementById('back-to-step-2-btn-hidden').addEventListener('click', () => navigateToStep(2));
         }
     }
     
-    function fetchUserPortfolio() {
-        userPortfolio = [
-            { symbol: 'AAPL', value: '15000.00' },
-            { symbol: 'GOOGL', value: '10000.00' },
-            { symbol: 'VTI', value: '25000.00' },
-            { symbol: 'BND', value: '8000.00' },
-            { symbol: 'VXUS', value: '12000.00' }
-        ];
-    }
-
     function getCookie(name) {
         let cookieValue = null;
         if (document.cookie && document.cookie !== '') {
@@ -281,6 +547,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     // --- EVENT LISTENERS ---
+    
     addCategoryBtn.addEventListener('click', () => addCategoryRow());
     categoriesContainer.addEventListener('click', function(e) {
         if (e.target.classList.contains('remove-category-btn')) {
@@ -289,19 +556,52 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     });
     categoriesContainer.addEventListener('input', updateTotalPercent);
+    
     toStep2Btn.addEventListener('click', () => {
-        populateHoldingsForAssignment();
+        updateAddFormCategories();
         navigateToStep(2);
     });
+
+    addHoldingBtn.addEventListener('click', () => {
+        const symbol = newSymbolInput.value.toUpperCase().trim();
+        const value = newValueInput.value;
+        const category = newCategorySelect.value; 
+
+        if (!symbol || !value) {
+            alert("Please enter a symbol and value.");
+            return;
+        }
+        renderHoldingRow(symbol, value, category);
+        newSymbolInput.value = '';
+        newValueInput.value = '';
+        newSymbolInput.focus();
+    });
+
+    holdingsContainer.addEventListener('click', (e) => {
+        if (e.target.classList.contains('remove-holding-btn')) {
+            e.target.closest('.holding-row').remove();
+        }
+    });
+
     backToStep1Btn.addEventListener('click', () => navigateToStep(1));
     toStep3Btn.addEventListener('click', runRebalanceCalculation);
 
+    // Save/Load Events
+    btnConfirmSave.addEventListener('click', saveScenario);
+    btnOpenLoadModal.addEventListener('click', fetchSavedScenarios);
+    
+    savedScenariosList.addEventListener('click', (e) => {
+        if(e.target.classList.contains('btn-load-scenario')) {
+            loadScenario(e.target.dataset.id);
+        }
+        if(e.target.classList.contains('btn-delete-scenario')) {
+            deleteScenario(e.target.dataset.id);
+        }
+    });
+
     // --- INITIALIZATION ---
-    addCategoryRow('US Stocks', '60');
-    addCategoryRow('International Stocks', '20');
-    addCategoryRow('Bonds', '20');
+    addCategoryRow('', ''); 
     updateTotalPercent();
-    fetchUserPortfolio();
 });
 </script>
 {% endblock extra_body %}
