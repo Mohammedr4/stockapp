@@ -103,14 +103,16 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 # --- Email Configuration (SendGrid HTTPS API) ---
 if not DEBUG:
+    # Use Anymail to connect via HTTPS (Port 443) - Bypasses Railway Block
     EMAIL_BACKEND = "anymail.backends.sendgrid.EmailBackend"
 
     ANYMAIL = {
         "SENDGRID_API_KEY": os.getenv('SENDGRID_API_KEY'),
     }
 
-    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
-    SERVER_EMAIL = os.getenv('DEFAULT_FROM_EMAIL')
+    # HARDCODED: Must match your SendGrid "Verified Sender" exactly
+    DEFAULT_FROM_EMAIL = 'mraeesi97@gmail.com'
+    SERVER_EMAIL = 'mraeesi97@gmail.com'
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
