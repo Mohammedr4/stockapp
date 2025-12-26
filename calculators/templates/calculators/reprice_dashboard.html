@@ -111,7 +111,6 @@
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     // --- USER AUTH STATUS ---
-    // We inject the Django user status directly into JS as a boolean
     const isUserAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
     const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
 
@@ -140,6 +139,22 @@ document.addEventListener('DOMContentLoaded', function () {
     let lastCalculationData = null; 
     let savedStrategies = [];
 
+    // --- HELPER: SAVE DRAFT (NEW FEATURE) ---
+    function saveDraftAndRedirect() {
+        const draftData = {
+            currentShares: inputs.currentShares.value,
+            averagePrice: inputs.averagePrice.value,
+            marketPrice: inputs.marketPrice.value,
+            strategyMode: document.querySelector('input[name="strategyMode"]:checked').value,
+            strategyValueShares: inputs.strategyValueShares.value,
+            strategyValuePrice: inputs.strategyValuePrice.value
+        };
+        // Save to browser memory
+        localStorage.setItem('stockSavvy_reprice_draft', JSON.stringify(draftData));
+        // Redirect to signup
+        window.location.href = signupUrl;
+    }
+
     // --- UI UPDATE FUNCTIONS ---
     function updatePositionDashboard() {
         const shares = parseFloat(inputs.currentShares.value) || 0;
@@ -159,20 +174,6 @@ document.addEventListener('DOMContentLoaded', function () {
     function renderApiResults(data, isSuccess) {
         if (!isSuccess) {
             let errorMsg = data.error || 'An unknown error occurred.';
-            if (!data.error && typeof data === 'object') {
-                try {
-                    const firstKey = Object.keys(data)[0];
-                    const firstValue = data[firstKey];
-                    if (typeof firstValue === 'object' && !Array.isArray(firstValue)) {
-                        const nestedKey = Object.keys(firstValue)[0];
-                        errorMsg = firstValue[nestedKey][0];
-                    } else if (Array.isArray(firstValue)) {
-                        errorMsg = firstValue[0];
-                    }
-                } catch (e) {
-                    errorMsg = 'Invalid data submitted. Please check your inputs.';
-                }
-            }
             resultsWrapper.innerHTML = `<div class="alert alert-danger">${errorMsg}</div>`;
             return;
         }
@@ -193,11 +194,10 @@ document.addEventListener('DOMContentLoaded', function () {
         }
         resultsWrapper.innerHTML = resultsHTML;
 
-        // --- THE GATEKEEPER LOGIC ---
-        // Attach listeners to the buttons and check auth status
+        // --- THE GATEKEEPER LOGIC (UPDATED) ---
         document.getElementById('saveStrategyTriggerBtn')?.addEventListener('click', () => {
             if (!isUserAuthenticated) {
-                window.location.href = signupUrl;
+                saveDraftAndRedirect(); // Save data before leaving
                 return;
             }
             document.getElementById('strategyName').value = '';
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
         document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
             if (!isUserAuthenticated) {
-                window.location.href = signupUrl;
+                saveDraftAndRedirect(); // Save data before leaving
                 return;
             }
             exportToPDF();
@@ -321,7 +321,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     async function fetchStrategies() {
-        // Only fetch if the library element exists (it's wrapped in an if-auth block in HTML)
         if (!strategyLibrary) return; 
 
         try {
@@ -439,7 +438,32 @@ document.addEventListener('DOMContentLoaded', function () {
         const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
         strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
         strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
-        updatePositionDashboard();
+        
+        // --- RESTORE DRAFT LOGIC (NEW FEATURE) ---
+        const savedDraft = localStorage.getItem('stockSavvy_reprice_draft');
+        if (savedDraft) {
+            const data = JSON.parse(savedDraft);
+            // Restore Values
+            if(data.currentShares) inputs.currentShares.value = data.currentShares;
+            if(data.averagePrice) inputs.averagePrice.value = data.averagePrice;
+            if(data.marketPrice) inputs.marketPrice.value = data.marketPrice;
+            
+            // Restore Radio
+            const radio = document.querySelector(`input[name="strategyMode"][value="${data.strategyMode}"]`);
+            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+            
+            // Restore Strategy Inputs (with small delay to ensure visibility handles correctly)
+            setTimeout(() => {
+                if(data.strategyValueShares) inputs.strategyValueShares.value = data.strategyValueShares;
+                if(data.strategyValuePrice) inputs.strategyValuePrice.value = data.strategyValuePrice;
+                handleInputChange(); // Trigger calc
+            }, 50);
+
+            // Cleanup so it doesn't load forever
+            localStorage.removeItem('stockSavvy_reprice_draft');
+        } else {
+            updatePositionDashboard();
+        }
         
         fetchStrategies();
     }
