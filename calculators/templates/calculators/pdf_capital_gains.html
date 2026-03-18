@@ -39,8 +39,8 @@
         <tr>
             <td>{{ sale.date }}</td>
             <td>{{ sale.quantity }}</td>
-            <td>${{ sale.price }}</td>
-            <td>${{ sale.fees }}</td>
+            <td>{{ sale.price }}</td>
+            <td>{{ sale.fees }}</td>
         </tr>
     </table>
 
@@ -59,7 +59,7 @@
             <tr>
                 <td>{{ lot.date }}</td>
                 <td>{{ lot.quantity }}</td>
-                <td>${{ lot.price }}</td>
+                <td>{{ lot.price }}</td>
                 <td>(Included in Total)</td>
             </tr>
             {% endfor %}
@@ -71,15 +71,15 @@
         
         <div class="result-row">
             <span class="result-label">Total Sale Proceeds:</span>
-            <span class="result-val">${{ results.total_sale_proceeds }}</span>
+            <span class="result-val">{{ results.total_sale_proceeds }}</span>
         </div>
         <div class="result-row">
             <span class="result-label">Total Cost Basis:</span>
-            <span class="result-val">${{ results.total_purchase_cost }}</span>
+            <span class="result-val">{{ results.total_purchase_cost }}</span>
         </div>
         <div class="result-row">
             <span class="result-label">Gross Gain/Loss:</span>
-            <span class="result-val">${{ results.gross_gain_loss }}</span>
+            <span class="result-val">{{ results.gross_gain_loss }}</span>
         </div>
         <div class="result-row">
             <span class="result-label">Jurisdiction:</span>
@@ -91,12 +91,12 @@
         </div>
         <div class="result-row">
             <span class="result-label">Estimated Tax:</span>
-            <span class="result-val">${{ results.estimated_tax }}</span>
+            <span class="result-val">{{ results.estimated_tax }}</span>
         </div>
         
         <div class="result-row total-row">
             <span class="result-label">Net Gain/Loss:</span>
-            <span class="result-val">${{ results.net_gain_loss }}</span>
+            <span class="result-val">{{ results.net_gain_loss }}</span>
         </div>
     </div>
 

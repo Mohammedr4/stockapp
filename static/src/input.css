@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+@source "../../templates";
+@source "../../core/templates";
+@source "../../calculators/templates";
+
+@theme {
+    --color-brand-blue: #0A2540;
+    --color-brand-blue-light: #1e3d59;
+    --color-brand-accent: #6366f1;
+    --font-sans: "Inter", sans-serif;
+}
+
+@utility glassmorphism {
+    background-color: rgb(255 255 255 / 0.7);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgb(255 255 255 / 0.2);
+    box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+}

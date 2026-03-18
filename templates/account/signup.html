@@ -1,41 +1,155 @@
 {% extends "base.html" %}
-{% load i18n crispy_forms_tags socialaccount %}
+{% load i18n crispy_forms_tags tailwind_filters socialaccount %}
 
 {% block title %}{% trans "Sign Up" %}{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title text-center h3 mb-4">{% trans "Create an Account" %}</h1>
+<div class="min-h-[calc(100vh-8rem)] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div
+        class="max-w-md w-full glassmorphism rounded-3xl p-8 shadow-2xl border border-gray-100/50 relative overflow-hidden">
 
-                    <div class="d-grid gap-2">
-                        <a href="{% provider_login_url 'google' %}" class="btn btn-outline-primary">
-                            <i class="fab fa-google"></i> Sign Up with Google
-                        </a>
-                    </div>
-                    
-                    <hr class="my-4">
-                    <p class="text-center text-muted">Or sign up with your email:</p>
+        <!-- Decorative Glow -->
+        <div class="absolute -top-24 -right-24 w-48 h-48 bg-brand-blue/10 rounded-full blur-3xl"></div>
+        <div class="absolute -bottom-24 -left-24 w-48 h-48 bg-brand-accent/10 rounded-full blur-3xl"></div>
 
-                    <form class="signup" id="signup_form" method="post" action="{% url 'account_signup' %}">
-                        {% csrf_token %}
-                        
-                        {{ form|crispy }}
-                        
-                        {% if redirect_field_value %}
-                            <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
-                        {% endif %}
-                        <div class="d-grid mt-4">
-                            <button class="btn btn-primary" type="submit">{% trans "Sign Up" %}</button>
-                        </div>
-                    </form>
+        <div class="relative z-10">
+            <div class="text-center mb-10">
+                <span class="inline-block p-3 rounded-2xl bg-brand-accent/5 text-brand-accent mb-4">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z">
+                        </path>
+                    </svg>
+                </span>
+                <h2 class="text-3xl font-extrabold text-gray-900 tracking-tight">Create Account</h2>
+                <p class="mt-2 text-sm text-gray-500 font-medium">Join StockSavvy and unlock your potential</p>
+            </div>
+
+            <!-- Google SSO (Priority) -->
+            <div class="mb-6 mt-4">
+                <a href="{% provider_login_url 'google' process='login' next=redirect_field_value %}"
+                    class="w-full flex items-center justify-center px-4 py-3 border border-gray-200 rounded-xl shadow-sm bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-all focus:outline-none focus:ring-2 focus:ring-brand-blue focus:ring-offset-2">
+                    <svg class="w-5 h-5 mr-3" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                        <path d="M1 1h22v22H1z" fill="none" />
+                    </svg>
+                    Sign Up with Google
+                </a>
+            </div>
+
+            <!-- Separator -->
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-200"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-3 bg-white text-gray-500 font-medium">Or continue with email</span>
                 </div>
             </div>
-            <p class="text-center mt-3">
-                Already have an account? <a href="{% url 'account_login' %}">Log in</a>
+
+            <!-- Signup Form -->
+            <form class="space-y-6" id="signup_form" method="POST" action="{% url 'account_signup' %}">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="bg-red-50 border-l-4 border-red-500 p-4 rounded-md mb-6">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path fill-rule="evenodd"
+                                    d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                                    clip-rule="evenodd" />
+                            </svg>
+                        </div>
+                        <div class="ml-3">
+                            <h3 class="text-sm font-medium text-red-800">
+                                {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+                            </h3>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="space-y-4" x-data="{ password: '' }">
+                    <div @input="if($event.target.type==='password') password = $event.target.value;">
+                        {{ form|crispy }}
+                    </div>
+
+                    <div class="mt-2 bg-gray-50/80 rounded-xl p-4 border border-gray-100" x-show="password.length > 0"
+                        x-transition.opacity>
+                        <p class="text-xs font-semibold text-gray-700 mb-2">Password requirements:</p>
+                        <ul class="text-xs space-y-1.5">
+                            <li class="flex items-center gap-2"
+                                :class="password.length >= 8 ? 'text-green-600 font-medium' : 'text-gray-500'">
+                                <svg x-show="password.length >= 8" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <svg x-show="password.length < 8" class="w-3.5 h-3.5" fill="none" stroke="currentColor"
+                                    viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                At least 8 characters
+                            </li>
+                            <li class="flex items-center gap-2"
+                                :class="/[A-Z]/.test(password) && /[a-z]/.test(password) ? 'text-green-600 font-medium' : 'text-gray-500'">
+                                <svg x-show="/[A-Z]/.test(password) && /[a-z]/.test(password)" class="w-3.5 h-3.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <svg x-show="!(/[A-Z]/.test(password) && /[a-z]/.test(password))" class="w-3.5 h-3.5"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                Uppercase & lowercase letters
+                            </li>
+                            <li class="flex items-center gap-2"
+                                :class="/[0-9]/.test(password) ? 'text-green-600 font-medium' : 'text-gray-500'">
+                                <svg x-show="/[0-9]/.test(password)" class="w-3.5 h-3.5" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M5 13l4 4L19 7"></path>
+                                </svg>
+                                <svg x-show="!/[0-9]/.test(password)" class="w-3.5 h-3.5" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M6 18L18 6M6 6l12 12"></path>
+                                </svg>
+                                At least one number
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <button type="submit"
+                    class="w-full flex justify-center mt-6 py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-brand-blue hover:bg-brand-blue-light focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-brand-blue transition-all hover:shadow-lg hover:-translate-y-0.5">
+                    Sign Up Free &rarr;
+                </button>
+
+                {% if redirect_field_value %}
+                <input type="hidden" name="{{ redirect_field_name }}" value="{{ redirect_field_value }}" />
+                {% endif %}
+            </form>
+
+            <p class="mt-8 text-center text-sm text-gray-600">
+                Already have an account?
+                <a href="{% url 'account_login' %}{% if redirect_field_value %}?{{ redirect_field_name }}={{ redirect_field_value }}{% endif %}"
+                    class="font-bold text-brand-accent hover:text-brand-blue transition-colors">Log In here</a>
             </p>
         </div>
     </div>

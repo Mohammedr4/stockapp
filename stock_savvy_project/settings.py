@@ -5,6 +5,22 @@ import dj_database_url
 
 load_dotenv()
 
+
+# --- Critical Environment Validation ---
+# Fail fast during boot if critical secrets are missing
+REQUIRED_VARS = ['SECRET_KEY']
+DEBUG_ENV = os.getenv('DEBUG', 'False') == 'True'
+if not DEBUG_ENV: # In production check more things
+    REQUIRED_VARS.extend(['SENDGRID_API_KEY', 'DATABASE_URL', 'GOOGLE_CLIENT_ID', 'GOOGLE_CLIENT_SECRET'])
+
+missing_vars = [var for var in REQUIRED_VARS if not os.getenv(var)]
+if missing_vars:
+    # We don't raise an error here because `manage.py collectstatic` might fail during build steps without these.
+    # But we print a prominent warning.
+    print(f"WARNING: Missing critical environment variables: {', '.join(missing_vars)}")
+
+
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -37,13 +53,24 @@ INSTALLED_APPS = [
     'allauth.socialaccount',
     'allauth.socialaccount.providers.google',
     'calculators',
-    'portfolio',
     'core',
     'crispy_forms',
-    'crispy_bootstrap5',
+    'crispy_tailwind',
     'rest_framework',
     'anymail',
 ]
+
+# --- REST Framework Configuration ---
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '30/minute',  # Stop bots from spamming your calculator APIs
+        'user': '100/minute'
+    }
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,7 +126,7 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATICFILES_DIRS = [BASE_DIR / 'static']
 STATIC_ROOT = BASE_DIR / 'staticfiles'
-STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # --- Email Configuration (SendGrid HTTPS API) ---
 if not DEBUG:
@@ -110,14 +137,14 @@ if not DEBUG:
         "SENDGRID_API_KEY": os.getenv('SENDGRID_API_KEY'),
     }
 
-    # HARDCODED: Must match your SendGrid "Verified Sender" exactly
-    DEFAULT_FROM_EMAIL = 'mraeesi97@gmail.com'
-    SERVER_EMAIL = 'mraeesi97@gmail.com'
+    # Read sender emails from environment, but keep fallback for local testing
+    DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'mraeesi97@gmail.com')
+    SERVER_EMAIL = os.getenv('SERVER_EMAIL', 'mraeesi97@gmail.com')
 else:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 # --- Crispy Forms ---
-CRISPY_ALLOWED_TEMPLATE_PACKS = "bootstrap5"
-CRISPY_TEMPLATE_PACK = "bootstrap5"
+CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
+CRISPY_TEMPLATE_PACK = "tailwind"
 
 # --- ALLAUTH CONFIGURATION ---
 AUTHENTICATION_BACKENDS = [
@@ -130,13 +157,12 @@ LOGIN_REDIRECT_URL = '/'
 LOGOUT_REDIRECT_URL = '/'
 
 # Definitive Email-Only Settings
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_LOGIN_METHODS = {'email'}
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*']
 ACCOUNT_EMAIL_VERIFICATION = 'none'
 ACCOUNT_UNIQUE_EMAIL = True # This is the critical missing piece
 ACCOUNT_SIGNUP_FORM_CLASS = 'accounts.forms.CustomSignupForm'
+ACCOUNT_SIGNUP_PASSWORD_ENTER_TWICE = False
 
 # Quality of Life Settings
 SOCIALACCOUNT_LOGIN_ON_GET = True

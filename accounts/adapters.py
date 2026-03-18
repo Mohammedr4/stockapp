@@ -19,15 +19,18 @@ class CustomAccountAdapter(DefaultAccountAdapter):
 class CustomSocialAccountAdapter(DefaultSocialAccountAdapter):
     """
     Handles social account (Google) signups.
-    This is the critical fix.
     """
     def populate_user(self, request, sociallogin, data):
         """
         This is called when a user signs up via Google.
-        We take their email and use it as the required username.
+        We safely extract the email and assign names.
         """
         user = super().populate_user(request, sociallogin, data)
-        user.username = user.email  # Set username to be the email
+        
+        email = data.get('email')
+        if email:
+             user.username = email
+             
         user.first_name = data.get('given_name', '')
         user.last_name = data.get('family_name', '')
         return user

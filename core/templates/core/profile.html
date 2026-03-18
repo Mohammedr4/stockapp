@@ -3,27 +3,89 @@
 {% block title %}My Profile{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-sm">
-                <div class="card-body">
-                    <h1 class="card-title text-center mb-4">My Profile</h1>
-                    <div class="list-group list-group-flush">
-                        <div class="list-group-item">
-                            <strong>Display Name:</strong> {{ user.first_name }}
-                        </div>
-                        <div class="list-group-item">
-                            <strong>Email:</strong> {{ user.email }}
-                        </div>
-                        <div class="list-group-item">
-                            <strong>Joined:</strong> {{ user.date_joined|date:"F j, Y" }}
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="glassmorphism rounded-3xl shadow-sm border border-gray-100 overflow-hidden relative">
+        <div class="h-32 bg-gradient-to-r from-brand-blue to-brand-accent"></div>
+        <div class="px-8 pb-8">
+            <div class="relative flex justify-between items-end -mt-12 mb-6">
+                <div class="w-24 h-24 rounded-full bg-white p-1 shadow-md">
+                    {% if user.socialaccount_set.all.0.get_avatar_url %}
+                    <img src="{{ user.socialaccount_set.all.0.get_avatar_url }}" alt="Avatar"
+                        class="w-full h-full object-cover rounded-full border border-gray-100">
+                    {% else %}
+                    <div
+                        class="w-full h-full rounded-full bg-brand-blue flex flex-col justify-center items-center text-white text-3xl font-bold">
+                        {{ user.email|make_list|first|upper }}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <h1 class="text-3xl font-extrabold text-gray-900 mb-8">My Profile</h1>
+
+            <!-- Profile Details and Edit Form -->
+            <div x-data="{ editing: false }"
+                class="bg-gray-50/50 rounded-2xl border border-gray-100 overflow-hidden relative">
+
+                <!-- Display Mode -->
+                <div x-show="!editing" x-transition.opacity class="divide-y divide-gray-100">
+                    <div class="p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <span class="text-sm font-semibold text-gray-500 mb-1 sm:mb-0">Display Name</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-gray-900 font-medium">{{ user.first_name|default:"Not set" }}</span>
+                            <button @click="editing = true"
+                                class="text-brand-blue hover:text-brand-blue-light text-sm font-medium transition-colors">Edit</button>
                         </div>
                     </div>
+                    <div class="p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <span class="text-sm font-semibold text-gray-500 mb-1 sm:mb-0">Email</span>
+                        <span class="text-gray-900 font-medium">{{ user.email }}</span>
+                    </div>
+                    <div class="p-5 flex flex-col sm:flex-row sm:justify-between sm:items-center">
+                        <span class="text-sm font-semibold text-gray-500 mb-1 sm:mb-0">Joined</span>
+                        <span class="text-gray-900 font-medium">{{ user.date_joined|date:"F j, Y" }}</span>
+                    </div>
                 </div>
+
+                <!-- Edit Mode -->
+                <div x-show="editing" style="display: none;" x-transition.opacity class="p-6 bg-white">
+                    <form method="POST" action="{% url 'core:profile' %}" class="space-y-4">
+                        {% csrf_token %}
+                        <div>
+                            <label for="first_name" class="block text-sm font-semibold text-gray-700 mb-1">Display
+                                Name</label>
+                            <input type="text" id="first_name" name="first_name" value="{{ user.first_name }}"
+                                class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2 bg-gray-50/50"
+                                placeholder="E.g. Jane Doe">
+                        </div>
+                        <p class="text-xs text-gray-400 mt-2">Emails cannot be changed from this panel.</p>
+
+                        <div class="flex gap-3 justify-end mt-6 pt-4 border-t border-gray-100">
+                            <button type="button" @click="editing = false"
+                                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors">
+                                Cancel
+                            </button>
+                            <button type="submit"
+                                class="px-4 py-2 text-sm font-medium text-white bg-brand-blue rounded-xl hover:bg-brand-blue-light transition-colors shadow-sm">
+                                Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <div class="mt-8 flex gap-4">
+                <a href="{% url 'account_logout' %}"
+                    class="px-5 py-2.5 text-sm font-bold text-red-600 bg-red-50 hover:bg-red-100 rounded-xl transition-colors border border-red-100 flex items-center gap-2">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1">
+                        </path>
+                    </svg>
+                    Log Out
+                </a>
             </div>
         </div>
     </div>
-</div>
 </div>
 {% endblock %}

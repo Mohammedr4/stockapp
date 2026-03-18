@@ -3,69 +3,246 @@
 {% block title %}Repricing Strategy Dashboard{% endblock %}
 
 {% block content %}
-<div class="container my-5">
-    <div class="text-center mb-5">
-        <h1>Repricing Strategy Console</h1>
-        <p class="lead text-muted">An interactive workspace to model your stock positions and strategies.</p>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'home' %}"
+                    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-brand-blue transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path
+                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z">
+                        </path>
+                    </svg>
+                    Workspace
+                </a>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path fill-rule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-1 text-sm font-semibold text-gray-800 md:ml-2">Strategy Console</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+</div>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">Repricing Strategy Console</h1>
+        <p class="mt-2 text-xl text-gray-500">An interactive workspace to model your stock positions and strategies.</p>
     </div>
 
-    <div class="row g-5">
-        <div class="col-lg-5">
-            <div class="card shadow-sm h-100">
-                <div class="card-header"><h4 class="my-0">Your Current Position</h4></div>
-                <div class="card-body d-flex flex-column">
-                    <div class="mb-3">
-                        <label for="currentShares" class="form-label">Current Shares Held</label>
-                        <input type="number" class="form-control" id="currentShares" step="any" placeholder="100" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <!-- Current Position -->
+        <div class="lg:col-span-4">
+            <div class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-6 h-full flex flex-col">
+                <div class="mb-6 pb-4 border-b border-gray-100">
+                    <h4 class="text-xl font-bold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-brand-blue" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M3 6l3 1v10h6v-5a2 2 0 10-4 0v1H5V7l-2-1m18 1v10h-6v-5a2 2 0 10-4 0v1h6V7l2-1h-2...">
+                            </path>
+                        </svg>
+                        Your Current Position
+                    </h4>
+                </div>
+                <div class="flex-grow flex flex-col space-y-4">
+                    <div>
+                        <label for="currentShares" class="block text-sm font-semibold text-gray-700 mb-1">Current Shares
+                            Held</label>
+                        <input type="number"
+                            class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2 bg-gray-50/50"
+                            id="currentShares" step="any" placeholder="100"
+                            oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);"
+                            max="999999999999999">
                     </div>
-                    <div class="mb-3">
-                        <label for="averagePrice" class="form-label">Current Average Price ($)</label>
-                        <input type="number" class="form-control" id="averagePrice" step="any" placeholder="150.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
+                    <div>
+                        <label for="averagePrice" class="block text-sm font-semibold text-gray-700 mb-1">Current Average
+                            Price</label>
+                        <input type="number"
+                            class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2 bg-gray-50/50"
+                            id="averagePrice" step="any" placeholder="150.00"
+                            oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);"
+                            max="999999999999999">
                     </div>
-                    <div class="mb-3">
-                        <label for="marketPrice" class="form-label">Current Market Price ($)</label>
-                        <input type="number" class="form-control" id="marketPrice" step="any" placeholder="120.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
+                    <div>
+                        <label for="marketPrice" class="block text-sm font-semibold text-gray-700 mb-1">Current Market
+                            Price</label>
+                        <input type="number"
+                            class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2 bg-gray-50/50"
+                            id="marketPrice" step="any" placeholder="120.00"
+                            oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);"
+                            max="999999999999999">
                     </div>
-                    <hr>
-                    <h5 class="mb-3">Live Summary</h5>
-                    <dl class="row mb-0">
-                        <dt class="col-sm-6">Total Cost Basis</dt>
-                        <dd class="col-sm-6 text-end" id="displayCostBasis">$0.00</dd>
-                        <dt class="col-sm-6">Current Market Value</dt>
-                        <dd class="col-sm-6 text-end" id="displayMarketValue">$0.00</dd>
-                        <dt class="col-sm-6">Unrealized P&L</dt>
-                        <dd class="col-sm-6 text-end fw-bold" id="displayPnl">$0.00</dd>
-                    </dl>
-                    <div class="mt-auto pt-3 text-center">
-                        <button class="btn btn-sm btn-outline-secondary" id="resetBtn">Reset Fields</button>
+
+                    <div class="mt-6 pt-6 border-t border-gray-100">
+                        <h5 class="text-sm font-bold text-gray-900 uppercase tracking-wider mb-4">Live Summary</h5>
+                        <dl class="space-y-3">
+                            <div class="flex justify-between items-center text-sm">
+                                <dt class="text-gray-500 font-medium">Total Cost Basis</dt>
+                                <dd class="text-gray-900 font-semibold" id="displayCostBasis">0.00</dd>
+                            </div>
+                            <div class="flex justify-between items-center text-sm">
+                                <dt class="text-gray-500 font-medium">Current Market Value</dt>
+                                <dd class="text-gray-900 font-semibold" id="displayMarketValue">0.00</dd>
+                            </div>
+                            <div class="flex justify-between items-center text-sm pt-2 border-t border-gray-50">
+                                <dt class="text-gray-500 font-medium">Unrealized P&L</dt>
+                                <dd class="font-bold border border-transparent rounded-lg px-2 py-1" id="displayPnl">
+                                    $0.00</dd>
+                            </div>
+                        </dl>
+                    </div>
+                    <div class="mt-auto pt-6 text-center">
+                        <button
+                            class="text-sm font-medium text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-lg transition-colors"
+                            id="resetBtn">Reset All Fields</button>
                     </div>
                 </div>
             </div>
         </div>
 
-        <div class="col-lg-7">
-            <div class="card shadow-sm h-100">
-                <div class="card-header"><h4 class="my-0">Your Strategy Engine</h4></div>
-                <div class="card-body d-flex flex-column">
-                    <div class="mb-4 text-center">
-                        <div class="btn-group" role="group">
-                            <input type="radio" class="btn-check" name="strategyMode" id="modeShares" value="shares" autocomplete="off" checked>
-                            <label class="btn btn-outline-primary" for="modeShares">Calculate by Shares</label>
-                            <input type="radio" class="btn-check" name="strategyMode" id="modePrice" value="price" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="modePrice">Calculate by Target Price</label>
+        <!-- Strategy Engine -->
+        <div class="lg:col-span-8">
+            <div class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-6 h-full flex flex-col">
+                <div class="mb-6 pb-4 border-b border-gray-100">
+                    <h4 class="text-xl font-bold text-gray-900">Your Strategy Engine</h4>
+                </div>
+
+                <div class="flex-grow flex flex-col">
+                    <div class="flex justify-center mb-8">
+                        <div class="inline-flex bg-gray-100 rounded-xl p-1" role="group">
+                            <label class="cursor-pointer">
+                                <input type="radio" class="peer sr-only" name="strategyMode" id="modeShares"
+                                    value="shares" checked>
+                                <span
+                                    class="block px-4 py-2 text-sm font-bold rounded-lg text-gray-500 peer-checked:bg-white peer-checked:text-brand-blue peer-checked:shadow-sm transition-all">Buy
+                                    Shares</span>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" class="peer sr-only" name="strategyMode" id="modePrice"
+                                    value="price">
+                                <span
+                                    class="block px-4 py-2 text-sm font-bold rounded-lg text-gray-500 peer-checked:bg-white peer-checked:text-brand-blue peer-checked:shadow-sm transition-all">Target
+                                    Average</span>
+                            </label>
+
+                            <label class="cursor-pointer">
+                                <input type="radio" class="peer sr-only" name="strategyMode" id="modeTranches"
+                                    value="tranches">
+                                <span
+                                    class="px-4 py-2 text-sm font-bold rounded-lg text-gray-500 peer-checked:bg-white peer-checked:text-brand-accent peer-checked:shadow-sm transition-all flex items-center gap-1">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                    </svg> Simulator
+                                </span>
+                            </label>
                         </div>
                     </div>
-                    <div id="strategyInputShares" class="mb-4">
-                        <label for="strategyValueShares" class="form-label">Additional Shares to Buy</label>
-                        <input type="number" class="form-control" id="strategyValueShares" step="any" placeholder="50" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
+
+                    <div id="strategyInputShares" class="mb-6">
+                        <label for="strategyValueShares"
+                            class="block text-sm font-semibold text-gray-700 mb-1">Additional Shares to Buy</label>
+                        <input type="number"
+                            class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                            id="strategyValueShares" step="any" placeholder="50"
+                            oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);"
+                            max="999999999999999">
                     </div>
-                    <div id="strategyInputPrice" class="mb-4" style="display: none;">
-                        <label for="strategyValuePrice" class="form-label">Desired New Average Price ($)</label>
-                        <input type="number" class="form-control" id="strategyValuePrice" step="any" placeholder="145.00" oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);" max="999999999999999">
+
+                    <div id="strategyInputPrice" class="mb-6" style="display: none;">
+                        <label for="strategyValuePrice" class="block text-sm font-semibold text-gray-700 mb-1">Desired
+                            New Average Price</label>
+                        <input type="number"
+                            class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                            id="strategyValuePrice" step="any" placeholder="145.00"
+                            oninput="if(this.value.length > 15) this.value = this.value.slice(0, 15);"
+                            max="999999999999999">
                     </div>
-                    <hr>
-                    <div id="results-wrapper" class="mt-auto">
-                        <div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>
+
+                    <div id="strategyInputTranches" class="mb-6" style="display: none;">
+                        <label class="block text-sm font-semibold text-gray-700 mb-1">Scale-In Limit Orders</label>
+                        <p class="text-xs text-gray-500 mb-3">Model multiple limit orders to see how a "ladder" strategy
+                            impacts your breakeven.</p>
+                        <div id="tranchesContainer" class="space-y-2">
+                            <div class="flex gap-2 tranche-row items-center">
+                                <div class="flex-1">
+                                    <input type="number"
+                                        class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-price focus:ring-brand-blue focus:border-brand-blue"
+                                        placeholder="Target Price" step="any" min="0.01">
+                                </div>
+                                <div class="flex-1">
+                                    <input type="number"
+                                        class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-amount focus:ring-brand-blue focus:border-brand-blue"
+                                        placeholder="Investment" step="any" min="0.01">
+                                </div>
+                                <div>
+                                    <button type="button"
+                                        class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors remove-tranche-btn"
+                                        style="display:none;"><svg class="w-5 h-5" fill="none" stroke="currentColor"
+                                            viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
+                                            </path>
+                                        </svg></button>
+                                </div>
+                            </div>
+                        </div>
+                        <button type="button" id="addTrancheBtn"
+                            class="mt-3 inline-flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-brand-blue bg-brand-blue/10 rounded-lg hover:bg-brand-blue/20 transition-colors"><svg
+                                class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                            </svg> Add Limit Order</button>
+                    </div>
+
+                    <div
+                        class="mt-4 border-t border-gray-100 pt-6 flex-grow flex flex-col relative overflow-hidden min-h-[300px]">
+                        <div id="results-wrapper" class="flex-grow flex flex-col justify-center items-center h-full">
+                            <!-- Ghost Chart Background SVG -->
+                            <div class="absolute inset-x-0 bottom-0 top-12 opacity-[0.05] pointer-events-none w-full">
+                                <svg viewBox="0 0 800 400" preserveAspectRatio="none"
+                                    class="w-full h-full text-brand-blue" xmlns="http://www.w3.org/2000/svg">
+                                    <defs>
+                                        <linearGradient id="ghostRepriceGradient" x1="0" y1="0" x2="0" y2="1">
+                                            <stop offset="0%" stop-color="currentColor" stop-opacity="0.8" />
+                                            <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Grid lines -->
+                                    <line x1="0" y1="100" x2="800" y2="100" stroke="currentColor" stroke-width="1.5"
+                                        stroke-dasharray="4" opacity="0.3" />
+                                    <line x1="0" y1="200" x2="800" y2="200" stroke="currentColor" stroke-width="1.5"
+                                        stroke-dasharray="4" opacity="0.3" />
+                                    <line x1="0" y1="300" x2="800" y2="300" stroke="currentColor" stroke-width="1.5"
+                                        stroke-dasharray="4" opacity="0.3" />
+                                    <!-- Bar Chart Shapes -->
+                                    <path
+                                        d="M50,400 L50,300 L150,300 L150,400 Z M250,400 L250,220 L350,220 L350,400 Z M450,400 L450,150 L550,150 L550,400 Z M650,400 L650,80 L750,80 L750,400 Z"
+                                        fill="url(#ghostRepriceGradient)" />
+                                </svg>
+                            </div>
+
+                            <div
+                                class="bg-white/70 backdrop-blur-[2px] p-6 rounded-2xl border border-white shadow-sm relative z-10 text-center max-w-[90%] mx-auto">
+                                <h4 class="text-xl font-bold text-gray-800 mb-2">Simulate Your Strategy</h4>
+                                <p class="text-gray-600 text-sm leading-relaxed mb-1">Enter your position and strategy
+                                    to unlock projected outcomes and visual pricing models.</p>
+                            </div>
+                        </div>
+
+                        <!-- Impact Panel (replaces old Chart.js bar chart) -->
+                        <div id="chart-wrapper" class="mt-4 w-full relative z-20" style="display: none;">
+                            <div id="impact-panel"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -73,34 +250,45 @@
     </div>
 
     {% if user.is_authenticated %}
-    <div class="row mt-5">
-        <div class="col-12">
-            <hr class="mb-5">
-            <h3 class="mb-4">My Strategy Library</h3>
-            <div id="strategy-library" class="row g-4">
-                <div class="col-12 text-center text-muted">Loading strategies...</div>
-            </div>
+    <div class="mt-16">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6 border-b border-gray-200 pb-2">My Strategy Library</h3>
+        <div id="strategy-library" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center text-gray-500 py-8">Loading strategies...</div>
         </div>
     </div>
     {% endif %}
 </div>
 
-<div class="modal fade" id="saveStrategyModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Save Strategy</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+<!-- Tailwind Modal -->
+<div class="hidden" id="saveStrategyModal">
+    <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h5 class="text-lg font-bold text-gray-900">Save Strategy</h5>
+                <button type="button" class="text-gray-400 hover:text-gray-600 transition-colors"
+                    onclick="document.getElementById('saveStrategyModal').classList.add('hidden')">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12">
+                        </path>
+                    </svg>
+                </button>
             </div>
-            <div class="modal-body">
-                <div class="mb-3">
-                    <label for="strategyName" class="form-label">Strategy Name</label>
-                    <input type="text" class="form-control" id="strategyName" placeholder="e.g., Tesla Aggressive Buy">
+            <div class="p-6">
+                <div>
+                    <label for="strategyName" class="block text-sm font-semibold text-gray-700 mb-1">Strategy
+                        Name</label>
+                    <input type="text"
+                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                        id="strategyName" placeholder="e.g., Tesla Aggressive Buy">
                 </div>
             </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="confirmSaveBtn">Save</button>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                    onclick="document.getElementById('saveStrategyModal').classList.add('hidden')">Cancel</button>
+                <button type="button"
+                    class="px-4 py-2 text-sm font-medium text-white bg-brand-blue rounded-xl hover:bg-brand-blue-light transition-colors shadow-sm"
+                    id="confirmSaveBtn">Save Strategy</button>
             </div>
         </div>
     </div>
@@ -108,367 +296,703 @@
 {% endblock content %}
 
 {% block extra_body %}
-<script>
-document.addEventListener('DOMContentLoaded', function () {
-    // --- USER AUTH STATUS ---
-    const isUserAuthenticated = {{ user.is_authenticated|yesno:"true,false" }};
-    const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
-
-    // --- ELEMENT REFERENCES ---
-    const inputs = {
-        currentShares: document.getElementById('currentShares'),
-        averagePrice: document.getElementById('averagePrice'),
-        marketPrice: document.getElementById('marketPrice'),
-        strategyValueShares: document.getElementById('strategyValueShares'),
-        strategyValuePrice: document.getElementById('strategyValuePrice'),
-    };
-    const radioButtons = document.querySelectorAll('input[name="strategyMode"]');
-    const displays = {
-        costBasis: document.getElementById('displayCostBasis'),
-        marketValue: document.getElementById('displayMarketValue'),
-        pnl: document.getElementById('displayPnl'),
-    };
-    const strategyInputShares = document.getElementById('strategyInputShares');
-    const strategyInputPrice = document.getElementById('strategyInputPrice');
-    const resultsWrapper = document.getElementById('results-wrapper');
-    const resetBtn = document.getElementById('resetBtn');
-    const strategyLibrary = document.getElementById('strategy-library');
-    const saveStrategyModal = new bootstrap.Modal(document.getElementById('saveStrategyModal'));
-    const confirmSaveBtn = document.getElementById('confirmSaveBtn');
-    let debounceTimer;
-    let lastCalculationData = null; 
-    let savedStrategies = [];
-
-    // --- HELPER: SAVE DRAFT (NEW FEATURE) ---
-    function saveDraftAndRedirect() {
-        const draftData = {
-            currentShares: inputs.currentShares.value,
-            averagePrice: inputs.averagePrice.value,
-            marketPrice: inputs.marketPrice.value,
-            strategyMode: document.querySelector('input[name="strategyMode"]:checked').value,
-            strategyValueShares: inputs.strategyValueShares.value,
-            strategyValuePrice: inputs.strategyValuePrice.value
-        };
-        // Save to browser memory
-        localStorage.setItem('stockSavvy_reprice_draft', JSON.stringify(draftData));
-        // Redirect to signup
-        window.location.href = signupUrl;
-    }
-
-    // --- UI UPDATE FUNCTIONS ---
-    function updatePositionDashboard() {
-        const shares = parseFloat(inputs.currentShares.value) || 0;
-        const avgPrice = parseFloat(inputs.averagePrice.value) || 0;
-        const marketPrice = parseFloat(inputs.marketPrice.value) || 0;
-        const costBasis = shares * avgPrice;
-        const marketValue = shares * marketPrice;
-        const pnl = marketValue - costBasis;
-        displays.costBasis.textContent = `$${costBasis.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        displays.marketValue.textContent = `$${marketValue.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        displays.pnl.textContent = `$${pnl.toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        displays.pnl.classList.remove('text-success', 'text-danger');
-        if (pnl > 0) displays.pnl.classList.add('text-success');
-        if (pnl < 0) displays.pnl.classList.add('text-danger');
-    }
-
-    function renderApiResults(data, isSuccess) {
-        if (!isSuccess) {
-            let errorMsg = data.error || 'An unknown error occurred.';
-            resultsWrapper.innerHTML = `<div class="alert alert-danger">${errorMsg}</div>`;
-            return;
+<style>
+    @keyframes fillBar {
+        from {
+            width: 0;
         }
-        
-        lastCalculationData = data; 
 
-        const actionsHtml = `
-            <div class="d-grid gap-2 mt-3">
-                <button class="btn btn-outline-primary" id="saveStrategyTriggerBtn">💾 Save Strategy</button>
-                <button class="btn btn-outline-dark" id="exportPdfBtn">📄 Export PDF Report</button>
+        to {
+            width: var(--fill);
+        }
+    }
+
+    .impact-fill-bar {
+        animation: fillBar 1s cubic-bezier(.4, 0, .2, 1) forwards;
+    }
+
+    @keyframes fadeSlideUp {
+        from {
+            opacity: 0;
+            transform: translateY(12px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .impact-card {
+        animation: fadeSlideUp 0.5s ease forwards;
+    }
+
+    .impact-card:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // --- USER AUTH STATUS ---
+        const isUserAuthenticated = ("{{ user.is_authenticated|yesno:'true,false' }}" === "true");
+        const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
+
+        // --- ELEMENT REFERENCES ---
+        const inputs = {
+            currentShares: document.getElementById('currentShares'),
+            averagePrice: document.getElementById('averagePrice'),
+            marketPrice: document.getElementById('marketPrice'),
+            strategyValueShares: document.getElementById('strategyValueShares'),
+            strategyValuePrice: document.getElementById('strategyValuePrice'),
+        };
+        const radioButtons = document.querySelectorAll('input[name="strategyMode"]');
+        const displays = {
+            costBasis: document.getElementById('displayCostBasis'),
+            marketValue: document.getElementById('displayMarketValue'),
+            pnl: document.getElementById('displayPnl'),
+        };
+        const strategyInputShares = document.getElementById('strategyInputShares');
+        const strategyInputPrice = document.getElementById('strategyInputPrice');
+        const strategyInputTranches = document.getElementById('strategyInputTranches');
+        const tranchesContainer = document.getElementById('tranchesContainer');
+        const addTrancheBtn = document.getElementById('addTrancheBtn');
+
+        const resultsWrapper = document.getElementById('results-wrapper');
+        const chartWrapper = document.getElementById('chart-wrapper');
+
+        const resetBtn = document.getElementById('resetBtn');
+        const strategyLibrary = document.getElementById('strategy-library');
+        const saveStrategyModalToggle = document.getElementById('saveStrategyModal');
+        const confirmSaveBtn = document.getElementById('confirmSaveBtn');
+        let debounceTimer;
+        let lastCalculationData = null;
+        let savedStrategies = [];
+        let scenarioChartInstance = null;
+
+        // --- TRANCHES LOGIC ---
+        addTrancheBtn.addEventListener('click', () => {
+            if (!isUserAuthenticated && tranchesContainer.querySelectorAll('.tranche-row').length >= 1) {
+                if (confirm("Modeling multiple limit orders is a premium feature. Create a free workspace to unlock this capability. Sign up now?")) {
+                    saveDraftAndRedirect();
+                }
+                return;
+            }
+
+            const row = document.createElement('div');
+            row.className = 'flex gap-2 tranche-row items-center';
+            row.innerHTML = `
+            <div class="flex-1">
+                <input type="number" class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-price focus:ring-brand-blue focus:border-brand-blue" placeholder="Target Price" step="any" min="0.01">
+            </div>
+            <div class="flex-1">
+                <input type="number" class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-amount focus:ring-brand-blue focus:border-brand-blue" placeholder="Investment" step="any" min="0.01">
+            </div>
+            <div>
+                <button type="button" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors remove-tranche-btn"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+            </div>
+        `;
+            tranchesContainer.appendChild(row);
+
+            row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', handleInputChange));
+
+            // Show all remove buttons if > 1 tranche
+            const rows = tranchesContainer.querySelectorAll('.tranche-row');
+            if (rows.length > 1) {
+                tranchesContainer.querySelectorAll('.remove-tranche-btn').forEach(btn => btn.style.display = 'block');
+            }
+        });
+
+        tranchesContainer.addEventListener('click', (e) => {
+            if (e.target.closest('.remove-tranche-btn')) {
+                const row = e.target.closest('.tranche-row');
+                row.remove();
+
+                const rows = tranchesContainer.querySelectorAll('.tranche-row');
+                if (rows.length <= 1) {
+                    tranchesContainer.querySelectorAll('.remove-tranche-btn').forEach(btn => btn.style.display = 'none');
+                }
+                handleInputChange();
+            }
+        });
+
+        // --- HELPER: SAVE DRAFT (NEW FEATURE) ---
+        function saveDraftAndRedirect() {
+            const draftData = {
+                currentShares: inputs.currentShares.value,
+                averagePrice: inputs.averagePrice.value,
+                marketPrice: inputs.marketPrice.value,
+                strategyMode: document.querySelector('input[name="strategyMode"]:checked').value,
+                strategyValueShares: inputs.strategyValueShares.value,
+                strategyValuePrice: inputs.strategyValuePrice.value
+            };
+            // Save to browser memory
+            localStorage.setItem('stockSavvy_reprice_draft', JSON.stringify(draftData));
+            // Redirect to signup
+            window.location.href = signupUrl;
+        }
+
+        // --- UI UPDATE FUNCTIONS ---
+        function updatePositionDashboard() {
+            const shares = parseFloat(inputs.currentShares.value) || 0;
+            const avgPrice = parseFloat(inputs.averagePrice.value) || 0;
+            const marketPrice = parseFloat(inputs.marketPrice.value) || 0;
+
+            if (shares < 0 || avgPrice < 0 || marketPrice < 0) {
+                displays.costBasis.textContent = '—';
+                displays.marketValue.textContent = '—';
+                displays.pnl.textContent = '⚠ Negative values not allowed';
+                displays.pnl.classList.remove('text-success', 'text-danger');
+                displays.pnl.classList.add('text-danger');
+                return;
+            }
+
+            const costBasis = shares * avgPrice;
+            const marketValue = shares * marketPrice;
+            const pnl = marketValue - costBasis;
+            displays.costBasis.textContent = `${costBasis.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            displays.marketValue.textContent = `${marketValue.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            displays.pnl.textContent = `${pnl.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            displays.pnl.classList.remove('text-success', 'text-danger');
+            if (pnl > 0) displays.pnl.classList.add('text-success');
+            if (pnl < 0) displays.pnl.classList.add('text-danger');
+        }
+
+        // --- FORMAT HELPER: adds thousand separators to API result strings ---
+        function fmt(val) {
+            const n = parseFloat(val);
+            if (isNaN(n)) return val;
+            const dec = String(val).includes('.') ? String(val).split('.')[1].length : 2;
+            return n.toLocaleString('en-US', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+        }
+
+        function renderApiResults(data, isSuccess) {
+            if (!isSuccess) {
+                // Handle DRF-style validation error objects (e.g. {strategy: {value: [...]}})
+                // as well as simple {error: '...'} messages
+                let errorMsg = 'An unknown error occurred.';
+                if (data.error) {
+                    errorMsg = data.error;
+                } else if (typeof data === 'object') {
+                    // Flatten DRF validation errors into a readable string
+                    const msgs = [];
+                    function extractErrors(obj) {
+                        for (const key in obj) {
+                            if (Array.isArray(obj[key])) msgs.push(obj[key].join(' '));
+                            else if (typeof obj[key] === 'object') extractErrors(obj[key]);
+                        }
+                    }
+                    extractErrors(data);
+                    if (msgs.length) errorMsg = msgs.join(' ');
+                }
+                resultsWrapper.innerHTML = `<div class="bg-red-50 text-red-700 p-4 rounded-xl text-center text-sm font-medium border border-red-100">${errorMsg}</div>`;
+                return;
+            }
+
+            lastCalculationData = data;
+
+            const clarityUrl = "{% url 'calculators:clarity_dashboard' %}";
+            const actionsHtml = `
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6">
+                <button class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors" id="saveStrategyTriggerBtn">💾 Save Strategy</button>
+                <a href="${clarityUrl}" class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors text-center">⚖️ Analyze Tax Impact</a>
+                <button class="px-4 py-2 border border-gray-200 text-gray-700 rounded-xl hover:bg-gray-50 text-sm font-semibold transition-colors" id="exportPdfBtn">📄 Export PDF Report</button>
             </div>`;
 
-        let resultsHTML = '';
-        if (data.new_average_price) {
-            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">New Average Price</dt><dd class="col-sm-5 text-end h5">$${data.new_average_price}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>${actionsHtml}`;
-        } else {
-            resultsHTML = `<h5 class="mb-3">Projected Outcome:</h5><dl class="row"><dt class="col-sm-7">Additional Shares Needed</dt><dd class="col-sm-5 text-end h5">${data.additional_shares_needed}</dd><dt class="col-sm-7">New Total Shares</dt><dd class="col-sm-5 text-end">${data.total_shares}</dd><dt class="col-sm-7">Additional Investment</dt><dd class="col-sm-5 text-end">$${data.additional_investment}</dd></dl>${actionsHtml}`;
-        }
-        resultsWrapper.innerHTML = resultsHTML;
+            let resultsHTML = '';
+            if (data.breakeven_recovery_percent) {
+                // Multi-tranche display
+                resultsHTML = `
+                <div class="w-full bg-gray-50 p-6 rounded-xl border border-gray-100 mb-2">
+                    <h5 class="text-sm border-b border-gray-200 pb-2 mb-4 font-bold text-gray-900 uppercase tracking-wider">Simulated Scenario Outcome</h5>
+                    <dl class="space-y-2 text-sm">
+                        <div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">Final Average Price</dt><dd class="text-gray-900 font-bold text-base">${fmt(data.final_average_price)}</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">Total Incremental Investment</dt><dd class="text-green-600 font-bold border rounded bg-green-50 border-green-200 px-2 py-0.5">+${fmt(data.total_additional_investment)}</dd></div>
+                        <div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">New Total Shares</dt><dd class="text-gray-900 font-semibold">${fmt(data.total_shares)}</dd></div>
+                    </dl>
+                </div>
+                ${actionsHtml}`;
 
-        // --- THE GATEKEEPER LOGIC (UPDATED) ---
-        document.getElementById('saveStrategyTriggerBtn')?.addEventListener('click', () => {
-            if (!isUserAuthenticated) {
-                saveDraftAndRedirect(); // Save data before leaving
-                return;
-            }
-            document.getElementById('strategyName').value = '';
-            saveStrategyModal.show();
-        });
+                renderImpactPanel(data.original_recovery_percent, data.breakeven_recovery_percent, data);
 
-        document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
-            if (!isUserAuthenticated) {
-                saveDraftAndRedirect(); // Save data before leaving
-                return;
-            }
-            exportToPDF();
-        });
-    }
-    
-    // --- API CALLS ---
-    function handleInputChange() {
-        updatePositionDashboard();
-        clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(callRepriceAPI, 500);
-    }
-
-    async function callRepriceAPI() {
-        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
-        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
-        if (!inputs.currentShares.value || !inputs.averagePrice.value || !inputs.marketPrice.value || !strategyValue) {
-            resultsWrapper.innerHTML = `<div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>`;
-            return;
-        }
-        resultsWrapper.innerHTML = `<div class="text-center"><div class="spinner-border" role="status"><span class="visually-hidden">Loading...</span></div></div>`;
-        const payload = {
-            position: { current_shares: inputs.currentShares.value, average_price: inputs.averagePrice.value, market_price: inputs.marketPrice.value },
-            strategy: { mode, value: strategyValue }
-        };
-        try {
-            const response = await fetch('/calculators/api/calculate-reprice/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify(payload),
-            });
-            const data = await response.json();
-            renderApiResults(data, response.ok);
-        } catch (error) {
-            renderApiResults({ error: 'A network error occurred.' }, false);
-        }
-    }
-
-    // --- EXPORT PDF LOGIC ---
-    async function exportToPDF() {
-        if (!lastCalculationData) return;
-
-        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
-        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
-        
-        const payload = {
-            ...lastCalculationData,
-            current_shares: inputs.currentShares.value,
-            average_price: inputs.averagePrice.value,
-            market_price: inputs.marketPrice.value,
-            strategy_mode: mode,
-            strategy_value: strategyValue
-        };
-
-        try {
-            const response = await fetch('/calculators/api/reprice-export-pdf/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify(payload),
-            });
-
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = window.URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = "StockSavvy_Report.pdf";
-                document.body.appendChild(a);
-                a.click();
-                a.remove();
+            } else if (data.new_average_price) {
+                resultsHTML = `<div class="w-full bg-gray-50 p-6 rounded-xl border border-gray-100 mb-2"><h5 class="text-sm border-b border-gray-200 pb-2 mb-4 font-bold text-gray-900 uppercase tracking-wider">Projected Outcome</h5><dl class="space-y-2 text-sm"><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">New Average Price</dt><dd class="text-gray-900 font-bold text-base">${fmt(data.new_average_price)}</dd></div><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">New Total Shares</dt><dd class="text-gray-900 font-semibold">${fmt(data.total_shares)}</dd></div><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">Additional Investment</dt><dd class="text-gray-900 font-semibold">${fmt(data.additional_investment)}</dd></div></dl></div>${actionsHtml}`;
+                chartWrapper.style.display = 'none';
             } else {
-                alert("Failed to generate PDF.");
+                resultsHTML = `<div class="w-full bg-gray-50 p-6 rounded-xl border border-gray-100 mb-2"><h5 class="text-sm border-b border-gray-200 pb-2 mb-4 font-bold text-gray-900 uppercase tracking-wider">Projected Outcome</h5><dl class="space-y-2 text-sm"><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">Additional Shares Needed</dt><dd class="text-gray-900 font-bold text-base">${fmt(data.additional_shares_needed)}</dd></div><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">New Total Shares</dt><dd class="text-gray-900 font-semibold">${fmt(data.total_shares)}</dd></div><div class="flex justify-between gap-4"><dt class="text-gray-500 font-medium">Additional Investment</dt><dd class="text-gray-900 font-semibold">${fmt(data.additional_investment)}</dd></div></dl></div>${actionsHtml}`;
+                chartWrapper.style.display = 'none';
             }
-        } catch (error) {
-            console.error(error);
-            alert("Network error downloading PDF.");
-        }
-    }
+            resultsWrapper.innerHTML = resultsHTML;
 
-    // --- SAVE LOGIC ---
-    async function saveStrategy() {
-        const name = document.getElementById('strategyName').value;
-        if (!name) { alert("Please enter a name."); return; }
-        const mode = document.querySelector('input[name="strategyMode"]:checked').value;
-        const strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
-
-        const payload = {
-            name: name,
-            current_shares: inputs.currentShares.value,
-            average_price: inputs.averagePrice.value,
-            market_price: inputs.marketPrice.value,
-            strategy_mode: mode,
-            strategy_value: strategyValue
-        };
-
-        try {
-            const response = await fetch('/calculators/api/reprice-strategies/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
-                body: JSON.stringify(payload),
+            // --- THE GATEKEEPER LOGIC (UPDATED) ---
+            document.getElementById('saveStrategyTriggerBtn')?.addEventListener('click', () => {
+                if (!isUserAuthenticated) {
+                    saveDraftAndRedirect(); // Save data before leaving
+                    return;
+                }
+                document.getElementById('strategyName').value = '';
+                saveStrategyModalToggle.classList.remove('hidden');
             });
-            
-            if (response.ok) {
-                saveStrategyModal.hide();
-                fetchStrategies();
-            } else {
-                alert("Error saving strategy.");
-            }
-        } catch (error) {
-            alert("Network error.");
-        }
-    }
 
-    async function fetchStrategies() {
-        if (!strategyLibrary) return; 
-
-        try {
-            const response = await fetch('/calculators/api/reprice-strategies/');
-            if (response.ok) {
-                const data = await response.json();
-                savedStrategies = data;
-                renderStrategies(data);
-            }
-        } catch (error) {
-            console.error("Error fetching strategies", error);
-        }
-    }
-
-    function renderStrategies(strategies) {
-        strategyLibrary.innerHTML = '';
-        if (strategies.length === 0) {
-            strategyLibrary.innerHTML = '<div class="col-12 text-center text-muted"><p>No saved strategies yet.</p></div>';
-            return;
-        }
-
-        strategies.forEach(s => {
-            const modeText = s.strategy_mode === 'shares' ? `Buy ${parseFloat(s.strategy_value)} shares` : `Target $${parseFloat(s.strategy_value)}`;
-            const card = `
-                <div class="col-md-4">
-                    <div class="card shadow-sm h-100">
-                        <div class="card-body">
-                            <h5 class="card-title">${s.name}</h5>
-                            <h6 class="card-subtitle mb-2 text-muted">${new Date(s.created_at).toLocaleDateString()}</h6>
-                            <p class="card-text small">
-                                <strong>Pos:</strong> ${parseFloat(s.current_shares)} @ $${parseFloat(s.average_price)}<br>
-                                <strong>Plan:</strong> ${modeText}
-                            </p>
-                            <div class="d-flex justify-content-between mt-3">
-                                <button class="btn btn-sm btn-primary load-strategy-btn" data-id="${s.id}">Load</button>
-                                <button class="btn btn-sm btn-danger delete-strategy-btn" data-id="${s.id}">Delete</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>`;
-            strategyLibrary.insertAdjacentHTML('beforeend', card);
-        });
-
-        document.querySelectorAll('.load-strategy-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => loadStrategy(e.target.dataset.id, strategies));
-        });
-        document.querySelectorAll('.delete-strategy-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => deleteStrategy(e.target.dataset.id));
-        });
-    }
-
-    function loadStrategy(id, strategies) {
-        const s = strategies.find(strat => strat.id == id);
-        if (s) {
-            inputs.currentShares.value = s.current_shares;
-            inputs.averagePrice.value = s.average_price;
-            inputs.marketPrice.value = s.market_price;
-            
-            const radio = document.querySelector(`input[name="strategyMode"][value="${s.strategy_mode}"]`);
-            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
-            setTimeout(() => {
-                if (s.strategy_mode === 'shares') inputs.strategyValueShares.value = s.strategy_value;
-                else inputs.strategyValuePrice.value = s.strategy_value;
-                handleInputChange();
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-            }, 50);
-        }
-    }
-
-    async function deleteStrategy(id) {
-        if (!confirm("Delete this strategy?")) return;
-        try {
-            const response = await fetch(`/calculators/api/reprice-strategies/${id}/`, {
-                method: 'DELETE',
-                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            document.getElementById('exportPdfBtn')?.addEventListener('click', () => {
+                if (!isUserAuthenticated) {
+                    saveDraftAndRedirect(); // Save data before leaving
+                    return;
+                }
+                exportToPDF();
             });
-            if (response.ok) fetchStrategies();
-        } catch (error) { alert("Network error."); }
-    }
+        }
 
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
+        // --- API CALLS ---
+        function handleInputChange() {
+            updatePositionDashboard();
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(callRepriceAPI, 500);
+        }
+
+        async function callRepriceAPI() {
+            const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+            let strategyValue = null;
+            let tranchesData = [];
+
+            if (mode === 'shares') {
+                strategyValue = inputs.strategyValueShares.value;
+                if (!inputs.currentShares.value || !inputs.averagePrice.value || !inputs.marketPrice.value || !strategyValue || parseFloat(strategyValue) <= 0) {
+                    resultsWrapper.innerHTML = `<div class="bg-blue-50 text-brand-blue p-4 rounded-xl text-center text-sm font-medium border border-blue-100">Enter your position and strategy to see the projected outcome.</div>`;
+                    chartWrapper.style.display = 'none';
+                    return;
+                }
+            } else if (mode === 'price') {
+                strategyValue = inputs.strategyValuePrice.value;
+                if (!inputs.currentShares.value || !inputs.averagePrice.value || !inputs.marketPrice.value || !strategyValue) {
+                    resultsWrapper.innerHTML = `<div class="bg-blue-50 text-brand-blue p-4 rounded-xl text-center text-sm font-medium border border-blue-100">Enter your position and strategy to see the projected outcome.</div>`;
+                    chartWrapper.style.display = 'none';
+                    return;
+                }
+            } else if (mode === 'tranches') {
+                // Collect tranches
+                const rows = tranchesContainer.querySelectorAll('.tranche-row');
+                rows.forEach(r => {
+                    const px = r.querySelector('.tranche-price').value;
+                    const amt = r.querySelector('.tranche-amount').value;
+                    if (px && amt) {
+                        tranchesData.push({ price: px, investment_amount: amt });
+                    }
+                });
+
+                if (!inputs.currentShares.value || !inputs.averagePrice.value || !inputs.marketPrice.value || tranchesData.length === 0) {
+                    resultsWrapper.innerHTML = `<div class="bg-blue-50 text-brand-blue p-4 rounded-xl text-center text-sm font-medium border border-blue-100">Enter your position and at least one complete limit order to simulate the trade.</div>`;
+                    chartWrapper.style.display = 'none';
+                    return;
                 }
             }
+
+            resultsWrapper.innerHTML = `<div class="flex justify-center my-4"><svg class="animate-spin h-8 w-8 text-brand-blue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg></div>`;
+            const payload = {
+                position: { current_shares: inputs.currentShares.value, average_price: inputs.averagePrice.value, market_price: inputs.marketPrice.value },
+                strategy: { mode, value: strategyValue, tranches: tranchesData }
+            };
+            try {
+                const response = await fetch('/calculators/api/calculate-reprice/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(payload),
+                });
+                const data = await response.json();
+                renderApiResults(data, response.ok);
+            } catch (error) {
+                renderApiResults({ error: 'A network error occurred.' }, false);
+            }
         }
-        return cookieValue;
-    }
 
-    function resetForm() {
-        Object.values(inputs).forEach(input => { input.value = ''; });
-        updatePositionDashboard();
-        resultsWrapper.innerHTML = `<div class="alert alert-info text-center">Enter your position and strategy to see the projected outcome.</div>`;
-    }
+        // --- IMPACT PANEL (replaces bar chart) ---
+        function renderImpactPanel(originalRecovery, newRecovery, data) {
+            chartWrapper.style.display = 'block';
+            const orig = parseFloat(originalRecovery);
+            const novo = parseFloat(newRecovery);
+            const improvement = (orig - novo).toFixed(1);
+            const isImproved = orig > novo;
+            const improvementLabel = isImproved
+                ? `↓ ${improvement}% less recovery needed`
+                : `↑ ${Math.abs(improvement)}% more recovery needed`;
+            const improvementColor = isImproved ? '#16a34a' : '#dc2626';
+            const improvementBg = isImproved ? '#f0fdf4' : '#fef2f2';
+            const improvementBorder = isImproved ? '#bbf7d0' : '#fecaca';
 
-    function initialize() {
-        Object.values(inputs).forEach(input => { input.addEventListener('input', handleInputChange); });
-        radioButtons.forEach(radio => {
-            radio.addEventListener('change', () => {
-                const mode = radio.value;
-                strategyInputShares.style.display = mode === 'shares' ? 'block' : 'none';
-                strategyInputPrice.style.display = mode === 'price' ? 'block' : 'none';
-                handleInputChange();
+            // Build tranche ladder HTML
+            const steps = data.scenario_steps || [];
+            let ladderHtml = '';
+            if (steps.length) {
+                ladderHtml = `
+                <div class="mt-4 pt-4 border-t border-gray-100">
+                    <p class="text-xs font-bold text-gray-400 uppercase tracking-widest mb-2">Tranche Ladder</p>
+                    <div class="space-y-1">
+                        ${steps.map((s, i) => `
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="flex-shrink-0 w-5 h-5 rounded-full bg-blue-100 text-blue-700 font-bold flex items-center justify-center">${i + 1}</span>
+                            <span class="text-gray-500">Buy @</span>
+                            <span class="font-semibold text-gray-800">$${fmt(s.tranche_price)}</span>
+                            <span class="text-gray-400">→</span>
+                            <span class="text-gray-500">Avg becomes</span>
+                            <span class="font-bold text-blue-700">$${fmt(s.running_average_price)}</span>
+                        </div>`).join('')}
+                    </div>
+                </div>`;
+            }
+
+            const origBarWidth = Math.min(orig, 200);  // cap at 200% for display
+            const novoBarWidth = Math.min(novo, 200);
+            const maxBar = Math.max(origBarWidth, novoBarWidth);
+            const origPct = maxBar > 0 ? (origBarWidth / maxBar * 100).toFixed(1) : 0;
+            const novoPct = maxBar > 0 ? (novoBarWidth / maxBar * 100).toFixed(1) : 0;
+
+            document.getElementById('impact-panel').innerHTML = `
+            <div style="font-family:inherit;">
+                <!-- Improvement badge -->
+                <div class="flex justify-center mb-3">
+                    <div style="background:${improvementBg};color:${improvementColor};border:1px solid ${improvementBorder};padding:4px 12px;border-radius:9999px;font-size:12px;font-weight:700;">
+                        ${improvementLabel}
+                    </div>
+                </div>
+
+                <!-- Before / After cards -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Before -->
+                    <div class="impact-card bg-red-50 border border-red-100 rounded-xl p-4">
+                        <p class="text-xs font-bold text-red-400 uppercase tracking-widest mb-1">Without Strategy</p>
+                        <p class="text-2xl font-extrabold text-red-600">${orig.toFixed(1)}%</p>
+                        <p class="text-xs text-red-400 mb-3">recovery to break even</p>
+                        <div class="h-2 w-full bg-red-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-red-400 rounded-full impact-fill-bar" style="--fill:${origPct}%; width:0;"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Avg: <span class="font-semibold text-gray-700">${fmt(data.original_average_price || inputs.averagePrice.value)}</span></p>
+                    </div>
+                    <!-- After -->
+                    <div class="impact-card bg-green-50 border border-green-100 rounded-xl p-4" style="animation-delay:.12s">
+                        <p class="text-xs font-bold text-green-500 uppercase tracking-widest mb-1">With Your Ladder</p>
+                        <p class="text-2xl font-extrabold text-green-600">${novo.toFixed(1)}%</p>
+                        <p class="text-xs text-green-500 mb-3">recovery to break even</p>
+                        <div class="h-2 w-full bg-green-100 rounded-full overflow-hidden">
+                            <div class="h-full bg-green-400 rounded-full impact-fill-bar" style="--fill:${novoPct}%; width:0;"></div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">New Avg: <span class="font-semibold text-gray-700">${fmt(data.final_average_price)}</span></p>
+                    </div>
+                </div>
+
+                ${ladderHtml}
+            </div>`;
+        }
+
+        // --- EXPORT PDF LOGIC ---
+        async function exportToPDF() {
+            if (!lastCalculationData) return;
+
+            const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+            let strategyValue = null;
+            let tranchesData = [];
+
+            if (mode === 'tranches') {
+                const rows = tranchesContainer.querySelectorAll('.tranche-row');
+                rows.forEach(r => {
+                    const px = r.querySelector('.tranche-price').value;
+                    const amt = r.querySelector('.tranche-amount').value;
+                    if (px && amt) tranchesData.push({ price: px, investment_amount: amt });
+                });
+            } else {
+                strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
+            }
+
+            const payload = {
+                ...lastCalculationData,
+                current_shares: inputs.currentShares.value,
+                average_price: inputs.averagePrice.value,
+                market_price: inputs.marketPrice.value,
+                strategy_mode: mode,
+                strategy_value: strategyValue,
+                tranches: tranchesData
+            };
+
+            try {
+                const response = await fetch('/calculators/api/reprice-export-pdf/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = "StockSavvy_Report.pdf";
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                } else {
+                    alert("Failed to generate PDF.");
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Network error downloading PDF.");
+            }
+        }
+
+        // --- SAVE LOGIC ---
+        async function saveStrategy() {
+            const name = document.getElementById('strategyName').value;
+            if (!name) { alert("Please enter a name."); return; }
+            const mode = document.querySelector('input[name="strategyMode"]:checked').value;
+            let strategyValue = null;
+            let tranchesData = [];
+
+            if (mode === 'tranches') {
+                // Collect tranche rows and serialise as a JSON string into strategy_value
+                const rows = tranchesContainer.querySelectorAll('.tranche-row');
+                rows.forEach(r => {
+                    const px = r.querySelector('.tranche-price').value;
+                    const amt = r.querySelector('.tranche-amount').value;
+                    if (px && amt) tranchesData.push({ price: px, investment_amount: amt });
+                });
+                strategyValue = JSON.stringify(tranchesData);
+            } else {
+                strategyValue = (mode === 'shares') ? inputs.strategyValueShares.value : inputs.strategyValuePrice.value;
+            }
+
+            const payload = {
+                name: name,
+                current_shares: inputs.currentShares.value,
+                average_price: inputs.averagePrice.value,
+                market_price: inputs.marketPrice.value,
+                strategy_mode: mode,
+                strategy_value: strategyValue
+            };
+
+            try {
+                const response = await fetch('/calculators/api/reprice-strategies/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                    body: JSON.stringify(payload),
+                });
+
+                if (response.ok) {
+                    saveStrategyModalToggle.classList.add('hidden');
+                    fetchStrategies();
+                } else {
+                    alert("Error saving strategy.");
+                }
+            } catch (error) {
+                alert("Network error.");
+            }
+        }
+
+        async function fetchStrategies() {
+            if (!strategyLibrary) return;
+
+            try {
+                const response = await fetch('/calculators/api/reprice-strategies/');
+                if (response.ok) {
+                    const data = await response.json();
+                    savedStrategies = data;
+                    renderStrategies(data);
+                }
+            } catch (error) {
+                console.error("Error fetching strategies", error);
+            }
+        }
+
+        function renderStrategies(strategies) {
+            strategyLibrary.innerHTML = '';
+            if (strategies.length === 0) {
+                strategyLibrary.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8"><p>No saved strategies yet.</p></div>';
+                return;
+            }
+
+            strategies.forEach(s => {
+                let modeText;
+                if (s.strategy_mode === 'shares') {
+                    modeText = `Buy ${parseFloat(s.strategy_value)} shares`;
+                } else if (s.strategy_mode === 'tranches') {
+                    try {
+                        const t = JSON.parse(s.strategy_value);
+                        modeText = `Scale-In Simulator (${t.length} order${t.length !== 1 ? 's' : ''})`;
+                    } catch (e) {
+                        modeText = 'Scale-In Simulator';
+                    }
+                } else {
+                    modeText = `Target $${parseFloat(s.strategy_value).toFixed(2)}`;
+                }
+
+                const card = `
+                <div class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 group">
+                    <div>
+                        <div class="flex justify-between items-start mb-2">
+                            <h5 class="text-lg font-bold text-gray-900 group-hover:text-brand-blue transition-colors">${s.name}</h5>
+                            <span class="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">${new Date(s.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <div class="space-y-1 py-3 border-y border-gray-100 my-3 text-sm">
+                            <div class="flex justify-between"><span class="text-gray-500 font-medium">Position:</span> <span class="text-gray-900 font-semibold">${parseFloat(s.current_shares)} @ ${parseFloat(s.average_price)}</span></div>
+                            <div class="flex justify-between"><span class="text-gray-500 font-medium">Plan:</span> <span class="text-brand-accent font-semibold">${modeText}</span></div>
+                        </div>
+                    </div>
+                    <div class="flex justify-between mt-auto pt-2 gap-3">
+                        <button class="flex-1 px-3 py-1.5 bg-brand-blue text-white text-sm font-semibold rounded-lg hover:bg-brand-blue-light transition-colors load-strategy-btn" data-id="${s.id}">Load Strategy</button>
+                        <button class="px-3 py-1.5 text-red-500 bg-red-50 hover:bg-red-100 text-sm font-semibold rounded-lg transition-colors delete-strategy-btn" data-id="${s.id}"><svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                    </div>
+                </div>`;
+                strategyLibrary.insertAdjacentHTML('beforeend', card);
             });
-        });
-        resetBtn.addEventListener('click', resetForm);
-        confirmSaveBtn.addEventListener('click', saveStrategy);
 
-        const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
-        strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
-        strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
-        
-        // --- RESTORE DRAFT LOGIC (NEW FEATURE) ---
-        const savedDraft = localStorage.getItem('stockSavvy_reprice_draft');
-        if (savedDraft) {
-            const data = JSON.parse(savedDraft);
-            // Restore Values
-            if(data.currentShares) inputs.currentShares.value = data.currentShares;
-            if(data.averagePrice) inputs.averagePrice.value = data.averagePrice;
-            if(data.marketPrice) inputs.marketPrice.value = data.marketPrice;
-            
-            // Restore Radio
-            const radio = document.querySelector(`input[name="strategyMode"][value="${data.strategyMode}"]`);
-            if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
-            
-            // Restore Strategy Inputs (with small delay to ensure visibility handles correctly)
-            setTimeout(() => {
-                if(data.strategyValueShares) inputs.strategyValueShares.value = data.strategyValueShares;
-                if(data.strategyValuePrice) inputs.strategyValuePrice.value = data.strategyValuePrice;
-                handleInputChange(); // Trigger calc
-            }, 50);
-
-            // Cleanup so it doesn't load forever
-            localStorage.removeItem('stockSavvy_reprice_draft');
-        } else {
-            updatePositionDashboard();
+            document.querySelectorAll('.load-strategy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => loadStrategy(e.target.dataset.id, strategies));
+            });
+            document.querySelectorAll('.delete-strategy-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => deleteStrategy(e.target.dataset.id));
+            });
         }
-        
-        fetchStrategies();
-    }
 
-    initialize();
-});
+        function loadStrategy(id, strategies) {
+            const s = strategies.find(strat => strat.id == id);
+            if (s) {
+                inputs.currentShares.value = s.current_shares;
+                inputs.averagePrice.value = s.average_price;
+                inputs.marketPrice.value = s.market_price;
+
+                const radio = document.querySelector(`input[name="strategyMode"][value="${s.strategy_mode}"]`);
+                if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+                setTimeout(() => {
+                    if (s.strategy_mode === 'shares') {
+                        inputs.strategyValueShares.value = s.strategy_value;
+                    } else if (s.strategy_mode === 'tranches') {
+                        // Clear existing tranche rows and rebuild from saved JSON
+                        tranchesContainer.innerHTML = '';
+                        try {
+                            const savedTranches = JSON.parse(s.strategy_value);
+                            savedTranches.forEach((t, i) => {
+                                const row = document.createElement('div');
+                                row.className = 'flex gap-2 tranche-row items-center';
+                                row.innerHTML = `
+                                <div class="flex-1">
+                                    <input type="number" class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-price focus:ring-brand-blue focus:border-brand-blue" placeholder="Target Price" step="any" min="0.01" value="${t.price}">
+                                </div>
+                                <div class="flex-1">
+                                    <input type="number" class="w-full rounded-xl border-gray-200 shadow-sm sm:text-sm px-3 py-2 tranche-amount focus:ring-brand-blue focus:border-brand-blue" placeholder="Investment" step="any" min="0.01" value="${t.investment_amount}">
+                                </div>
+                                <div>
+                                    <button type="button" class="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors remove-tranche-btn">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                    </button>
+                                </div>`;
+                                tranchesContainer.appendChild(row);
+                                // Wire up remove button
+                                row.querySelector('.remove-tranche-btn').addEventListener('click', () => {
+                                    row.remove();
+                                    handleInputChange();
+                                });
+                                // Wire up live recalculation
+                                row.querySelectorAll('input').forEach(inp => inp.addEventListener('input', () => {
+                                    clearTimeout(debounceTimer);
+                                    debounceTimer = setTimeout(handleInputChange, 600);
+                                }));
+                            });
+                        } catch (e) {
+                            console.error('Failed to parse saved tranches', e);
+                        }
+                    } else {
+                        inputs.strategyValuePrice.value = s.strategy_value;
+                    }
+                    handleInputChange();
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                }, 50);
+
+            }
+        }
+
+        async function deleteStrategy(id) {
+            if (!confirm("Delete this strategy?")) return;
+            try {
+                const response = await fetch(`/calculators/api/reprice-strategies/${id}/`, {
+                    method: 'DELETE',
+                    headers: { 'X-CSRFToken': getCookie('csrftoken') }
+                });
+                if (response.ok) fetchStrategies();
+            } catch (error) { alert("Network error."); }
+        }
+
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+
+        function resetForm() {
+            Object.values(inputs).forEach(input => { input.value = ''; });
+            updatePositionDashboard();
+            resultsWrapper.innerHTML = `<div class="bg-blue-50 text-brand-blue p-4 rounded-xl text-center text-sm font-medium border border-blue-100">Enter your position and strategy to see the projected outcome.</div>`;
+        }
+
+        function initialize() {
+            Object.values(inputs).forEach(input => { input.addEventListener('input', handleInputChange); });
+
+            // Also listen to tranche inputs
+            document.querySelectorAll('.tranche-price, .tranche-amount').forEach(i => i.addEventListener('input', handleInputChange));
+
+            radioButtons.forEach(radio => {
+                radio.addEventListener('change', () => {
+                    const mode = radio.value;
+                    strategyInputShares.style.display = mode === 'shares' ? 'block' : 'none';
+                    strategyInputPrice.style.display = mode === 'price' ? 'block' : 'none';
+                    strategyInputTranches.style.display = mode === 'tranches' ? 'block' : 'none';
+                    chartWrapper.style.display = 'none';
+                    handleInputChange();
+                });
+            });
+            resetBtn.addEventListener('click', resetForm);
+            confirmSaveBtn.addEventListener('click', saveStrategy);
+
+            const initialMode = document.querySelector('input[name="strategyMode"]:checked').value;
+            strategyInputShares.style.display = initialMode === 'shares' ? 'block' : 'none';
+            strategyInputPrice.style.display = initialMode === 'price' ? 'block' : 'none';
+            strategyInputTranches.style.display = initialMode === 'tranches' ? 'block' : 'none';
+
+            // --- RESTORE DRAFT LOGIC (NEW FEATURE) ---
+            const savedDraft = localStorage.getItem('stockSavvy_reprice_draft');
+            if (savedDraft) {
+                const data = JSON.parse(savedDraft);
+                // Restore Values
+                if (data.currentShares) inputs.currentShares.value = data.currentShares;
+                if (data.averagePrice) inputs.averagePrice.value = data.averagePrice;
+                if (data.marketPrice) inputs.marketPrice.value = data.marketPrice;
+
+                // Restore Radio
+                const radio = document.querySelector(`input[name="strategyMode"][value="${data.strategyMode}"]`);
+                if (radio) { radio.checked = true; radio.dispatchEvent(new Event('change')); }
+
+                // Restore Strategy Inputs (with small delay to ensure visibility handles correctly)
+                setTimeout(() => {
+                    if (data.strategyValueShares) inputs.strategyValueShares.value = data.strategyValueShares;
+                    if (data.strategyValuePrice) inputs.strategyValuePrice.value = data.strategyValuePrice;
+                    handleInputChange(); // Trigger calc
+                }, 50);
+
+                // Cleanup so it doesn't load forever
+                localStorage.removeItem('stockSavvy_reprice_draft');
+            } else {
+                updatePositionDashboard();
+            }
+
+            fetchStrategies();
+        }
+
+        initialize();
+    });
 </script>
 {% endblock extra_body %}

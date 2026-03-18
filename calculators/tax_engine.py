@@ -42,6 +42,8 @@ def calculate_fifo_cost_basis(purchase_lots: List[TransactionLot], sold_quantity
     
     return total_cost_basis, total_fees
 
+from .tax_config import UK_TAX_CONFIG, US_SHORT_TERM_BRACKETS, US_LONG_TERM_BRACKETS
+    
 def get_holding_period_and_type(purchase_date: date, sale_date: date) -> Tuple[str, str]:
     """Determines the holding period and whether the gain is short-term or long-term."""
     if not purchase_date or not sale_date:
@@ -50,60 +52,49 @@ def get_holding_period_and_type(purchase_date: date, sale_date: date) -> Tuple[s
     delta = relativedelta(sale_date, purchase_date)
     period_str = f"{delta.years}y, {delta.months}m, {delta.days}d"
     
-    gain_type = "Long-Term" if sale_date >= purchase_date + relativedelta(years=1) else "Short-Term"
+    # PROFESSIONAL FIX: Long term requires STRICTLY greater than one year of holding
+    gain_type = "Long-Term" if sale_date > purchase_date + relativedelta(years=1) else "Short-Term"
     
     return period_str, gain_type
 
 # --- Jurisdiction-Specific Tax Logic ---
 
 def calculate_uk_cgt(gross_gain: Decimal, annual_income: Decimal) -> Decimal:
-    """Calculates UK Capital Gains Tax (CGT). Simplified for 2024/25 tax year."""
+    """Calculates UK Capital Gains Tax (CGT) using external config."""
     if gross_gain <= 0:
         return Decimal('0.00')
         
-    # Tax constants for 2024/25
-    ANNUAL_EXEMPT_AMOUNT = Decimal('3000.00')
-    BASIC_RATE_THRESHOLD = Decimal('50270.00')
-    BASIC_RATE_CGT = Decimal('0.10')
-    HIGHER_RATE_CGT = Decimal('0.20')
+    exempt = UK_TAX_CONFIG['ANNUAL_EXEMPT_AMOUNT']
+    threshold = UK_TAX_CONFIG['BASIC_RATE_THRESHOLD']
+    basic_rate = UK_TAX_CONFIG['BASIC_RATE_CGT']
+    higher_rate = UK_TAX_CONFIG['HIGHER_RATE_CGT']
         
-    taxable_gain = max(Decimal('0.00'), gross_gain - ANNUAL_EXEMPT_AMOUNT)
+    taxable_gain = max(Decimal('0.00'), gross_gain - exempt)
     if taxable_gain <= 0:
         return Decimal('0.00')
         
-    remaining_basic_rate_band = max(Decimal('0.00'), BASIC_RATE_THRESHOLD - annual_income)
+    remaining_basic_rate_band = max(Decimal('0.00'), threshold - annual_income)
     basic_rate_gain = min(remaining_basic_rate_band, taxable_gain)
     higher_rate_gain = max(Decimal('0.00'), taxable_gain - basic_rate_gain)
         
-    cgt_payable = (basic_rate_gain * BASIC_RATE_CGT) + (higher_rate_gain * HIGHER_RATE_CGT)
+    cgt_payable = (basic_rate_gain * basic_rate) + (higher_rate_gain * higher_rate)
     return cgt_payable.quantize(Decimal('0.01'))
 
 def calculate_us_cgt(gross_gain: Decimal, annual_income: Decimal, filing_status: str, gain_type: str) -> Decimal:
-    """Estimates US Capital Gains Tax. Highly simplified for 2024 tax year."""
+    """Estimates US Capital Gains Tax using external config brackets."""
     if gross_gain <= 0:
         return Decimal('0.00')
 
-    # Short-term gains are taxed as ordinary income. This is a vast simplification.
     if gain_type == "Short-Term":
         total_income = annual_income + gross_gain
-        # Simplified marginal tax rate lookup for a single filer
-        if total_income <= 11600: return gross_gain * Decimal('0.10')
-        if total_income <= 47150: return gross_gain * Decimal('0.12')
-        if total_income <= 100525: return gross_gain * Decimal('0.22')
-        # ... and so on. This simplification is sufficient for our purpose.
-        return gross_gain * Decimal('0.24') # Defaulting to a common bracket
+        for bracket in US_SHORT_TERM_BRACKETS:
+             if bracket['up_to'] == Decimal('Infinity') or total_income <= bracket['up_to']:
+                 return (gross_gain * bracket['rate']).quantize(Decimal('0.01'))
 
-    # Long-term gains have preferential rates.
     else:
-        # Simplified brackets for 2024 "Single" filer
-        if filing_status == 'single':
-            if annual_income <= 47025: return gross_gain * Decimal('0.00')
-            if annual_income <= 518900: return gross_gain * Decimal('0.15')
-            return gross_gain * Decimal('0.20')
-        # Simplified brackets for 2024 "Married Filing Jointly"
-        elif filing_status == 'married_jointly':
-            if annual_income <= 94050: return gross_gain * Decimal('0.00')
-            if annual_income <= 583750: return gross_gain * Decimal('0.15')
-            return gross_gain * Decimal('0.20')
+        brackets = US_LONG_TERM_BRACKETS.get(filing_status, US_LONG_TERM_BRACKETS['single']) # Fallback to single if invalid
+        for bracket in brackets:
+            if bracket['up_to'] == Decimal('Infinity') or annual_income <= bracket['up_to']:
+                 return (gross_gain * bracket['rate']).quantize(Decimal('0.01'))
         
     return Decimal('0.00')

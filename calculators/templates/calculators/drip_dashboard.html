@@ -1,0 +1,616 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load socialaccount %}
+
+{% block title %}DRIP Predictor | StockSavvy{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 pb-2">
+    <nav class="flex" aria-label="Breadcrumb">
+        <ol class="inline-flex items-center space-x-1 md:space-x-3">
+            <li class="inline-flex items-center">
+                <a href="{% url 'home' %}"
+                    class="inline-flex items-center text-sm font-medium text-gray-500 hover:text-brand-blue transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                        <path
+                            d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z">
+                        </path>
+                    </svg>
+                    Workspace
+                </a>
+            </li>
+            <li aria-current="page">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd"
+                            d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                            clip-rule="evenodd"></path>
+                    </svg>
+                    <span class="ml-1 text-sm font-semibold text-gray-800 md:ml-2">DRIP Predictor</span>
+                </div>
+            </li>
+        </ol>
+    </nav>
+</div>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+    <div class="text-center mb-10">
+        <h1 class="text-4xl font-extrabold text-gray-900 tracking-tight">DRIP Simulator</h1>
+        <p class="mt-2 text-xl text-gray-500">Visualize your wealth compounding with Dividend Reinvestment.</p>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 relative">
+        {% if not user.is_authenticated %}
+        <div
+            class="absolute inset-0 z-50 rounded-3xl bg-white/60 backdrop-blur-md flex flex-col items-center text-center p-8 pt-20 border border-white/40 shadow-[0_0_40px_rgba(0,0,0,0.05)]">
+            <div
+                class="w-16 h-16 bg-purple-50 text-purple-600 rounded-full flex items-center justify-center mb-6 shadow-sm">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                    </path>
+                </svg>
+            </div>
+            <h2 class="text-3xl font-extrabold text-gray-900 mb-4 tracking-tight">Premium Tool Locked</h2>
+            <p class="text-lg text-gray-700 font-semibold max-w-lg mb-8">The DRIP Predictor is exclusively available to
+                registered users. Create your free workspace to unlock this powerful compounding analysis tool.</p>
+            <div class="flex flex-col sm:flex-row gap-4">
+                <a href="{% provider_login_url 'google' %}?next={{ request.path }}"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-gray-900 bg-white hover:bg-gray-50 shadow-md hover:-translate-y-0.5 transition-all">
+                    <svg class="w-5 h-5 mr-2" viewBox="0 0 24 24">
+                        <path
+                            d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+                            fill="#4285F4" />
+                        <path
+                            d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                            fill="#34A853" />
+                        <path
+                            d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                            fill="#FBBC05" />
+                        <path
+                            d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                            fill="#EA4335" />
+                    </svg>
+                    Unlock with Google
+                </a>
+                <a href="{% url 'account_signup' %}?next={{ request.path }}"
+                    class="inline-flex items-center justify-center px-6 py-3 border border-transparent text-sm font-bold rounded-xl text-white bg-purple-600 shadow-md hover:bg-purple-700 hover:-translate-y-0.5 transition-all">Sign
+                    Up Free</a>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Left Column: Inputs -->
+        <div class="lg:col-span-4">
+            <div
+                class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-6 h-full flex flex-col relative overflow-hidden">
+                <div class="absolute top-0 left-0 w-1 h-full bg-green-500 rounded-l-2xl"></div>
+                <div class="mb-6 pb-2 border-b border-gray-100">
+                    <h4 class="text-lg font-bold text-gray-900 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z">
+                            </path>
+                        </svg>
+                        Variables
+                    </h4>
+                </div>
+                <div class="flex-grow">
+                    <form id="drip-form">
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Initial Principal</label>
+                                <input type="number" step="0.01"
+                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                                    id="initial_principal" value="10000.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Annual
+                                    Contribution</label>
+                                <input type="number" step="0.01"
+                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                                    id="annual_contribution" value="1200.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Dividend Yield (%)</label>
+                                <input type="number" step="0.01"
+                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                                    id="dividend_yield" value="4.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Annual Appreciation
+                                    (%)</label>
+                                <input type="number" step="0.01"
+                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                                    id="annual_appreciation" value="5.00" required>
+                            </div>
+                            <div>
+                                <label class="block text-sm font-semibold text-gray-700 mb-1">Years to Grow</label>
+                                <input type="number"
+                                    class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                                    id="years_to_grow" value="10" min="1" max="50" required>
+                            </div>
+                        </div>
+                        <div class="mt-8">
+                            <button type="submit" id="simulate-btn"
+                                class="w-full flex justify-center items-center gap-2 px-4 py-3 text-sm font-bold text-white bg-green-600 rounded-xl shadow-sm hover:bg-green-700 hover:shadow-md transition-all">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                                </svg>
+                                Simulate Growth
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Column: Results & Chart -->
+        <div class="lg:col-span-8">
+            <!-- Results Card (shown after calc) -->
+            <div class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-6 h-full flex flex-col"
+                id="results-card" style="display: none;">
+                <div class="mb-6 pb-2 border-b border-gray-100 flex justify-between items-center">
+                    <h4 class="text-xl font-bold text-gray-900">Compound Growth Projection</h4>
+                </div>
+                <div class="flex-grow flex flex-col">
+                    <!-- Summary Metrics -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-center mb-8">
+                        <div class="p-4 bg-gray-50 rounded-xl border border-gray-100">
+                            <h6 class="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Contributed
+                            </h6>
+                            <h4 class="text-xl font-bold text-gray-900" id="res-contributions">-</h4>
+                        </div>
+                        <div
+                            class="p-4 bg-green-50 rounded-xl border border-green-100 shadow-sm transform hover:-translate-y-1 transition-transform">
+                            <h6 class="text-xs font-bold text-green-700 uppercase tracking-wider mb-1">Dividends</h6>
+                            <h4 class="text-xl font-extrabold text-green-600" id="res-dividends">-</h4>
+                        </div>
+                        <div
+                            class="p-4 bg-blue-50 rounded-xl border border-blue-100 shadow-sm transform hover:-translate-y-1 transition-transform">
+                            <h6 class="text-xs font-bold text-brand-blue uppercase tracking-wider mb-1">Growth</h6>
+                            <h4 class="text-xl font-extrabold text-brand-blue" id="res-growth">-</h4>
+                        </div>
+                        <div class="p-4 bg-green-600 text-white rounded-xl shadow-md transform scale-105 z-10">
+                            <h6 class="text-xs font-bold text-green-100 uppercase tracking-wider mb-1">Total Balance
+                            </h6>
+                            <h4 class="text-xl font-extrabold text-white" id="res-balance">-</h4>
+                        </div>
+                    </div>
+
+                    <!-- Premium Area Chart -->
+                    <div class="flex-grow w-full relative mb-6" style="min-height: 300px;">
+                        <canvas id="dripChart"></canvas>
+                    </div>
+
+                    <!-- Save + Actions -->
+                    <div class="pt-6 border-t border-gray-100 flex justify-end gap-3">
+                        {% if not user.is_authenticated %}
+                        <button id="saveProjectionBtn"
+                            class="px-5 py-2.5 text-sm font-bold text-gray-500 bg-gray-50 border border-gray-200 rounded-xl flex items-center gap-2">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z">
+                                </path>
+                            </svg>
+                            Save Projection
+                        </button>
+                        {% else %}
+                        <button id="saveProjectionBtn"
+                            class="px-5 py-2.5 text-sm font-bold text-gray-700 bg-white border border-gray-300 rounded-xl shadow-sm hover:bg-gray-50 flex items-center gap-2 transition-colors">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4">
+                                </path>
+                            </svg>
+                            Save Projection
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Placeholder before calculation -->
+            <div class="glassmorphism rounded-2xl border border-dashed border-brand-blue/30 p-8 h-full flex flex-col justify-center items-center text-center relative overflow-hidden"
+                id="placeholder-card">
+                <div class="absolute inset-x-0 bottom-0 top-12 opacity-[0.07] pointer-events-none w-full">
+                    <svg viewBox="0 0 800 400" preserveAspectRatio="none" class="w-full h-full text-brand-blue">
+                        <defs>
+                            <linearGradient id="ghostGradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="currentColor" stop-opacity="0.8" />
+                                <stop offset="100%" stop-color="currentColor" stop-opacity="0" />
+                            </linearGradient>
+                        </defs>
+                        <path
+                            d="M0,400 L0,380 C100,380 200,350 300,300 C400,250 500,180 600,100 C700,20 750,0 800,0 L800,400 Z"
+                            fill="url(#ghostGradient)" />
+                        <path d="M0,380 C100,380 200,350 300,300 C400,250 500,180 600,100 C700,20 750,0 800,0"
+                            fill="none" stroke="currentColor" stroke-width="6" stroke-linecap="round" />
+                    </svg>
+                </div>
+                <div
+                    class="relative z-10 bg-white/70 backdrop-blur-[2px] p-6 rounded-2xl border border-white shadow-sm mt-8 inline-block max-w-sm">
+                    <h4 class="text-2xl font-bold text-gray-800 mb-2">Visualize Your Wealth Snowball</h4>
+                    <p class="text-gray-600 text-sm leading-relaxed">Enter your investment variables to unlock a
+                        projection of how Dividend Reinvestment (DRIP) exponentially compounds your wealth over time.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Save Modal -->
+    <div class="hidden" id="saveProjectionModal">
+        <div class="fixed inset-0 bg-gray-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden">
+                <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                    <h5 class="text-lg font-bold text-gray-900">Save Projection</h5>
+                    <button type="button" class="text-gray-400 hover:text-gray-600"
+                        onclick="document.getElementById('saveProjectionModal').classList.add('hidden')">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M6 18L18 6M6 6l12 12"></path>
+                        </svg>
+                    </button>
+                </div>
+                <div class="p-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-1">Projection Name</label>
+                    <input type="text" id="projectionName"
+                        class="w-full rounded-xl border-gray-200 shadow-sm focus:border-brand-blue focus:ring-brand-blue sm:text-sm px-4 py-2"
+                        placeholder="e.g., Retirement 2035">
+                </div>
+                <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                    <button type="button"
+                        class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 transition-colors"
+                        onclick="document.getElementById('saveProjectionModal').classList.add('hidden')">Cancel</button>
+                    <button type="button" id="confirmSaveProjBtn"
+                        class="px-4 py-2 text-sm font-medium text-white bg-green-600 rounded-xl hover:bg-green-700 transition-colors shadow-sm">Save</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Projections Library -->
+    {% if user.is_authenticated %}
+    <div class="mt-16 pt-8 border-t border-gray-200">
+        <h3 class="text-2xl font-bold text-gray-900 mb-6">My Saved Projections</h3>
+        <div id="projection-library" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="col-span-full text-center text-gray-500 py-8">Loading projections...</div>
+        </div>
+    </div>
+    {% endif %}
+
+</div>
+{% endblock %}
+
+{% block extra_body %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    let dripChart;
+    let lastSummary = null;
+    let lastPayload = null;
+    const isUserAuthenticated = ("{{ user.is_authenticated|yesno:'true,false' }}" === "true");
+    const signupUrl = "{% url 'account_signup' %}?next={{ request.path }}";
+
+    function fmtNum(n) {
+        return parseFloat(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    }
+
+    function getCookie(name) {
+        let v = null;
+        if (document.cookie) {
+            document.cookie.split(';').forEach(c => {
+                c = c.trim();
+                if (c.startsWith(name + '=')) v = decodeURIComponent(c.substring(name.length + 1));
+            });
+        }
+        return v;
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        // Draft restore
+        const savedDraft = localStorage.getItem('stockSavvy_drip_draft');
+        if (savedDraft) {
+            try {
+                const p = JSON.parse(savedDraft);
+                document.getElementById('initial_principal').value = p.initial_principal || '';
+                document.getElementById('annual_contribution').value = p.annual_contribution || '';
+                document.getElementById('dividend_yield').value = p.dividend_yield_percent || '';
+                document.getElementById('annual_appreciation').value = p.annual_appreciation_percent || '';
+                document.getElementById('years_to_grow').value = p.years_to_grow || '';
+                localStorage.removeItem('stockSavvy_drip_draft');
+                setTimeout(() => document.getElementById('simulate-btn').click(), 100);
+            } catch (e) { console.error("Draft corrupted"); }
+        }
+
+        fetchProjections();
+
+        // Save projection button
+        document.getElementById('saveProjectionBtn')?.addEventListener('click', () => {
+            if (!isUserAuthenticated) {
+                if (lastPayload) localStorage.setItem('stockSavvy_drip_draft', JSON.stringify(lastPayload));
+                window.location.href = signupUrl;
+                return;
+            }
+            if (!lastSummary) { alert('Run a simulation first.'); return; }
+            document.getElementById('projectionName').value = `${document.getElementById('years_to_grow').value}-Year DRIP`;
+            document.getElementById('saveProjectionModal').classList.remove('hidden');
+        });
+
+        document.getElementById('confirmSaveProjBtn')?.addEventListener('click', saveProjection);
+
+        // Event delegation for library buttons
+        const lib = document.getElementById('projection-library');
+        if (lib) {
+            lib.addEventListener('click', (e) => {
+                const loadBtn = e.target.closest('.load-proj-btn');
+                const deleteBtn = e.target.closest('.delete-proj-btn');
+                if (loadBtn) loadProjection(loadBtn.dataset.id);
+                if (deleteBtn) deleteProjection(deleteBtn.dataset.id);
+            });
+        }
+    });
+
+    document.getElementById('drip-form').addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn = document.getElementById('simulate-btn');
+        btn.disabled = true;
+        btn.innerHTML = '<svg class="animate-spin w-5 h-5 inline-block mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Calculating...';
+
+        const payload = {
+            initial_principal: document.getElementById('initial_principal').value,
+            annual_contribution: document.getElementById('annual_contribution').value,
+            dividend_yield_percent: document.getElementById('dividend_yield').value,
+            annual_appreciation_percent: document.getElementById('annual_appreciation').value,
+            years_to_grow: document.getElementById('years_to_grow').value
+        };
+        lastPayload = payload;
+
+        try {
+            const response = await fetch('{% url "calculators:api_calculate_drip" %}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': '{{ csrf_token }}' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+
+            if (response.ok) {
+                lastSummary = data.summary;
+                document.getElementById('placeholder-card').style.display = 'none';
+                document.getElementById('results-card').style.display = 'block';
+
+                document.getElementById('res-contributions').innerText = fmtNum(data.summary.total_contributions);
+                document.getElementById('res-dividends').innerText = fmtNum(data.summary.total_dividends_earned);
+                document.getElementById('res-growth').innerText = fmtNum(data.summary.total_capital_growth);
+                document.getElementById('res-balance').innerText = fmtNum(data.summary.final_balance);
+
+                renderAreaChart(data.projection);
+            } else {
+                alert('Error: ' + JSON.stringify(data));
+            }
+        } catch (err) {
+            alert('Network error: ' + err.message);
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg> Simulate Growth';
+        }
+    });
+
+    function renderAreaChart(projection) {
+        const ctx = document.getElementById('dripChart').getContext('2d');
+        if (dripChart) dripChart.destroy();
+
+        const labels = projection.map(r => `Year ${r.year}`);
+        const contributions = projection.map(r => parseFloat(r.contributions_to_date));
+        const compoundedGrowth = projection.map(r => parseFloat(r.end_balance) - parseFloat(r.contributions_to_date));
+
+        // Canvas gradients
+        const contribGrad = ctx.createLinearGradient(0, 0, 0, 400);
+        contribGrad.addColorStop(0, 'rgba(59,130,246,0.5)');
+        contribGrad.addColorStop(1, 'rgba(59,130,246,0.05)');
+
+        const growthGrad = ctx.createLinearGradient(0, 0, 0, 400);
+        growthGrad.addColorStop(0, 'rgba(34,197,94,0.6)');
+        growthGrad.addColorStop(1, 'rgba(34,197,94,0.05)');
+
+        dripChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [
+                    {
+                        label: 'Total Contributions',
+                        data: contributions,
+                        fill: true,
+                        backgroundColor: contribGrad,
+                        borderColor: 'rgba(59,130,246,0.9)',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(59,130,246,0.9)',
+                        pointBorderWidth: 2,
+                        tension: 0.4,
+                        stack: 'stack',
+                    },
+                    {
+                        label: 'Compounded Growth',
+                        data: compoundedGrowth,
+                        fill: true,
+                        backgroundColor: growthGrad,
+                        borderColor: 'rgba(34,197,94,0.9)',
+                        borderWidth: 2.5,
+                        pointRadius: 4,
+                        pointHoverRadius: 7,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: 'rgba(34,197,94,0.9)',
+                        pointBorderWidth: 2,
+                        tension: 0.4,
+                        stack: 'stack',
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: { usePointStyle: true, pointStyleWidth: 10, font: { size: 12, weight: '600' }, color: '#374151' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(17,24,39,0.92)',
+                        titleFont: { size: 13, weight: 'bold' },
+                        bodyFont: { size: 12 },
+                        padding: 12,
+                        cornerRadius: 10,
+                        callbacks: {
+                            label: ctx => {
+                                const val = new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(ctx.parsed.y);
+                                return ` ${ctx.dataset.label}: ${val}`;
+                            },
+                            footer: items => {
+                                const total = items.reduce((s, i) => s + i.parsed.y, 0);
+                                return `Total: ${new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(total)}`;
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#6b7280', font: { size: 11, weight: '500' } }
+                    },
+                    y: {
+                        stacked: true,
+                        grid: { color: 'rgba(0,0,0,0.05)', drawBorder: false },
+                        ticks: {
+                            color: '#6b7280',
+                            font: { size: 11 },
+                            callback: v => '$' + v.toLocaleString()
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // --- Save Projection ---
+    async function saveProjection() {
+        const name = document.getElementById('projectionName').value.trim();
+        if (!name) { alert('Please enter a name.'); return; }
+        if (!lastSummary || !lastPayload) { alert('Run a simulation first.'); return; }
+
+        const payload = {
+            name,
+            initial_principal: lastPayload.initial_principal,
+            annual_contribution: lastPayload.annual_contribution,
+            dividend_yield_percent: lastPayload.dividend_yield_percent,
+            annual_appreciation_percent: lastPayload.annual_appreciation_percent,
+            years_to_grow: lastPayload.years_to_grow,
+            final_balance: lastSummary.final_balance,
+            total_dividends: lastSummary.total_dividends_earned,
+        };
+
+        try {
+            const r = await fetch('/calculators/api/drip-projections/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
+                body: JSON.stringify(payload)
+            });
+            const data = await r.json();
+            if (r.ok) {
+                document.getElementById('saveProjectionModal').classList.add('hidden');
+                fetchProjections();
+            } else {
+                alert('Save failed: ' + (data.error || JSON.stringify(data)));
+            }
+        } catch (e) {
+            alert('Network error: ' + e.message);
+        }
+    }
+
+    async function fetchProjections() {
+        const lib = document.getElementById('projection-library');
+        if (!lib) return;
+        try {
+            const r = await fetch('/calculators/api/drip-projections/');
+            if (r.ok) {
+                const data = await r.json();
+                renderProjections(data);
+            }
+        } catch (e) { console.error(e); }
+    }
+
+    function renderProjections(projections) {
+        const lib = document.getElementById('projection-library');
+        lib.innerHTML = '';
+        if (!projections.length) {
+            lib.innerHTML = '<div class="col-span-full text-center text-gray-500 py-8">No saved projections yet.</div>';
+            return;
+        }
+        projections.forEach(p => {
+            const card = `
+            <div class="glassmorphism rounded-2xl shadow-sm border border-gray-100 p-5 flex flex-col hover:-translate-y-1 transition-transform duration-300 group">
+                <div>
+                    <div class="flex justify-between items-start mb-2">
+                        <h5 class="text-lg font-bold text-gray-900 group-hover:text-green-600 transition-colors">${p.name}</h5>
+                        <span class="text-xs text-gray-500 bg-white px-2 py-0.5 rounded-full border border-gray-100 shadow-sm">${new Date(p.created_at).toLocaleDateString()}</span>
+                    </div>
+                    <div class="space-y-1 py-3 border-y border-gray-100 my-3 text-sm">
+                        <div class="flex justify-between"><span class="text-gray-500 font-medium">Principal:</span> <span class="text-gray-900 font-semibold">$${parseFloat(p.initial_principal).toLocaleString()}</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500 font-medium">Yield / Years:</span> <span class="text-gray-900 font-semibold">${p.dividend_yield_percent}% / ${p.years_to_grow}yr</span></div>
+                        <div class="flex justify-between"><span class="text-gray-500 font-medium">Final Balance:</span> <span class="font-semibold text-green-600">$${parseFloat(p.final_balance).toLocaleString(undefined, { minimumFractionDigits: 2 })}</span></div>
+                    </div>
+                </div>
+                <div class="flex justify-between mt-auto pt-2 gap-3">
+                    <button class="flex-1 px-3 py-1.5 bg-green-600 text-white text-sm font-semibold rounded-lg hover:bg-green-700 transition-colors load-proj-btn" data-id="${p.id}">Load</button>
+                    <button class="px-3 py-1.5 text-red-500 bg-red-50 hover:bg-red-100 text-sm font-semibold rounded-lg transition-colors delete-proj-btn" data-id="${p.id}"><svg class="w-4 h-4 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg></button>
+                </div>
+            </div>`;
+            lib.insertAdjacentHTML('beforeend', card);
+        });
+    }
+
+    function loadProjection(id) {
+        const proj = window._dripProjections?.find(p => p.id == id);
+        if (!proj) { fetchProjections(); return; }
+        document.getElementById('initial_principal').value = proj.initial_principal;
+        document.getElementById('annual_contribution').value = proj.annual_contribution;
+        document.getElementById('dividend_yield').value = proj.dividend_yield_percent;
+        document.getElementById('annual_appreciation').value = proj.annual_appreciation_percent;
+        document.getElementById('years_to_grow').value = proj.years_to_grow;
+        document.getElementById('simulate-btn').click();
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    async function deleteProjection(id) {
+        if (!confirm('Delete this projection?')) return;
+        try {
+            const r = await fetch(`/calculators/api/drip-projections/${id}/`, {
+                method: 'DELETE',
+                headers: { 'X-CSRFToken': getCookie('csrftoken') }
+            });
+            if (r.ok) fetchProjections();
+        } catch (e) { alert('Network error.'); }
+    }
+
+    // Patch fetchProjections to cache for load
+    const _origFetch = fetchProjections;
+    async function fetchProjections() {
+        const lib = document.getElementById('projection-library');
+        if (!lib) return;
+        try {
+            const r = await fetch('/calculators/api/drip-projections/');
+            if (r.ok) {
+                const data = await r.json();
+                window._dripProjections = data;
+                renderProjections(data);
+            }
+        } catch (e) { console.error(e); }
+    }
+</script>
+{% endblock %}

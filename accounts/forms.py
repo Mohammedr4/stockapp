@@ -1,19 +1,23 @@
 # accounts/forms.py
 from django import forms
-# We remove "from allauth.account.forms import SignupForm" to prevent the circular import
+from django import forms
 
 class CustomSignupForm(forms.Form):
-    # This form no longer needs to inherit from SignupForm
-    display_name = forms.CharField(
-        max_length=100, 
-        label='Display Name', 
+    first_name = forms.CharField(
+        max_length=50, 
+        label='First Name', 
         required=True,
-        widget=forms.TextInput(attrs={'placeholder': 'e.g., John Doe'})
+        widget=forms.TextInput(attrs={'placeholder': 'Jane'})
     )
 
     def signup(self, request, user):
-        user.first_name = self.cleaned_data['display_name'].split(' ')[0]
-        if len(self.cleaned_data['display_name'].split(' ')) > 1:
-            user.last_name = ' '.join(self.cleaned_data['display_name'].split(' ')[-1:])
+        # Allauth will pass the newly created user here.
+        # We can directly modify and save the extended fields.
+        user.first_name = self.cleaned_data['first_name'].strip()
+        
+        # Fallback to saving email as username if django forces a username column
+        if not user.username:
+            user.username = user.email
+            
         user.save()
         return user
